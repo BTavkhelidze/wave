@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# turbo
+.turbo
+
+# build outputs
+dist/
+build/
+
+# env files
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
