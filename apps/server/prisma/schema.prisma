@@ -12,10 +12,16 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ServiceLanguage {
+  en
+  ka
+}
+
+
 model Service{
   id       Int @id @default(autoincrement())
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  colors String[]
+ 
   iconColor String
   icon String
   translations ServiceTranslation[]
@@ -25,8 +31,8 @@ model Service{
 model ServiceTranslation {
   id Int @id @default(autoincrement())
   serviceId  Int @map("service_id")
-  language String
-  title String
+  language    ServiceLanguage
+  title String @unique
   description String
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)

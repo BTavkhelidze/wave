@@ -1,26 +1,111 @@
 import { Injectable } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 
 @Injectable()
 export class ServicesService {
-  create(createServiceDto: CreateServiceDto) {
-    return 'This action adds a new service';
+  constructor( private readonly prisma: PrismaService){}
+
+  async create(createServiceDto: CreateServiceDto) {
+  const data = {
+  title: createServiceDto.title,
+  description: createServiceDto.description,
+  language: createServiceDto.language,
+  service: {
+    create: {
+
+    
+      icon: createServiceDto.icon,
+      iconColor: createServiceDto.iconColor
+    }
+  }
+  }
+   
+    try{
+
+const services = await this.prisma.serviceTranslation.create({
+  data: data
+});      
+return services;
+    }catch(error){
+      console.error('Error fetching services:', error);
+      throw error;
+    }
+    
   }
 
-  findAll() {
-    return `This action returns all services`;
+  async findAll(language: string) {
+   
+    try{
+
+const services = await this.prisma.serviceTranslation.findMany({
+  include: {
+    
+    service: {'select': {
+      icon: true,
+      iconColor: true,
+      
+    }},
+    },
+  
+  where: {
+    language: language,
+  }
+ 
+});      
+return services;
+    }catch(error){
+      console.error('Error fetching services:', error);
+      throw error;
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} service`;
+  async findOne(id: number) {
+    try {
+      const service = await this.prisma.serviceTranslation.findUnique({
+       where: {
+          id: id
+       }
+});
+
+      return service;
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      throw error;
+    }
   }
 
-  update(id: number, updateServiceDto: UpdateServiceDto) {
-    return `This action updates a #${id} service`;
+  async update(id: number, updateServiceDto: UpdateServiceDto) {
+        try {
+      const service = await this.prisma.serviceTranslation.update({
+       where: {
+          id: id
+       },
+       data: updateServiceDto
+});
+
+      return service;
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      throw error;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} service`;
+  async remove(id: number) {
+            try {
+      const service = await this.prisma.serviceTranslation.delete({
+       where: {
+          id: id
+       }
+
+});
+
+
+      return {service, message: 'Service deleted successfully'};
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      throw error;
+    }
   }
 }
