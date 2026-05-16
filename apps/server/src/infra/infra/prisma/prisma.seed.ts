@@ -16,7 +16,7 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  console.log('Seeding services...');
+
 
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
@@ -26,8 +26,6 @@ async function main() {
       data: {
         icon: service.icon?.trim() ?? null,
         iconColor: service.iconColor?.trim() ?? null,
-        colors: service.colors.map((color) => color.trim()),
-
         translations: {
           create: service.translations.map((translation) => ({
             language: translation.language.trim(),

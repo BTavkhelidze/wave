@@ -4,7 +4,6 @@ export const services = [
   {
     icon: 'FaFireExtinguisher',
     iconColor: 'red',
-    colors: ['#B22222', '#FF8C00', '#FFD700', '#2F4F4F', '#DCDCDC'],
     translations: [
       {
         language: 'en',
@@ -23,7 +22,6 @@ export const services = [
   {
     icon: 'FaSnowflake',
     iconColor: 'blue',
-    colors: ['#1E90FF', '#87CEFA', '#FF4500', '#F2F2F2', '#36454F'],
     translations: [
       {
         language: 'en',
@@ -42,7 +40,6 @@ export const services = [
   {
     icon: 'FaWind',
     iconColor: 'cyan',
-    colors: ['#00BFFF', '#40E0D0', '#3A6073', '#E8ECEF', '#FFFFFF'],
     translations: [
       {
         language: 'en',
@@ -61,7 +58,6 @@ export const services = [
   {
     icon: 'FaFaucet',
     iconColor: 'blue',
-    colors: ['#2A7AE2', '#6CA6CD', '#6B8E23', '#37474F', '#ECEFF1'],
     translations: [
       {
         language: 'en',
@@ -80,7 +76,6 @@ export const services = [
   {
     icon: 'FaBolt',
     iconColor: 'yellow',
-    colors: ['#FFC107', '#1976D2', '#455A64', '#212121', '#F5F5F5'],
     translations: [
       {
         language: 'en',
