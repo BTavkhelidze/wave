@@ -8,6 +8,12 @@ export class ServicesService {
   constructor( private readonly prisma: PrismaService){}
 
   async create(createServiceDto: CreateServiceDto) {
+
+    if(!createServiceDto.title) throw new Error('Title is required');
+    if(!createServiceDto.description) throw new Error('Description is required');
+    if(!createServiceDto.language) throw new Error('Language is required');
+    if(!createServiceDto.icon) throw new Error('Icon is required');
+    if(!createServiceDto.iconColor) throw new Error('Icon color is required');
   const data = {
   title: createServiceDto.title,
   description: createServiceDto.description,
@@ -29,7 +35,7 @@ const services = await this.prisma.serviceTranslation.create({
 });      
 return services;
     }catch(error){
-      console.error('Error fetching services:', error);
+     
       throw error;
     }
     
@@ -56,7 +62,7 @@ const services = await this.prisma.serviceTranslation.findMany({
 });      
 return services;
     }catch(error){
-      console.error('Error fetching services:', error);
+     
       throw error;
     }
   }
@@ -71,7 +77,7 @@ return services;
 
       return service;
     } catch (error) {
-      console.error('Error fetching service:', error);
+
       throw error;
     }
   }
@@ -87,7 +93,7 @@ return services;
 
       return service;
     } catch (error) {
-      console.error('Error fetching service:', error);
+     
       throw error;
     }
   }
@@ -101,10 +107,9 @@ return services;
 
 });
 
-
       return {service, message: 'Service deleted successfully'};
     } catch (error) {
-      console.error('Error fetching service:', error);
+
       throw error;
     }
   }
