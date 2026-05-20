@@ -40,3 +40,12 @@ model ServiceTranslation {
   @@unique([serviceId, language])
   @@map("service_translations")
 }
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  @@map("users")
+}

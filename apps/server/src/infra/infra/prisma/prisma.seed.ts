@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { services } from './data';
+import * as bcrypt from 'bcrypt';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -16,8 +17,7 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-
-
+  const salt = await bcrypt.genSalt(10);
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
 
@@ -28,7 +28,7 @@ async function main() {
         iconColor: service.iconColor?.trim() ?? null,
         translations: {
           create: service.translations.map((translation) => ({
-            language: translation.language.trim(),
+            language: translation.language,
             title: translation.title.trim(),
             description: translation.description?.trim() ?? null,
           })),
@@ -37,7 +37,13 @@ async function main() {
     });
   }
 
-  console.log('Services seeded successfully.');
+  await prisma.user.create({
+    data: {
+      email: "Bekatavkhelidze4@gmail.com",
+      password: await bcrypt.hash("beqabeqa", salt)
+
+    }
+  })
 }
 
 main()
