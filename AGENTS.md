@@ -10,13 +10,13 @@
 - **Separation of Concerns:** - `components/`: Purely presentational (Shadcn/Tailwind).
   - `hooks/` & `services/`: Complex business logic, orchestration.
   - `api/`: Tanstack Query hooks (React Query).
-- **Communication:** Client apps (frontend/admin) communicate with `server` exclusively via REST/GraphQL. No direct database access from the client.
+- **Communication:** Client apps (client/admin) communicate with `server` exclusively via REST/GraphQL. No direct database access from the client.
 
 ## 3. Monorepo Workflow (CRITICAL)
-- **Identify App:** Before starting, confirm which app you are editing: `apps/frontend` or `apps/admin`.
-- **DRY (Don't Repeat Yourself):** - If logic is shared between `frontend` and `admin`, move it to `packages/shared`.
+- **Identify App:** Before starting, confirm which app you are editing: `apps/client` or `apps/admin`.
+- **DRY (Don't Repeat Yourself):** - If logic is shared between `client` and `admin`, move it to `packages/shared`.
   - Shared TypeScript interfaces must reside in `packages/types`.
-- **Prisma Rules:** Only `apps/server` has access to Prisma. Never suggest `import { prisma } ...` in `apps/frontend` or `apps/admin`.
+- **Prisma Rules:** Only `apps/server` has access to Prisma. Never suggest `import { prisma } ...` in `apps/client` or `apps/admin`.
 
 ## 4. Coding Standards
 - **Tanstack Query:** Use for all server-state management.
