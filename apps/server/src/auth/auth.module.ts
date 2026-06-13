@@ -5,13 +5,22 @@ import { HashProvider } from './providers/hash.provider';
 import { BcryptProvider } from './providers/bcrypt.provider';
 import { AuthService } from './providers/auth.service';
 import { UsersModule } from 'src/users/users.module';
+import { SignInProvider } from './providers/signIn.provider';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, {
+  providers: [AuthService,  {
     provide: HashProvider,
     useClass: BcryptProvider
-  }],
-  imports: [UsersModule]
+  }, SignInProvider],
+  imports: [UsersModule, JwtModule.register({
+    secret: 'supersecret',
+    signOptions: {
+      expiresIn: '1h',
+      issuer: 'my-nest-api',
+      audience: 'my-react-client'
+    }
+  })]
 })
 export class AuthModule {}
