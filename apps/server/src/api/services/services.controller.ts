@@ -18,7 +18,7 @@ import {
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
-import { ServiceLanguage } from '@prisma/client';
+import { ServiceLanguage } from './enums/service-language';
 
 @ApiTags('services')
 @Controller('services')
@@ -52,7 +52,7 @@ export class ServicesController {
     description: 'Service translation ID',
   })
   findOne(@Param('id') id: string) {
-    return this.servicesService.findOne(+id);
+    return this.servicesService.findOne(id);
   }
 
   @Patch(':id')
@@ -63,11 +63,8 @@ export class ServicesController {
     description: 'Service translation ID',
   })
   @ApiBody({ type: UpdateServiceDto })
-  update(
-    @Param('id') id: string,
-    @Body() updateServiceDto: UpdateServiceDto,
-  ) {
-    return this.servicesService.update(+id, updateServiceDto);
+  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+    return this.servicesService.update(id, updateServiceDto);
   }
 
   @Delete(':id')
@@ -78,6 +75,6 @@ export class ServicesController {
     description: 'Service translation ID',
   })
   remove(@Param('id') id: string) {
-    return this.servicesService.remove(+id);
+    return this.servicesService.remove(id);
   }
 }
