@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ServiceLanguage } from '@prisma/client';
 import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { ServiceLanguage } from '../enums/service-lang.enums';
 
 export class CreateServiceDto {
   @ApiProperty({

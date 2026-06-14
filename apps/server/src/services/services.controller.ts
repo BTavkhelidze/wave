@@ -18,6 +18,7 @@ import {
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { ServiceLanguage } from '@prisma/client';
 
 @ApiTags('services')
 @Controller('services')
@@ -39,7 +40,7 @@ export class ServicesController {
     example: 'en',
     description: 'Service language, for example en or ka',
   })
-  findAll(@Query('language') language = 'en') {
+  findAll(@Query('language') language: ServiceLanguage) {
     return this.servicesService.findAll(language);
   }
 

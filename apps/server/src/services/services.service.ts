@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
+import { ServiceLanguage } from '@prisma/client';
 
 @Injectable()
 export class ServicesService {
@@ -41,7 +42,7 @@ return services;
     
   }
 
-  async findAll(language: string) {
+  async findAll(language: ServiceLanguage) {
    
     try{
 
