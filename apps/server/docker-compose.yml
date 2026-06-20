@@ -24,7 +24,10 @@ services:
       - wave-prisma
 
     healthcheck:
-      test: ['CMD-SHELL', "pg_isready -u ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

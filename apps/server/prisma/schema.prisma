@@ -1,30 +1,164 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-   provider   = "prisma-client-js"
-  engineType = "binary"
+  provider = "prisma-client-js"
+    engineType = "binary"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+enum Language {
+  EN
+  KA
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EMPLOYEE
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum AdminAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PUBLISH
+  UNPUBLISH
+  ARCHIVE
+}
+
+enum AdminEntity {
+  USER
+  SERVICE
+  BLOG
+  CONTACT_MESSAGE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+  lastLogin DateTime? @map("last_login") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  blogs Blog[]
+  logs  AdminLog[]
+
+  @@map("users")
+}
+
 model Service {
-  id            Int      @id @default(autoincrement())
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id        String @id @default(uuid())
+  icon      String
+  iconColor String @map("icon_color")
+  isActive  Boolean @default(true) @map("is_active")
+  sortOrder Int     @default(0) @map("sort_order")
 
-  titleEn       String   @map("title_en")
-  titleKa       String?  @map("title_ka")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  descriptionEn String?  @map("description_en")
-  descriptionKa String?  @map("description_ka")
+  translations ServiceTranslation[]
 
-  colors        String[]
-  icon          String?
-  iconColor     String?  @map("iconColor")
-
+  @@index([isActive])
+  @@index([sortOrder])
   @@map("services")
+}
+
+model ServiceTranslation {
+  id          String   @id @default(uuid())
+  serviceId   String   @map("service_id")
+  language    Language
+  title       String
+  description String   @db.Text
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, language])
+  @@index([language])
+  @@map("service_translations")
+}
+
+model Blog {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  coverImage  String? @map("cover_image")
+  isPublished Boolean @default(false) @map("is_published")
+
+  authorId String? @map("author_id")
+
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  author       User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  translations BlogTranslation[]
+
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@index([authorId])
+  @@map("blogs")
+}
+
+model BlogTranslation {
+  id       String   @id @default(uuid())
+  blogId   String   @map("blog_id")
+  language Language
+  title    String
+  excerpt  String?  @db.VarChar(255)
+  content  String   @db.Text
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, language])
+  @@index([language])
+  @@index([blogId])
+  @@map("blog_translations")
+}
+
+model ContactMessage {
+  id      String        @id @default(uuid())
+  name    String
+  email   String
+  phone   String?
+  company String?
+  message String        @db.Text
+  status  MessageStatus @default(UNREAD)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model AdminLog {
+  id       String      @id @default(uuid())
+  userId   String?     @map("user_id")
+  action   AdminAction
+  entity   AdminEntity
+  entityId String?     @map("entity_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("admin_logs")
 }
