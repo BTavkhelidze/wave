@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Language } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { services } from './data';
 import * as bcrypt from 'bcrypt';
@@ -28,7 +28,7 @@ async function main() {
         iconColor: service.iconColor?.trim() ?? null,
         translations: {
           create: service.translations.map((translation) => ({
-            language: translation.language,
+            language: translation.language as unknown as Language,
             title: translation.title.trim(),
             description: translation.description?.trim() ?? null,
           })),

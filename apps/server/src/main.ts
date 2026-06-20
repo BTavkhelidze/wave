@@ -1,36 +1,49 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-import { ValidationPipe} from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common';
 
-import {DocumentBuilder, SwaggerModule} from '@nestjs/swagger'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { getCorsConfig } from './config/cors.config';
+import { ConfigService } from '@nestjs/config';
+import { getSwaggerConfig } from './config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  const config = app.get(ConfigService);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-    })
-  )
+    }),
+  );
+
+  const logger = new Logger(AppModule.name);
+
+  app.enableCors(getCorsConfig(config));
 
   // Swagger setup
-  const config = new DocumentBuilder()
-  .setTitle('Nest Wave API')
-  .setDescription('API documentation for Nest Wave engineering')
-  .setTermsOfService('https://example.com/terms')
-  .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-  .addServer('http://localhost:3000', 'Local development server')
-  .setVersion('1.0')
-  .build();
+  const swaggerConfig = getSwaggerConfig();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+    jsonDocumentUrl: 'openapi.json',
+  });
+  const port = config.getOrThrow<number>('HTTP_PORT');
+  const host = config.getOrThrow<string>('HTTP_HOST');
 
-  SwaggerModule.setup('api', app, document);
+  try {
+    await app.listen(port, '0.0.0.0');
 
-
-  await app.listen(process.env.PORT ?? 3000);
+    Logger.log(`Server is running at: ${host}`);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      logger.error(`Failed to start server: ${error.message}`, error);
+    } else {
+      logger.error('Failed to start server: unknown error', error as string);
+    }
+    process.exit(1);
+  }
 }
 bootstrap();
