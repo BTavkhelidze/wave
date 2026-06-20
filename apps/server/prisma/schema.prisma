@@ -17,6 +17,12 @@ enum ServiceLanguage {
   ka
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EMPLOYEE
+}
+
 
 model Service{
   id       Int @id @default(autoincrement())
@@ -42,10 +48,55 @@ model ServiceTranslation {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique
-  password String
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
   @@map("users")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  isRead    Boolean  @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("contact_messages")
+}
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  coverImage  String?
+  isPublished Boolean  @default(false)
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  translations BlogTranslation[]
+
+  @@map("blogs")
+}
+
+model BlogTranslation {
+  id          Int             @id @default(autoincrement())
+  blogId      Int             @map("blog_id")
+  language    ServiceLanguage
+  title       String
+  excerpt     String?
+  content     String
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, language])
+  @@map("blog_translations")
 }
