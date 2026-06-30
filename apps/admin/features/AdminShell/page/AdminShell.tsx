@@ -1,6 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import AsidePanel from '../../../Widgets/AsidePanel/AsidePanel';
 
+type NavItem = {
+  label: string;
+  path: string;
+};
+
 type NavGroup = {
   title: string;
   items: NavItem[];
