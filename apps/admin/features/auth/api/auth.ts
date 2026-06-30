@@ -1,3 +1,5 @@
+import { IData } from '../../interface/interface';
+
 const API_Base = 'http://localhost:5000/api';
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -13,22 +15,17 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-interface User {
+export interface AuthUser {
   id: string;
   email: string;
 }
 
-export async function fetchCurrentUser() {
+export async function fetchCurrentUser(): Promise<AuthUser> {
   const res = await fetch(`${API_Base}/users/profile`, {
     credentials: 'include',
   });
 
-  return handleResponse<User>(res);
-}
-
-interface IData {
-  email: string;
-  password: string;
+  return handleResponse<AuthUser>(res);
 }
 
 export async function loginUser(data: IData) {

@@ -1,34 +1,36 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema } from '../schema/LoginShcema';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-// import { Input } from "../../src/components/ui/input";
-// import { Label } from "../../src/components/ui/label";
-// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../src/components/ui/form";
+import { Button } from '../../src/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../../src/components/ui/form';
+import { Input } from '../../src/components/ui/input';
+import { useAuth } from '../context/AuthContext';
+import { LoginSchema } from './schema/LoginShcema';
 
-// import { Button } from '../../src/components/ui/button';
-// import { useAuth } from '../context/AuthContext';
-// import { toast } from 'react-toastify';
+type LoginFormValues = z.infer<typeof LoginSchema>;
 
 function Login() {
-  // Use form setup
-  const form = useForm({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: '', password: '' },
   });
   const { login } = useAuth();
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: LoginFormValues) => {
     try {
       await login(data);
-      toast({ title: 'Success', description: 'Logged in!' });
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Invalid credentials',
-        variant: 'destructive',
-      });
+      toast.success('Logged in!');
+    } catch {
+      toast.error('Invalid credentials');
     }
   };
 
@@ -58,7 +60,7 @@ function Login() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type='password' placeholder='••••••••' {...field} />
+                  <Input type='password' placeholder='********' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
