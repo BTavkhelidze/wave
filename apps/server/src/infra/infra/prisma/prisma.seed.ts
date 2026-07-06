@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, Language } from '@prisma/client';
+import { PrismaClient, Language, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { services } from './data';
 import * as bcrypt from 'bcrypt';
@@ -39,11 +39,12 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      email: "Bekatavkhelidze4@gmail.com",
-      password: await bcrypt.hash("beqabeqa", salt)
-
-    }
-  })
+      email: 'bekatavkhelidze41@gmail.com',
+      password: await bcrypt.hash('beqabeqa', salt),
+      role: UserRole.SUPER_ADMIN,
+      isActive: true,
+    },
+  });
 }
 
 main()

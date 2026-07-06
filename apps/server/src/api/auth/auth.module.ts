@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 
 import { AuthController } from './auth.controller';
 import { HashProvider } from './providers/hash.provider';
@@ -8,6 +9,9 @@ import { AuthService } from './providers/auth.service';
 import { SignInProvider } from './providers/signIn.provider';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
+import { GenerateTokenProvider } from './providers/generate-tokens.provider';
+import { RefreshTokenProvider } from './providers/refresh-tokens.provider';
+import jwtConfig from 'src/config/jwt.config';
 
 @Module({
   controllers: [AuthController],
@@ -18,9 +22,12 @@ import { UsersModule } from '../users/users.module';
       useClass: BcryptProvider,
     },
     SignInProvider,
+    GenerateTokenProvider,
+    RefreshTokenProvider,
   ],
   imports: [
     UsersModule,
+    ConfigModule.forFeature(jwtConfig),
     JwtModule.register({
       secret: 'supersecret',
       signOptions: {

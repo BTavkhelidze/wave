@@ -45,7 +45,8 @@ enum AdminEntity {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  password  String
+  password String? 
+  refreshToken String? @map("refresh_token") 
   role      UserRole @default(ADMIN)
   isActive  Boolean  @default(true)
   lastLogin DateTime? @map("last_login") @db.Timestamptz(6)

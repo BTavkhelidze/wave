@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { getCorsConfig } from './config/cors.config';
 import { ConfigService } from '@nestjs/config';
 import { getSwaggerConfig } from './config/swagger.config';
@@ -20,6 +20,9 @@ async function bootstrap() {
   );
 
   const logger = new Logger(AppModule.name);
+  const apiPrefix = config.getOrThrow<string>('appConfig.apiPrefix');
+
+  app.setGlobalPrefix(apiPrefix);
 
   app.enableCors(getCorsConfig(config));
 
@@ -27,11 +30,11 @@ async function bootstrap() {
   const swaggerConfig = getSwaggerConfig();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
 
-  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, swaggerDocument, {
     jsonDocumentUrl: 'openapi.json',
   });
-  const port = config.getOrThrow<number>('HTTP_PORT');
-  const host = config.getOrThrow<string>('HTTP_HOST');
+  const port = config.getOrThrow<number>('appConfig.http.port');
+  const host = config.getOrThrow<string>('appConfig.http.host');
 
   try {
     await app.listen(port, '0.0.0.0');

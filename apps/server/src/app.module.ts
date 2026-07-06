@@ -10,7 +10,7 @@ import appConfig from './config/app.config';
 import { ApiModule } from './api/api.module';
 import { ServicesService } from './api/services/services.service';
 
-const ENV = process.env.NODE_ENV;
+const ENV = process.env.NODE_ENV?.trim();
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ const ENV = process.env.NODE_ENV;
     PrismaModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: !ENV ? '.env' : `.env.${ENV}`,
+      envFilePath: ENV ? [`.env.${ENV}`, '.env'] : '.env',
       load: [appConfig],
     }),
     ApiModule,
