@@ -12,6 +12,10 @@ import { UsersModule } from '../users/users.module';
 import { GenerateTokenProvider } from './providers/generate-tokens.provider';
 import { RefreshTokenProvider } from './providers/refresh-tokens.provider';
 import jwtConfig from 'src/config/jwt.config';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { PrismaModule } from 'src/infra/infra/prisma/prisma.module';
+import { ActiveUserProvider } from './providers/active-user.provider';
 
 @Module({
   controllers: [AuthController],
@@ -24,9 +28,12 @@ import jwtConfig from 'src/config/jwt.config';
     SignInProvider,
     GenerateTokenProvider,
     RefreshTokenProvider,
+    JwtStrategy,
+    ActiveUserProvider,
   ],
   imports: [
     UsersModule,
+    PrismaModule,
     ConfigModule.forFeature(jwtConfig),
     JwtModule.register({
       secret: 'supersecret',
@@ -36,6 +43,8 @@ import jwtConfig from 'src/config/jwt.config';
         audience: 'my-react-client',
       },
     }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
+  exports: [PassportModule],
 })
 export class AuthModule {}

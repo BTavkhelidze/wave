@@ -7,6 +7,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { getCorsConfig } from './config/cors.config';
 import { ConfigService } from '@nestjs/config';
 import { getSwaggerConfig } from './config/swagger.config';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,7 @@ async function bootstrap() {
   app.setGlobalPrefix(apiPrefix);
 
   app.enableCors(getCorsConfig(config));
+  app.use(cookieParser());
 
   // Swagger setup
   const swaggerConfig = getSwaggerConfig();

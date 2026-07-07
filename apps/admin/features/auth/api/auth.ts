@@ -19,7 +19,8 @@ interface User {
 }
 
 export async function fetchCurrentUser() {
-  const res = await fetch(`${API_Base}/users/profile`, {
+  const res = await fetch(`${API_Base}/auth/active-user`, {
+    method: 'POST',
     credentials: 'include',
   });
 
@@ -32,7 +33,7 @@ interface IData {
 }
 
 export async function loginUser(data: IData) {
-  const res = await fetch(`${API_Base}/users/login`, {
+  const res = await fetch(`${API_Base}/auth/signin`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -44,7 +45,7 @@ export async function loginUser(data: IData) {
 }
 
 export async function logoutUser() {
-  const res = await fetch(`${API_Base}/users/logout`, {
+  const res = await fetch(`${API_Base}/auth/logout`, {
     method: 'POST',
     credentials: 'include',
   });
