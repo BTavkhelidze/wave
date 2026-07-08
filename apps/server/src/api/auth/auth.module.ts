@@ -16,6 +16,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { PrismaModule } from 'src/infra/infra/prisma/prisma.module';
 import { ActiveUserProvider } from './providers/active-user.provider';
+import { LogoutProvider } from './providers/logout.provider';
 
 @Module({
   controllers: [AuthController],
@@ -30,6 +31,7 @@ import { ActiveUserProvider } from './providers/active-user.provider';
     RefreshTokenProvider,
     JwtStrategy,
     ActiveUserProvider,
+    LogoutProvider,
   ],
   imports: [
     UsersModule,

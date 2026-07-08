@@ -61,6 +61,7 @@ export class SignInProvider {
     });
 
     return {
+      status: 200,
       message: 'User signed in successfully',
     };
   }

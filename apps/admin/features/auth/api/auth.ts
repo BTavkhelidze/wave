@@ -1,4 +1,4 @@
-const API_Base = 'http://localhost:5000/api';
+const API_Base = 'http://localhost:3000/api';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (res.status === 401) {
@@ -13,13 +13,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-interface User {
+export interface User {
   id: string;
   email: string;
 }
 
 export async function fetchCurrentUser() {
-  const res = await fetch(`${API_Base}/auth/active-user`, {
+  const res = await fetch(`${API_Base}/auth/active-account`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -27,12 +27,12 @@ export async function fetchCurrentUser() {
   return handleResponse<User>(res);
 }
 
-interface IData {
+export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export async function loginUser(data: IData) {
+export async function loginUser(data: LoginCredentials) {
   const res = await fetch(`${API_Base}/auth/signin`, {
     method: 'POST',
     credentials: 'include',
@@ -41,6 +41,7 @@ export async function loginUser(data: IData) {
     },
     body: JSON.stringify(data),
   });
+  console.log('res', await res.json());
   return handleResponse(res);
 }
 

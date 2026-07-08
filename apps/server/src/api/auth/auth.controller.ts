@@ -8,16 +8,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { AuthService } from './providers/auth.service';
 import { SignInDto } from './dtos/signIn.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
-import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
-
-interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser;
-}
+import { AccessTokenGuard } from './guards/access-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -31,6 +27,7 @@ export class AuthController {
     return this.authService.signIn(signInDto, res);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('logout')
   public logout(
     @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
@@ -49,15 +46,9 @@ export class AuthController {
     // return this.authService.forgotPassword();
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post('active-user')
-  public activeUser(@Req() req: AuthenticatedRequest) {
-    return this.authService.activeAccount(req.user);
-  }
-
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AccessTokenGuard)
   @Post('active-account')
-  public activeAccount(@Req() req: AuthenticatedRequest) {
-    return this.authService.activeAccount(req.user);
+  public async activeAccount(@Req() req) {
+    return this.authService.activeAccount(req.user.email);
   }
 }

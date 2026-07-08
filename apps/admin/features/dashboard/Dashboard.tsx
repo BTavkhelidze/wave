@@ -28,6 +28,7 @@ type DashboardSnapshot = {
 };
 
 function DashboardPage() {
+  
   const { data, isLoading, isError } = useQuery<DashboardSnapshot>({
     queryKey: ['admin-dashboard-summary'],
     queryFn: async () => {

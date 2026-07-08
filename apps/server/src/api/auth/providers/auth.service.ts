@@ -6,7 +6,7 @@ import { SignInProvider } from './signIn.provider';
 import { RefreshTokenDto } from '../dtos/refresh-token.dto';
 import { RefreshTokenProvider } from './refresh-tokens.provider';
 import { ActiveUserProvider } from './active-user.provider';
-import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
+import { LogoutProvider } from './logout.provider';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +14,7 @@ export class AuthService {
     private readonly signInProvider: SignInProvider,
     private readonly refreshTokenProvider: RefreshTokenProvider,
     private readonly activeUserProvider: ActiveUserProvider,
+    private readonly logoutProvider: LogoutProvider,
   ) {}
   public async signIn(
     signInDto: SignInDto,
@@ -23,19 +24,14 @@ export class AuthService {
   }
 
   public logout(res: Response<any, Record<string, any>>) {
-    res.clearCookie('refreshToken', { path: '/' });
-    res.clearCookie('accessToken', { path: '/' });
-
-    return {
-      message: 'User logged out successfully',
-    };
+    return this.logoutProvider.logout(res);
   }
 
   public async refreshToken(refreshTokenDto: RefreshTokenDto) {
     return await this.refreshTokenProvider.refreshToken(refreshTokenDto);
   }
 
-  public activeAccount(user: AuthenticatedUser): AuthenticatedUser {
-    return this.activeUserProvider.activeAccount(user);
+  public async activeAccount(userEmail: string) {
+    return await this.activeUserProvider.activeAccount(userEmail);
   }
 }

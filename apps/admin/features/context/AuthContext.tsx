@@ -1,39 +1,50 @@
-import { QueryClient, useQuery } from '@tanstack/react-query';
-import { Children, createContext, useContext, ReactNode } from 'react';
-import { fetchCurrentUser, logoutUser } from '../auth/api/auth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, ReactNode } from 'react';
+import {
+  fetchCurrentUser,
+  loginUser,
+  logoutUser,
+  type LoginCredentials,
+  type User,
+} from '../auth/api/auth';
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
+const authQueryKey = ['auth', 'me'] as const;
+
 const AuthContext = createContext<
   | {
-      user: any;
+      user: User | null | undefined;
       isLoading: boolean;
+      login: (credentials: LoginCredentials) => Promise<void>;
       logout: () => Promise<void>;
     }
   | undefined
 >(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const queryClient = new QueryClient();
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['auth', 'me'],
+  const queryClient = useQueryClient();
+  const { data: user, isLoading } = useQuery({
+    queryKey: authQueryKey,
     queryFn: fetchCurrentUser,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
+  const login = async (credentials: LoginCredentials) => {
+    await loginUser(credentials);
+    const currentUser = await fetchCurrentUser();
+
+    queryClient.setQueryData(authQueryKey, currentUser);
+  };
+
   const logout = async () => {
     await logoutUser();
 
-    queryClient.setQueryData(['auth', 'me'], null);
-
-    queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+    queryClient.setQueryData(authQueryKey, null);
+    queryClient.removeQueries({ queryKey: authQueryKey });
   };
 
   return (
@@ -41,6 +52,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       value={{
         user,
         isLoading,
+        login,
         logout,
       }}
     >

@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
-import { UsersService } from './users.service';
 import {
+  HttpException,
   Injectable,
   RequestTimeoutException,
   UnauthorizedException,
@@ -12,7 +12,7 @@ export class FindUserByIdEmailProvider {
 
   public async findUserByEmail(email: string) {
     try {
-      let user = await this.prismaService.user.findUnique({
+      const user = await this.prismaService.user.findUnique({
         where: {
           email,
         },
@@ -21,6 +21,10 @@ export class FindUserByIdEmailProvider {
 
       return user;
     } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
       throw new RequestTimeoutException(err, {
         description: 'Could not fetch user',
       });
