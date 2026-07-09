@@ -8,11 +8,11 @@ export class ActiveUserProvider {
 
   public async activeAccount(
     userEmail: string,
-  ): Promise<Omit<User, 'password' | 'refreshToken'>> {
+  ): Promise<Omit<User, 'password' | 'hashedRefreshToken'>> {
     const user = await this.userService.findUserByEmail(userEmail);
     const {
       password: _password,
-      refreshToken: _refreshToken,
+      hashedRefreshToken: _hashedRefreshToken,
       ...userWithoutPassword
     } = user;
 

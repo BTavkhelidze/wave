@@ -11,11 +11,13 @@ import { Request } from 'express';
 
 import type { ConfigType } from '@nestjs/config';
 import jwtConfig from 'src/config/jwt.config';
+import { ActiveUserGuard } from './active-user.guard';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly activeUserGuard: ActiveUserGuard,
 
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: ConfigType<typeof jwtConfig>,
@@ -44,7 +46,7 @@ export class AccessTokenGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    return true;
+    return this.activeUserGuard.canActivate(context);
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

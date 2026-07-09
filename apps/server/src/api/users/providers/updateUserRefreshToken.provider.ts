@@ -11,7 +11,7 @@ export class UpdateUserRefreshTokenProvider {
         id: userId,
       },
       data: {
-        refreshToken: refreshToken,
+        hashedRefreshToken: refreshToken,
       },
     });
     return user;

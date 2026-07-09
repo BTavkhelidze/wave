@@ -32,6 +32,11 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface LoginResponse {
+  status: number;
+  message: string;
+}
+
 export async function loginUser(data: LoginCredentials) {
   const res = await fetch(`${API_Base}/auth/signin`, {
     method: 'POST',
@@ -41,8 +46,8 @@ export async function loginUser(data: LoginCredentials) {
     },
     body: JSON.stringify(data),
   });
-  console.log('res', await res.json());
-  return handleResponse(res);
+
+  return handleResponse<LoginResponse>(res);
 }
 
 export async function logoutUser() {

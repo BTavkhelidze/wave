@@ -29,12 +29,8 @@ function Login() {
     setSubmitError(null);
 
     try {
-      const res = await login(data);
-      console.log('res', res);
-
-      if (res.status === 200) {
-        navigate('/', { replace: true });
-      }
+      await login(data);
+      navigate('/', { replace: true });
     } catch {
       setSubmitError('Invalid email or password');
     }

@@ -3,17 +3,20 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './providers/auth.service';
 import { SignInDto } from './dtos/signIn.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
-import { JwtAuthGuard } from './guards/jwt.guard';
 import { AccessTokenGuard } from './guards/access-token.guard';
+import { ActiveUser } from './decorators/active-user.decorator';
+import { ChangePasswordDto } from './dtos/change-password.dto';
+import type { ChangePasswordResponse } from './providers/change-password.provider';
 
 @Controller('auth')
 export class AuthController {
@@ -28,17 +31,32 @@ export class AuthController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AccessTokenGuard)
   @Post('logout')
   public logout(
+    @ActiveUser('id') activeUserId: string,
     @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
   ) {
-    return this.authService.logout(res);
+    return this.authService.logout(activeUserId, res);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('refresh-token')
-  public async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshToken(refreshTokenDto);
+  public async refreshToken(
+    @Req() req: Request,
+    @Body() refreshTokenDto: RefreshTokenDto,
+    @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
+  ) {
+    const refreshToken =
+      typeof req.cookies?.refreshToken === 'string'
+        ? req.cookies.refreshToken
+        : refreshTokenDto.refreshToken;
+
+    if (!refreshToken) {
+      return this.authService.refreshToken('', res);
+    }
+
+    return this.authService.refreshToken(refreshToken, res);
   }
 
   @Post('forgot-password')
@@ -47,8 +65,17 @@ export class AuthController {
   }
 
   @UseGuards(AccessTokenGuard)
+  @Patch('change-password')
+  public changePassword(
+    @ActiveUser('id') activeUserId: string,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ): Promise<ChangePasswordResponse> {
+    return this.authService.changePassword(activeUserId, changePasswordDto);
+  }
+
+  @UseGuards(AccessTokenGuard)
   @Post('active-account')
-  public async activeAccount(@Req() req) {
-    return this.authService.activeAccount(req.user.email);
+  public async activeAccount(@ActiveUser('email') activeUserEmail: string) {
+    return this.authService.activeAccount(activeUserEmail);
   }
 }

@@ -37,12 +37,28 @@ async function main() {
     });
   }
 
-  await prisma.user.create({
-    data: {
+  await prisma.user.upsert({
+    where: {
       email: 'bekatavkhelidze41@gmail.com',
-      password: await bcrypt.hash('beqabeqa', salt),
+    },
+    update: {
+      firstName: 'Beka',
+      lastName: 'Tavkhelidze',
       role: UserRole.SUPER_ADMIN,
       isActive: true,
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
+    },
+    create: {
+      firstName: 'Beka',
+      lastName: 'Tavkhelidze',
+      email: 'bekatavkhelidze41@gmail.com',
+      password: await bcrypt.hash('beqabeqa', salt),
+      hashedRefreshToken: null,
+      role: UserRole.SUPER_ADMIN,
+      isActive: true,
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
     },
   });
 }

@@ -7,7 +7,9 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import {
   ApiTags,
   ApiOperation,
@@ -19,12 +21,17 @@ import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServiceLanguage } from './enums/service-language';
+import { AccessTokenGuard } from '../auth/guards/access-token.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('services')
 @Controller('services')
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Post()
   @ApiOperation({ summary: 'Create service translation' })
   @ApiBody({ type: CreateServiceDto })
@@ -55,6 +62,8 @@ export class ServicesController {
     return this.servicesService.findOne(id);
   }
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Patch(':id')
   @ApiOperation({ summary: 'Update service translation by ID' })
   @ApiParam({
@@ -67,6 +76,8 @@ export class ServicesController {
     return this.servicesService.update(id, updateServiceDto);
   }
 
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete service translation by ID' })
   @ApiParam({

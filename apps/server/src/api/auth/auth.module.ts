@@ -13,10 +13,14 @@ import { GenerateTokenProvider } from './providers/generate-tokens.provider';
 import { RefreshTokenProvider } from './providers/refresh-tokens.provider';
 import jwtConfig from 'src/config/jwt.config';
 import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './strategies/jwt.strategy';
+
 import { PrismaModule } from 'src/infra/infra/prisma/prisma.module';
 import { ActiveUserProvider } from './providers/active-user.provider';
 import { LogoutProvider } from './providers/logout.provider';
+import { ChangePasswordProvider } from './providers/change-password.provider';
+import { AccessTokenGuard } from './guards/access-token.guard';
+import { ActiveUserGuard } from './guards/active-user.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   controllers: [AuthController],
@@ -29,9 +33,12 @@ import { LogoutProvider } from './providers/logout.provider';
     SignInProvider,
     GenerateTokenProvider,
     RefreshTokenProvider,
-    JwtStrategy,
     ActiveUserProvider,
     LogoutProvider,
+    ChangePasswordProvider,
+    AccessTokenGuard,
+    ActiveUserGuard,
+    RolesGuard,
   ],
   imports: [
     UsersModule,
@@ -47,6 +54,6 @@ import { LogoutProvider } from './providers/logout.provider';
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  exports: [PassportModule],
+  exports: [PassportModule, AccessTokenGuard, ActiveUserGuard, RolesGuard],
 })
 export class AuthModule {}

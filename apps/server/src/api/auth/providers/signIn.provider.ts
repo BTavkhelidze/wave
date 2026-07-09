@@ -3,9 +3,11 @@ import type { CookieOptions, Response } from 'express';
 import { HashProvider } from './hash.provider';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AdminAction, AdminEntity } from '@prisma/client';
 import { SignInDto } from '../dtos/signIn.dto';
 import { UsersService } from 'src/api/users/providers/users.service';
 import { GenerateTokenProvider } from './generate-tokens.provider';
+import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 
 @Injectable()
 export class SignInProvider {
@@ -14,6 +16,7 @@ export class SignInProvider {
     private readonly hashProvider: HashProvider,
     private readonly generateTokenProvider: GenerateTokenProvider,
     private readonly configService: ConfigService,
+    private readonly prismaService: PrismaService,
   ) {}
   public async signIn(
     signInDto: SignInDto,
@@ -27,6 +30,10 @@ export class SignInProvider {
     if (!user.password)
       throw new UnauthorizedException('Email or password is incorrect');
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive');
+    }
+
     const isPasswordValid = await this.hashProvider.comparePassword(
       signInDto.password,
       user.password,
@@ -39,7 +46,25 @@ export class SignInProvider {
       tokens.refreshToken,
     );
 
-    await this.userService.updateUserRefreshToken(user.id, hashedRefreshToken);
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          hashedRefreshToken,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          userId: user.id,
+          action: AdminAction.LOGIN,
+          entity: AdminEntity.USER,
+          entityId: user.id,
+        },
+      });
+    });
 
     const isProduction =
       this.configService.get<string>('appConfig.environment') === 'production';

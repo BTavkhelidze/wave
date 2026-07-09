@@ -28,6 +28,7 @@ enum AdminAction {
   CREATE
   UPDATE
   DELETE
+  PASSWORD_CHANGE
   LOGIN
   LOGOUT
   PUBLISH
@@ -43,20 +44,30 @@ enum AdminEntity {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password String? 
-  refreshToken String? @map("refresh_token") 
-  role      UserRole @default(ADMIN)
-  isActive  Boolean  @default(true)
-  lastLogin DateTime? @map("last_login") @db.Timestamptz(6)
+  id        String @id @default(uuid())
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+  email     String @unique
+
+  password           String?
+  hashedRefreshToken String? @map("hashed_refresh_token")
+
+  role     UserRole @default(ADMIN)
+  isActive Boolean  @default(true) @map("is_active")
+
+  mustChangePassword Boolean @default(true) @map("must_change_password")
+
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz(6)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   blogs Blog[]
   logs  AdminLog[]
 
+  @@index([role])
+  @@index([isActive])
   @@map("users")
 }
 
