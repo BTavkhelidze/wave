@@ -1,4 +1,4 @@
 export enum ServiceLanguage {
-  EN,
-  KA,
+  EN = 'EN',
+  KA = 'KA',
 }

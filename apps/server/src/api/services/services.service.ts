@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
-import { Language } from '@prisma/client';
+import { Language, Prisma } from '@prisma/client';
 import { ServiceLanguage } from './enums/service-language';
 
 @Injectable()
@@ -40,7 +40,13 @@ export class ServicesService {
     }
   }
 
-  async findAll(language: ServiceLanguage) {
+  async findAll(language?: ServiceLanguage) {
+    const where: Prisma.ServiceTranslationWhereInput = language
+      ? {
+          language: language as Language,
+        }
+      : {};
+
     try {
       const services = await this.prisma.serviceTranslation.findMany({
         include: {
@@ -52,9 +58,7 @@ export class ServicesService {
           },
         },
 
-        where: {
-          language: language as unknown as Language,
-        },
+        where,
       });
       return services;
     } catch (error) {
