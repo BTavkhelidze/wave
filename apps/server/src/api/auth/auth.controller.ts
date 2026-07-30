@@ -9,6 +9,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from './providers/auth.service';
 import { SignInDto } from './dtos/signIn.dto';
@@ -17,7 +23,12 @@ import { AccessTokenGuard } from './guards/access-token.guard';
 import { ActiveUser } from './decorators/active-user.decorator';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import type { ChangePasswordResponse } from './providers/change-password.provider';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import type { ForgotPasswordResponse } from './providers/forgot-password.provider';
+import type { ResetPasswordResponse } from './providers/reset-password.provider';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -59,9 +70,32 @@ export class AuthController {
     return this.authService.refreshToken(refreshToken, res);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('forgot-password')
-  public async forgotPassword() {
-    // return this.authService.forgotPassword();
+  @ApiOperation({ summary: 'Request password reset instructions' })
+  @ApiBody({ type: ForgotPasswordDto })
+  @ApiOkResponse({
+    description: 'Generic response returned regardless of account existence.',
+  })
+  public async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+    @Req() req: Request,
+  ): Promise<ForgotPasswordResponse> {
+    return this.authService.forgotPassword(forgotPasswordDto, req.ip);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using a password reset token' })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkResponse({
+    description: 'Password was reset successfully.',
+  })
+  public async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+    @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
+  ): Promise<ResetPasswordResponse> {
+    return this.authService.resetPassword(resetPasswordDto, res);
   }
 
   @UseGuards(AccessTokenGuard)

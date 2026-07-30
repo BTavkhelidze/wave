@@ -9,7 +9,6 @@ import { FindUserByIdProvider } from './providers/findUserById.provider';
 import { UpdateUserRefreshTokenProvider } from './providers/updateUserRefreshToken.provider';
 import { UpdateUserActiveStatusProvider } from './providers/updateUserActiveStatus.provider';
 import jwtConfig from 'src/config/jwt.config';
-import { SuperAdminGuard } from '../auth/guards/super-admin.guard';
 import { HashProvider } from '../auth/providers/hash.provider';
 import { BcryptProvider } from '../auth/providers/bcrypt.provider';
 import { CreateUserByAdminProvider } from './providers/createUserByAdmin.provider';
@@ -41,7 +40,6 @@ import { DeleteUserByAdminProvider } from './providers/delete-user-by-admin.prov
     AccessTokenGuard,
     ActiveUserGuard,
     RolesGuard,
-    SuperAdminGuard,
   ],
   exports: [
     UsersService,

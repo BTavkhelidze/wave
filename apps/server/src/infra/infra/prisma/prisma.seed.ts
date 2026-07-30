@@ -28,7 +28,7 @@ async function main() {
         iconColor: service.iconColor?.trim() ?? null,
         translations: {
           create: service.translations.map((translation) => ({
-            language: translation.language as unknown as Language,
+            language: translation.language,
             title: translation.title.trim(),
             description: translation.description?.trim() ?? null,
           })),

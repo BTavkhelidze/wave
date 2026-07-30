@@ -11,6 +11,16 @@ import {
   ChangePasswordProvider,
   type ChangePasswordResponse,
 } from './change-password.provider';
+import { ForgotPasswordDto } from '../dtos/forgot-password.dto';
+import {
+  ForgotPasswordProvider,
+  type ForgotPasswordResponse,
+} from './forgot-password.provider';
+import { ResetPasswordDto } from '../dtos/reset-password.dto';
+import {
+  ResetPasswordProvider,
+  type ResetPasswordResponse,
+} from './reset-password.provider';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +30,8 @@ export class AuthService {
     private readonly activeUserProvider: ActiveUserProvider,
     private readonly logoutProvider: LogoutProvider,
     private readonly changePasswordProvider: ChangePasswordProvider,
+    private readonly forgotPasswordProvider: ForgotPasswordProvider,
+    private readonly resetPasswordProvider: ResetPasswordProvider,
   ) {}
   public async signIn(
     signInDto: SignInDto,
@@ -51,5 +63,22 @@ export class AuthService {
       activeUserId,
       changePasswordDto,
     );
+  }
+
+  public forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+    requestIp?: string,
+  ): Promise<ForgotPasswordResponse> {
+    return this.forgotPasswordProvider.forgotPassword(
+      forgotPasswordDto,
+      requestIp,
+    );
+  }
+
+  public resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+    res: Response<any, Record<string, any>>,
+  ): Promise<ResetPasswordResponse> {
+    return this.resetPasswordProvider.resetPassword(resetPasswordDto, res);
   }
 }

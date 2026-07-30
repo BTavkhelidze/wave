@@ -87,7 +87,8 @@ export class ServicesService {
     if (dto.icon !== undefined || dto.iconColor !== undefined) {
       data.service = { update: {} };
       if (dto.icon !== undefined) data.service.update.icon = dto.icon;
-      if (dto.iconColor !== undefined) data.service.update.iconColor = dto.iconColor;
+      if (dto.iconColor !== undefined)
+        data.service.update.iconColor = dto.iconColor;
     }
 
     try {

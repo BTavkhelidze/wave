@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useEffect } from 'react';
 import {
   fetchCurrentUser,
   loginUser,
@@ -7,19 +7,24 @@ import {
   type LoginCredentials,
   type User,
 } from '../auth/api/auth';
+import {
+  isAuthRequestError,
+  subscribeToSessionExpired,
+} from '../../src/shared/api/httpClient';
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
-const authQueryKey = ['auth', 'me'] as const;
+export const authQueryKey = ['auth', 'me'] as const;
 
 const AuthContext = createContext<
   | {
       user: User | null | undefined;
       isLoading: boolean;
-      login: (credentials: LoginCredentials) => Promise<void>;
+      login: (credentials: LoginCredentials) => Promise<User>;
       logout: () => Promise<void>;
+      refreshCurrentUser: () => Promise<User>;
     }
   | undefined
 >(undefined);
@@ -28,23 +33,43 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
   const { data: user, isLoading } = useQuery({
     queryKey: authQueryKey,
-    queryFn: fetchCurrentUser,
+    queryFn: fetchCurrentUserOrNull,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  const login = async (credentials: LoginCredentials) => {
-    await loginUser(credentials);
+  useEffect(() => {
+    return subscribeToSessionExpired(() => {
+      void queryClient.cancelQueries({ queryKey: authQueryKey });
+      queryClient.setQueryData(authQueryKey, null);
+    });
+  }, [queryClient]);
+
+  const refreshCurrentUser = async () => {
     const currentUser = await fetchCurrentUser();
 
     queryClient.setQueryData(authQueryKey, currentUser);
+
+    return currentUser;
+  };
+
+  const login = async (credentials: LoginCredentials) => {
+    await loginUser(credentials);
+
+    return refreshCurrentUser();
   };
 
   const logout = async () => {
-    await logoutUser();
-
-    queryClient.setQueryData(authQueryKey, null);
-    queryClient.removeQueries({ queryKey: authQueryKey });
+    try {
+      await logoutUser();
+    } catch (error) {
+      if (!isAuthRequestError(error)) {
+        throw error;
+      }
+    } finally {
+      await queryClient.cancelQueries({ queryKey: authQueryKey });
+      queryClient.setQueryData(authQueryKey, null);
+    }
   };
 
   return (
@@ -54,12 +79,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         login,
         logout,
+        refreshCurrentUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+async function fetchCurrentUserOrNull(): Promise<User | null> {
+  try {
+    return await fetchCurrentUser();
+  } catch (error) {
+    if (isAuthRequestError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+}
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);

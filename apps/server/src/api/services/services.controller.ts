@@ -40,6 +40,8 @@ export class ServicesController {
   }
 
   @Get()
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
   @ApiOperation({ summary: 'Get all services by language' })
   @ApiQuery({
     name: 'language',
@@ -52,6 +54,8 @@ export class ServicesController {
   }
 
   @Get(':id')
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
   @ApiOperation({ summary: 'Get one service translation by ID' })
   @ApiParam({
     name: 'id',

@@ -4,7 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { AdminAction, AdminEntity } from '@prisma/client';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
@@ -41,14 +40,8 @@ export class ChangePasswordProvider {
         throw new NotFoundException('User not found');
       }
 
-      const isCurrentPasswordValid =
-        await this.hashProvider.comparePassword(
-          changePasswordDto.currentPassword,
-          user.password,
-        );
-
-      if (!isCurrentPasswordValid) {
-        throw new UnauthorizedException('Current password is incorrect');
+      if (!user.password) {
+        throw new BadRequestException('User does not have a password set');
       }
 
       const isSamePassword = await this.hashProvider.comparePassword(

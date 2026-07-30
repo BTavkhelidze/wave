@@ -5,6 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { useAuth } from '../context/AuthContext';
+import {
+  ADMIN_DEFAULT_ROUTE,
+  ADMIN_ROUTE_PATHS,
+} from '../../src/app/router/routes.constants';
 import { LoginSchema } from './schema/LoginShcema';
 
 type LoginFormValues = z.infer<typeof LoginSchema>;
@@ -29,8 +33,13 @@ function Login() {
     setSubmitError(null);
 
     try {
-      await login(data);
-      navigate('/', { replace: true });
+      const user = await login(data);
+      navigate(
+        user.mustChangePassword
+          ? ADMIN_ROUTE_PATHS.changeInitialPassword
+          : ADMIN_DEFAULT_ROUTE,
+        { replace: true },
+      );
     } catch {
       setSubmitError('Invalid email or password');
     }
