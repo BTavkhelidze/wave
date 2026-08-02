@@ -59,10 +59,10 @@ export class PasswordResetEmailService {
 
     return Boolean(
       mail.from &&
-        mail.smtp.host &&
-        mail.smtp.port &&
-        mail.smtp.user &&
-        mail.smtp.password,
+      mail.smtp.host &&
+      mail.smtp.port &&
+      mail.smtp.user &&
+      mail.smtp.password,
     );
   }
 }

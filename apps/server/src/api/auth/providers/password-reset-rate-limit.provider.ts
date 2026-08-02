@@ -18,8 +18,7 @@ export class PasswordResetRateLimitProvider {
 
   public consume(key: string): void {
     const now = Date.now();
-    const windowMs =
-      this.appConfiguration.passwordReset.rateLimit.windowMs;
+    const windowMs = this.appConfiguration.passwordReset.rateLimit.windowMs;
     const maxRequests =
       this.appConfiguration.passwordReset.rateLimit.maxRequests;
     const current = this.requests.get(key);

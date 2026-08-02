@@ -15,8 +15,7 @@ export type ResetPasswordResponse = {
   message: string;
 };
 
-const INVALID_RESET_TOKEN_MESSAGE =
-  'Invalid or expired password reset token';
+const INVALID_RESET_TOKEN_MESSAGE = 'Invalid or expired password reset token';
 
 @Injectable()
 export class ResetPasswordProvider {

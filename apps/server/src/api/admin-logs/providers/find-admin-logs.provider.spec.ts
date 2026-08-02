@@ -28,7 +28,10 @@ describe('FindAdminLogsProvider', () => {
 
   let prismaService: {
     adminLog: {
-      findMany: jest.Mock<Promise<AdminLogItem[]>, [Prisma.AdminLogFindManyArgs]>;
+      findMany: jest.Mock<
+        Promise<AdminLogItem[]>,
+        [Prisma.AdminLogFindManyArgs]
+      >;
       count: jest.Mock<Promise<number>, [Prisma.AdminLogCountArgs]>;
     };
     $transaction: jest.Mock<
@@ -46,8 +49,9 @@ describe('FindAdminLogsProvider', () => {
       },
       $transaction: jest
         .fn()
-        .mockImplementation(async (operations) =>
-          Promise.all(operations) as Promise<[AdminLogItem[], number]>,
+        .mockImplementation(
+          async (operations) =>
+            Promise.all(operations) as Promise<[AdminLogItem[], number]>,
         ),
     };
     provider = new FindAdminLogsProvider(

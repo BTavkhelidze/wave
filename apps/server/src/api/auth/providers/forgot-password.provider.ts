@@ -84,8 +84,7 @@ export class ForgotPasswordProvider {
       await this.passwordResetEmailService.sendPasswordResetEmail({
         to: user.email,
         resetUrl: this.buildResetUrl(rawToken),
-        expiresInMinutes:
-          this.appConfiguration.passwordReset.expiresInMinutes,
+        expiresInMinutes: this.appConfiguration.passwordReset.expiresInMinutes,
       });
 
       return this.buildGenericResponse();
@@ -112,7 +111,10 @@ export class ForgotPasswordProvider {
   }
 
   private buildResetUrl(rawToken: string): string {
-    const resetUrl = new URL('/reset-password', this.appConfiguration.frontendUrl);
+    const resetUrl = new URL(
+      '/reset-password',
+      this.appConfiguration.frontendUrl,
+    );
     resetUrl.searchParams.set('token', rawToken);
 
     return resetUrl.toString();

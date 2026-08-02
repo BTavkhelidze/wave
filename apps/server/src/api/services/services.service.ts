@@ -43,7 +43,7 @@ export class ServicesService {
   async findAll(language?: ServiceLanguage) {
     const where: Prisma.ServiceTranslationWhereInput = language
       ? {
-          language: language as Language,
+          language: language,
         }
       : {};
 

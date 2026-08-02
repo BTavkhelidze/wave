@@ -73,7 +73,9 @@ export class AdminLogsController {
   })
   @ApiOkResponse({ type: AdminLogsResponseDto })
   @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
-  @ApiForbiddenResponse({ description: 'Only SUPER_ADMIN users can access logs.' })
+  @ApiForbiddenResponse({
+    description: 'Only SUPER_ADMIN users can access logs.',
+  })
   public findAdminLogs(
     @Query() query: FindAdminLogsQueryDto,
   ): Promise<FindAdminLogsResponse> {

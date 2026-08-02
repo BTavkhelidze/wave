@@ -75,7 +75,7 @@ describe('ForgotPasswordProvider', () => {
     };
     provider = new ForgotPasswordProvider(
       prismaService as unknown as PrismaService,
-      tokenProvider as unknown as PasswordResetTokenProvider,
+      tokenProvider,
       emailService as unknown as PasswordResetEmailService,
       rateLimitProvider as unknown as PasswordResetRateLimitProvider,
       appConfiguration as never,
@@ -112,8 +112,7 @@ describe('ForgotPasswordProvider', () => {
     });
     expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
       to: user.email,
-      resetUrl:
-        'http://localhost:5173/reset-password?token=raw-reset-token',
+      resetUrl: 'http://localhost:5173/reset-password?token=raw-reset-token',
       expiresInMinutes: 30,
     });
     expect(JSON.stringify(response)).not.toContain('raw-reset-token');

@@ -4,6 +4,16 @@ const DEFAULT_API_PREFIX = 'api';
 const DEFAULT_HTTP_PORT = 3000;
 const DEFAULT_PASSWORD_RESET_EXPIRES_MINUTES = 30;
 
+function getRequiredString(name: string): string {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+
+  return value;
+}
+
 function parseHttpPort(value: string | undefined): number {
   const port = Number(value?.trim() || DEFAULT_HTTP_PORT);
 
@@ -49,6 +59,13 @@ export default registerAs('appConfig', () => {
         user: process.env.SMTP_USER?.trim(),
         password: process.env.SMTP_PASSWORD?.trim(),
       },
+    },
+    hetznerS3: {
+      endpoint: getRequiredString('HETZNER_S3_ENDPOINT'),
+      region: getRequiredString('HETZNER_S3_REGION'),
+      bucket: getRequiredString('HETZNER_S3_BUCKET'),
+      accessKey: getRequiredString('HETZNER_S3_ACCESS_KEY'),
+      secretKey: getRequiredString('HETZNER_S3_SECRET_KEY'),
     },
     passwordReset: {
       expiresInMinutes: passwordResetExpiresInMinutes,

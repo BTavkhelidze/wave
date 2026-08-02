@@ -60,8 +60,7 @@ export class FindAdminLogsProvider {
         this.prismaService.adminLog.findMany({
           where,
           orderBy: {
-            createdAt:
-              query.sortOrder ?? query.sort ?? AdminLogSortOrder.DESC,
+            createdAt: query.sortOrder ?? query.sort ?? AdminLogSortOrder.DESC,
           },
           skip: (page - 1) * limit,
           take: limit,
