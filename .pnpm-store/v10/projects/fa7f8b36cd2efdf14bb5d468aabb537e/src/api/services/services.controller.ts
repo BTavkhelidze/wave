@@ -1,0 +1,97 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiParam,
+  ApiBody,
+} from '@nestjs/swagger';
+import { ServicesService } from './services.service';
+import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
+import { ServiceLanguage } from './enums/service-language';
+import { FindServicesQueryDto } from './dto/find-services-query.dto';
+import { AccessTokenGuard } from '../auth/guards/access-token.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
+@ApiTags('services')
+@Controller('services')
+export class ServicesController {
+  constructor(private readonly servicesService: ServicesService) {}
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Post()
+  @ApiOperation({ summary: 'Create service translation' })
+  @ApiBody({ type: CreateServiceDto })
+  create(@Body() createServiceDto: CreateServiceDto) {
+    return this.servicesService.create(createServiceDto);
+  }
+
+  @Get()
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @ApiOperation({ summary: 'Get all services by language' })
+  @ApiQuery({
+    name: 'language',
+    required: false,
+    enum: ServiceLanguage,
+    example: ServiceLanguage.EN,
+    description: 'Service language, for example EN or KA',
+  })
+  findAll(@Query() query: FindServicesQueryDto) {
+    return this.servicesService.findAll(query.language);
+  }
+
+  @Get(':id')
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @ApiOperation({ summary: 'Get one service translation by ID' })
+  @ApiParam({
+    name: 'id',
+    example: 1,
+    description: 'Service translation ID',
+  })
+  findOne(@Param('id') id: string) {
+    return this.servicesService.findOne(id);
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update service translation by ID' })
+  @ApiParam({
+    name: 'id',
+    example: 1,
+    description: 'Service translation ID',
+  })
+  @ApiBody({ type: UpdateServiceDto })
+  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+    return this.servicesService.update(id, updateServiceDto);
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete service translation by ID' })
+  @ApiParam({
+    name: 'id',
+    example: 1,
+    description: 'Service translation ID',
+  })
+  remove(@Param('id') id: string) {
+    return this.servicesService.remove(id);
+  }
+}
