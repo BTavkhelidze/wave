@@ -9,16 +9,32 @@ import PublicRoute from '../../../features/routes/PublicRoute';
 import { RoleProtectedRoute } from '../../../features/routes/RoleProtectedRoute';
 import { AnalyticsPage } from '../../../features/analytics/pages/AnalyticsPage';
 import { AdminLogsPage } from '../../../features/admin-logs';
+import { CreateBlogPage } from '../../../features/blogs/create-blog';
 import { BlogsPage } from '../../../features/blogs/pages/BlogsPage';
+import { PublicBlogDetailPage } from '../../../features/blogs/pages/PublicBlogDetailPage';
+import { PublicBlogsPage } from '../../../features/blogs/pages/PublicBlogsPage';
 import { ServicesPage } from '../../../features/services/pages/ServicesPage';
 import { CreateUserPage } from '../../../features/users/create-user';
 import { UsersPage } from '../../../features/users/users-page';
-import { ADMIN_DEFAULT_ROUTE, ADMIN_ROUTE_PATHS } from './routes.constants';
+import {
+  ADMIN_DEFAULT_ROUTE,
+  ADMIN_ROUTE_PATHS,
+  PUBLIC_ROUTE_PATHS,
+} from './routes.constants';
 import { ADMIN_ROUTE_ACCESS } from './routes.permissions';
 
 export function AppRoutes() {
   return (
     <Routes>
+      <Route
+        path={PUBLIC_ROUTE_PATHS.blogs}
+        element={<PublicBlogsPage />}
+      />
+      <Route
+        path={PUBLIC_ROUTE_PATHS.blogDetail}
+        element={<PublicBlogDetailPage />}
+      />
+
       <Route
         path='/login'
         element={
@@ -112,6 +128,16 @@ export function AppRoutes() {
               allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.blogs]}
             >
               <BlogsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.createBlog.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.createBlog]}
+            >
+              <CreateBlogPage />
             </RoleProtectedRoute>
           }
         />

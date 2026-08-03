@@ -43,6 +43,11 @@ enum AdminEntity {
   CONTACT_MESSAGE
 }
 
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+
 model User {
   id        String @id @default(uuid())
   firstName String @map("first_name")
@@ -63,7 +68,6 @@ model User {
 
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  blogs Blog[]
   logs  AdminLog[]
   passwordResetTokens PasswordResetToken[]
 
@@ -120,41 +124,26 @@ model ServiceTranslation {
 }
 
 model Blog {
-  id          String  @id @default(uuid())
-  slug        String  @unique
-  coverImage  String? @map("cover_image")
-  isPublished Boolean @default(false) @map("is_published")
+  id            String     @id @default(uuid())
+  title         String
+  slug          String     @unique
+  excerpt       String     @db.Text
+  content       String     @db.Text
+  coverImageKey String     @map("cover_image_key")
+  coverImageUrl String     @map("cover_image_url")
+  language      Language
+  status        BlogStatus @default(DRAFT)
+  isFeatured    Boolean    @default(false) @map("is_featured")
+  publishedAt   DateTime?  @map("published_at") @db.Timestamptz(6)
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  authorId String? @map("author_id")
-
-  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
-
-  author       User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  translations BlogTranslation[]
-
-  @@index([isPublished])
-  @@index([publishedAt])
-  @@index([authorId])
-  @@map("blogs")
-}
-
-model BlogTranslation {
-  id       String   @id @default(uuid())
-  blogId   String   @map("blog_id")
-  language Language
-  title    String
-  excerpt  String?  @db.VarChar(255)
-  content  String   @db.Text
-
-  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
-
-  @@unique([blogId, language])
   @@index([language])
-  @@index([blogId])
-  @@map("blog_translations")
+  @@index([status])
+  @@index([isFeatured])
+  @@index([publishedAt])
+  @@index([createdAt])
+  @@map("blogs")
 }
 
 model ContactMessage {
