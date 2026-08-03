@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "set NODE_ENV=development && nest start --watch",
-    "build": "nest build",
+    "build": "prisma generate --config prisma.config.ts && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -34,6 +34,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.2",
+    "@prisma/adapter-pg": "7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
