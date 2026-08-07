@@ -9,6 +9,17 @@ import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { Language, Prisma } from '@prisma/client';
 import { ServiceLanguage } from './enums/service-language';
 
+export interface PublicServiceResponse {
+  id: string;
+  title_ka?: string;
+  title_en?: string;
+  description_ka?: string;
+  description_en?: string;
+  icon: string;
+  iconColor: string;
+  colors: string[];
+}
+
 @Injectable()
 export class ServicesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -99,6 +110,48 @@ export class ServicesService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async findPublic(): Promise<PublicServiceResponse[]> {
+    const services = await this.prisma.service.findMany({
+      where: {
+        isActive: true,
+        deletedAt: null,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        id: true,
+        icon: true,
+        iconColor: true,
+        translations: {
+          select: {
+            language: true,
+            title: true,
+            description: true,
+          },
+        },
+      },
+    });
+
+    return services.map((service) => {
+      const kaTranslation = service.translations.find(
+        (translation) => translation.language === Language.KA,
+      );
+      const enTranslation = service.translations.find(
+        (translation) => translation.language === Language.EN,
+      );
+
+      return {
+        id: service.id,
+        title_ka: kaTranslation?.title,
+        title_en: enTranslation?.title,
+        description_ka: kaTranslation?.description,
+        description_en: enTranslation?.description,
+        icon: service.icon,
+        iconColor: service.iconColor,
+        colors: [],
+      };
+    });
   }
 
   async findOne(id: string) {

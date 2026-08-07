@@ -20,7 +20,7 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { ServicesService } from './services.service';
+import { PublicServiceResponse, ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServiceLanguage } from './enums/service-language';
@@ -56,6 +56,28 @@ export class ServicesController {
   })
   findAll(@Query() query: FindServicesQueryDto) {
     return this.servicesService.findAll(query.language);
+  }
+
+  @Get('public')
+  @ApiOperation({ summary: 'Get public active services' })
+  @ApiOkResponse({
+    schema: {
+      example: [
+        {
+          id: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+          title_ka: 'Service title in Georgian',
+          title_en: 'Service title in English',
+          description_ka: 'Service description in Georgian',
+          description_en: 'Service description in English',
+          icon: 'FaTools',
+          iconColor: '#3B82F6',
+          colors: [],
+        },
+      ],
+    },
+  })
+  findPublic(): Promise<PublicServiceResponse[]> {
+    return this.servicesService.findPublic();
   }
 
   @Post(':id/view')

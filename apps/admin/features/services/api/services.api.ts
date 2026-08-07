@@ -6,6 +6,7 @@ import type {
 
 export function fetchServices(
   params: ServiceListQueryParams,
+  signal?: AbortSignal,
 ): Promise<ServiceListItemData[]> {
   const searchParams = new URLSearchParams();
 
@@ -17,5 +18,6 @@ export function fetchServices(
 
   return apiRequest<ServiceListItemData[]>(
     `/services${queryString ? `?${queryString}` : ''}`,
+    { signal },
   );
 }

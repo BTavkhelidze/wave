@@ -6,9 +6,13 @@ import * as FaIcons from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 import { WavyBackground } from '../ui/wavy-background';
-import { IServices } from '@/Interface/Interface';
 import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
+import { usePublicServicesQuery } from './services.queries';
+import {
+  getLocalizedServiceDescription,
+  getLocalizedServiceTitle,
+} from './services.locale';
 
 interface SingleServiceProps {
   service: string;
@@ -17,70 +21,95 @@ interface SingleServiceProps {
 function SingleService({ service }: SingleServiceProps) {
   const [curIndex, setCurIndex] = useState<number | null>(null);
   const [isHover, setIsHover] = useState<boolean>(false);
+  const locale = useLocale();
 
   const {
     data: services,
-    isFetching,
+    isPending,
     isError,
-  } = useQuery<IServices[]>({
-    queryKey: ['services'],
-    queryFn: async () => {
-      const res = await fetch('/api/Services');
-      return res.json();
-    },
-  });
+  } = usePublicServicesQuery(locale);
 
   useEffect(() => {
     if (!services) return;
 
-    const index = services.findIndex((el) => el.id === +service);
+    const index = services.findIndex((el) => el.id === service);
 
-    if (index !== -1) {
-      setCurIndex(index);
-    } else {
-      setCurIndex(0);
-    }
+    setCurIndex(index);
   }, [service, services]);
 
-  if (isFetching || curIndex === null)
+  if (isPending)
     return (
-      <div className='absolute z-60 inset-0 bg-[#0B1012] flex items-center justify-center'>
+      <div
+        className='absolute z-60 inset-0 bg-[#0B1012] flex items-center justify-center'
+        role='status'
+        aria-live='polite'
+      >
         <p>Loading...</p>
       </div>
     );
 
-  const currentService = services![curIndex];
-
-  const IconComponent =
-    FaIcons[currentService.icon as keyof typeof FaIcons] || FaIcons.FaTools;
-
-  const handlePrev = () => {
-    if (curIndex > 0) {
-      setCurIndex((prev) => prev! - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (curIndex < services!.length - 1) {
-      setCurIndex((prev) => prev! + 1);
-    }
-  };
   if (isError)
     return (
-      <div className='absolute z-60 inset-0 flex items-center justify-center'>
+      <div
+        className='absolute z-60 inset-0 flex items-center justify-center'
+        role='alert'
+      >
         <p className='text-white'>Error loading service.</p>
       </div>
     );
 
+  if (curIndex === null)
+    return (
+      <div
+        className='absolute z-60 inset-0 bg-[#0B1012] flex items-center justify-center'
+        role='status'
+        aria-live='polite'
+      >
+        <p>Loading...</p>
+      </div>
+    );
+
+  const currentService =
+    services && curIndex >= 0 ? services[curIndex] : undefined;
+
+  if (!currentService)
+    return (
+      <div
+        className='absolute z-60 inset-0 flex items-center justify-center'
+        role='status'
+      >
+        <p className='text-white'>Service not found.</p>
+      </div>
+    );
+
+  const IconComponent =
+    FaIcons[currentService.icon as keyof typeof FaIcons] || FaIcons.FaTools;
+  const serviceTitle =
+    getLocalizedServiceTitle(currentService, locale) ?? 'Service';
+  const serviceDescription =
+    getLocalizedServiceDescription(currentService, locale) ?? '';
+
+  const handlePrev = () => {
+    if (curIndex > 0) {
+      setCurIndex((prev) => (prev === null ? prev : prev - 1));
+    }
+  };
+
+  const handleNext = () => {
+    if (services && curIndex < services.length - 1) {
+      setCurIndex((prev) => (prev === null ? prev : prev + 1));
+    }
+  };
+
   return (
-    <main className='max-w-[1440px] overflow-hidden mx-auto px-[2%] pt-30 flex flex-col h-screen '>
+    <article className='max-w-[1440px] overflow-hidden mx-auto px-[2%] pt-30 flex flex-col min-h-screen'>
       <Link
-        href='/services'
-        className='flex gap-2 items-center '
+        href={`/${locale}/services`}
+        className='flex gap-2 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012] w-fit'
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
       >
-        <FaIcons.FaAngleLeft />
+        <FaIcons.FaAngleLeft aria-hidden='true' focusable='false' />
         <motion.span
           initial={{ x: 0 }}
           animate={isHover ? { x: 10 } : { x: 0 }}
@@ -90,11 +119,17 @@ function SingleService({ service }: SingleServiceProps) {
         </motion.span>
       </Link>
 
-      <section className='w-full  overflow-hidden overflow-y-visible flex-1 flex flex-col items-center  text-center   justify-center  '>
-        <div className='mb-4 absolute  overflow-hidden -top-50 left-0 w-full h-full -z-1'>
+      <section
+        className='w-full overflow-hidden overflow-y-visible flex-1 flex flex-col items-center text-center justify-center'
+        aria-labelledby='service-title'
+      >
+        <div
+          className='mb-4 absolute  overflow-hidden -top-50 left-0 w-full h-full -z-1'
+          aria-hidden='true'
+        >
           <WavyBackground
             className='w-full h-[10%]'
-            colors={currentService?.colors}
+            colors={currentService.colors}
           ></WavyBackground>
         </div>
 
@@ -105,12 +140,17 @@ function SingleService({ service }: SingleServiceProps) {
           <IconComponent
             className={cn(`text-2xl md:text-4xl self-center mt-10`)}
             style={{ color: `${currentService.iconColor}` }}
+            aria-hidden='true'
+            focusable='false'
           />
-          <h2 className='text-lg sm:text-xl md:text-4xl lg:text-3xl font-bold inter-var text-center text-white '>
-            {currentService?.title_ka || currentService?.title_en}
-          </h2>
-          <p className='text-sm sm:text-base text-[#898D8E]'>
-            {currentService?.description_ka || currentService?.description_en}
+          <h1
+            className='text-lg sm:text-xl md:text-4xl lg:text-3xl font-bold inter-var text-center text-white break-words leading-tight'
+            id='service-title'
+          >
+            {serviceTitle}
+          </h1>
+          <p className='text-sm sm:text-base text-[#898D8E] break-words leading-relaxed'>
+            {serviceDescription}
           </p>
         </div>
 
@@ -121,28 +161,30 @@ function SingleService({ service }: SingleServiceProps) {
               whileHover={{ y: -2 }}
               type='button'
               title='Prev'
-              className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer'
+              aria-label='Previous service'
+              className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
               onClick={handlePrev}
             >
-              <FaIcons.FaAngleLeft /> PREV
+              <FaIcons.FaAngleLeft aria-hidden='true' focusable='false' /> PREV
             </motion.button>
           )}
 
-          {curIndex < services!.length - 1 && (
+          {services && curIndex < services.length - 1 && (
             <motion.button
               initial={{ y: 0 }}
               whileHover={{ y: -2 }}
               type='button'
               title='Next'
-              className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer'
+              aria-label='Next service'
+              className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
               onClick={handleNext}
             >
-              NEXT <FaIcons.FaAngleRight />
+              NEXT <FaIcons.FaAngleRight aria-hidden='true' focusable='false' />
             </motion.button>
           )}
         </div>
       </section>
-    </main>
+    </article>
   );
 }
 

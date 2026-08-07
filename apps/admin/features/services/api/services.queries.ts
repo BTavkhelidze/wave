@@ -8,7 +8,7 @@ export const servicesQueryKey = (params: ServiceListQueryParams) =>
 export function useServicesQuery(params: ServiceListQueryParams) {
   return useQuery({
     queryKey: servicesQueryKey(params),
-    queryFn: () => fetchServices(params),
+    queryFn: ({ signal }) => fetchServices(params, signal),
     placeholderData: (previousData) => previousData,
   });
 }

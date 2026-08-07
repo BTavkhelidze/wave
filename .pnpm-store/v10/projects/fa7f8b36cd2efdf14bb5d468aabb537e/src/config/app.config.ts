@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 const DEFAULT_API_PREFIX = 'api';
-const DEFAULT_HTTP_PORT = 3000;
+const DEFAULT_HTTP_PORT = 5000;
 const DEFAULT_PASSWORD_RESET_EXPIRES_MINUTES = 30;
 
 function getRequiredString(name: string): string {

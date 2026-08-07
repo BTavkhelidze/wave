@@ -5,13 +5,12 @@ export interface ISingleServiceLanding {
 }
 
 export interface IServices {
-  id: number;
+  id: string;
   title_ka?: string;
   title_en?: string;
-  description_en: string;
-  description_ka: string;
+  description_en?: string;
+  description_ka?: string;
   icon: string;
   colors: string[];
-  created_at: string;
   iconColor: string;
 }
