@@ -97,6 +97,7 @@ model Service {
   iconColor String @map("icon_color")
   isActive  Boolean @default(true) @map("is_active")
   sortOrder Int     @default(0) @map("sort_order")
+  viewCount Int     @default(0) @map("view_count")
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -135,6 +136,7 @@ model Blog {
   status        BlogStatus @default(DRAFT)
   isFeatured    Boolean    @default(false) @map("is_featured")
   publishedAt   DateTime?  @map("published_at") @db.Timestamptz(6)
+  viewCount     Int        @default(0) @map("view_count")
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 

@@ -22,8 +22,9 @@ export class SignInProvider {
     signInDto: SignInDto,
     res: Response<any, Record<string, any>>,
   ) {
+    console.log('signInDto1', signInDto);
     const user = await this.userService.findUserByEmail(signInDto.email);
-
+    console.log('user', user);
     if (!user)
       throw new UnauthorizedException('Email or password is incorrect');
 

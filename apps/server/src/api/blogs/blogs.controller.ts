@@ -38,6 +38,7 @@ import { CreateBlogDto } from './dto/create-blog.dto';
 import { FindBlogsQueryDto } from './dto/find-blogs-query.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import {
+  BlogViewCountResponse,
   BlogDetail,
   BlogsService,
   DeleteBlogResponse,
@@ -80,6 +81,23 @@ export class BlogsController {
   @ApiNotFoundResponse({ description: 'Blog not found.' })
   public findPublicBySlug(@Param('slug') slug: string): Promise<BlogDetail> {
     return this.blogsService.findPublicBySlug(slug);
+  }
+
+  @Post('slug/:slug/view')
+  @ApiOperation({ summary: 'Increment blog view count by slug' })
+  @ApiParam({ name: 'slug', example: 'fire-safety-checklist' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        viewCount: 15,
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Blog not found.' })
+  public incrementViewCount(
+    @Param('slug') slug: string,
+  ): Promise<BlogViewCountResponse> {
+    return this.blogsService.incrementViewCount(slug);
   }
 
   @Get(':id')

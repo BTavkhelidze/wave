@@ -33,6 +33,7 @@ export class AuthController {
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
   ) {
+    console.log('signInDto', signInDto);
     return this.authService.signIn(signInDto, res);
   }
 

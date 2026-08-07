@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import {
@@ -16,6 +17,8 @@ import {
   ApiQuery,
   ApiParam,
   ApiBody,
+  ApiOkResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -53,6 +56,25 @@ export class ServicesController {
   })
   findAll(@Query() query: FindServicesQueryDto) {
     return this.servicesService.findAll(query.language);
+  }
+
+  @Post(':id/view')
+  @ApiOperation({ summary: 'Increment service view count' })
+  @ApiParam({
+    name: 'id',
+    example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+    description: 'Service ID',
+  })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        viewCount: 15,
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Service not found.' })
+  incrementViewCount(@Param('id', ParseUUIDPipe) id: string) {
+    return this.servicesService.incrementViewCount(id);
   }
 
   @Get(':id')

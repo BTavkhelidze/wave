@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
@@ -8,6 +12,37 @@ import { ServiceLanguage } from './enums/service-language';
 @Injectable()
 export class ServicesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async incrementViewCount(id: string): Promise<{ viewCount: number }> {
+    try {
+      const service = await this.prisma.service.update({
+        where: {
+          id,
+        },
+        data: {
+          viewCount: {
+            increment: 1,
+          },
+        },
+        select: {
+          viewCount: true,
+        },
+      });
+
+      return service;
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException('Service not found');
+      }
+
+      throw new InternalServerErrorException(
+        'Could not increment service view count',
+      );
+    }
+  }
 
   async create(createServiceDto: CreateServiceDto) {
     const dto = createServiceDto as unknown as Record<string, any>;

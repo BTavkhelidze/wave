@@ -64,6 +64,10 @@ export type DeleteBlogResponse = {
   message: string;
 };
 
+export type BlogViewCountResponse = {
+  viewCount: number;
+};
+
 const isPrismaKnownError = (
   error: unknown,
 ): error is Prisma.PrismaClientKnownRequestError => {
@@ -191,6 +195,42 @@ export class BlogsService {
       }
 
       throw new InternalServerErrorException('Could not fetch blog');
+    }
+  }
+
+  public async incrementViewCount(
+    slug: string,
+  ): Promise<BlogViewCountResponse> {
+    const normalizedSlug = this.normalizeAndValidateSlug(slug);
+
+    try {
+      const blog = await this.prismaService.blog.update({
+        where: {
+          slug: normalizedSlug,
+        },
+        data: {
+          viewCount: {
+            increment: 1,
+          },
+        },
+        select: {
+          viewCount: true,
+        },
+      });
+
+      return blog;
+    } catch (error: unknown) {
+      if (isPrismaKnownError(error) && error.code === 'P2025') {
+        throw new NotFoundException('Blog not found');
+      }
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Could not increment blog view count',
+      );
     }
   }
 
