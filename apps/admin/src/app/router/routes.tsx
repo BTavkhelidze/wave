@@ -13,6 +13,9 @@ import { CreateBlogPage } from '../../../features/blogs/create-blog';
 import { BlogsPage } from '../../../features/blogs/pages/BlogsPage';
 import { PublicBlogDetailPage } from '../../../features/blogs/pages/PublicBlogDetailPage';
 import { PublicBlogsPage } from '../../../features/blogs/pages/PublicBlogsPage';
+import { CreateServicePage } from '../../../features/services/pages/CreateServicePage';
+import { ServiceDetailPage } from '../../../features/services/pages/ServiceDetailPage';
+import { ServiceTranslationPreviewPage } from '../../../features/services/pages/ServiceTranslationPreviewPage';
 import { ServicesPage } from '../../../features/services/pages/ServicesPage';
 import { CreateUserPage } from '../../../features/users/create-user';
 import { UsersPage } from '../../../features/users/users-page';
@@ -118,6 +121,38 @@ export function AppRoutes() {
               allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.services]}
             >
               <ServicesPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.createService.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.createService]}
+            >
+              <CreateServicePage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.serviceDetail.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.serviceDetail]}
+            >
+              <ServiceDetailPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.serviceTranslationDetail.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={
+                ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.serviceTranslationDetail]
+              }
+            >
+              <ServiceTranslationPreviewPage />
             </RoleProtectedRoute>
           }
         />

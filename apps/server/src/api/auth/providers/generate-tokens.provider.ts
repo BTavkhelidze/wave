@@ -39,12 +39,12 @@ export class GenerateTokenProvider {
     const [accessToken, refreshToken] = await Promise.all([
       this.signToken<Partial<ActiveUserData>>(
         user.id,
-        this.jwtConfiguration.accessTokenExpiresIn!,
+        this.jwtConfiguration.accessTokenExpiresIn,
         {
           email: user.email,
         },
       ),
-      this.signToken(user.id, this.jwtConfiguration.refreshTokenExpiresIn!, {
+      this.signToken(user.id, this.jwtConfiguration.refreshTokenExpiresIn, {
         email: user.email,
       }),
     ]);

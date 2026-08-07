@@ -1,12 +1,15 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { CreateServiceTranslationDto } from './dto/create-service-translation.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
-import { Language, Prisma } from '@prisma/client';
+import { AdminAction, AdminEntity, Language, Prisma } from '@prisma/client';
 import { ServiceLanguage } from './enums/service-language';
 
 export interface PublicServiceResponse {
@@ -55,61 +58,95 @@ export class ServicesService {
     }
   }
 
-  async create(createServiceDto: CreateServiceDto) {
-    const dto = createServiceDto as unknown as Record<string, any>;
+  async create(createServiceDto: CreateServiceDto, adminId: string) {
+    const requiredLanguages = [ServiceLanguage.EN, ServiceLanguage.KA];
+    const providedLanguages = new Set(
+      createServiceDto.translations.map((translation) => translation.language),
+    );
+    const hasRequiredTranslations =
+      createServiceDto.translations.length === requiredLanguages.length &&
+      requiredLanguages.every((language) => providedLanguages.has(language));
 
-    if (!dto.title) throw new Error('Title is required');
-    if (!dto.description) throw new Error('Description is required');
-    if (!dto.language) throw new Error('Language is required');
-    if (!dto.icon) throw new Error('Icon is required');
-    if (!dto.iconColor) throw new Error('Icon color is required');
-
-    const data = {
-      title: dto.title,
-      description: dto.description,
-      language: dto.language,
-      service: {
-        create: {
-          icon: dto.icon,
-          iconColor: dto.iconColor,
-        },
-      },
-    };
-
-    try {
-      const services = await this.prisma.serviceTranslation.create({
-        data: data,
-      });
-      return services;
-    } catch (error) {
-      throw error;
+    if (!hasRequiredTranslations) {
+      throw new BadRequestException(
+        'Service must include exactly one EN and one KA translation',
+      );
     }
+
+    return this.prisma.$transaction(async (tx) => {
+      const serviceCount = await tx.service.count({
+        where: {
+          deletedAt: null,
+        },
+      });
+      const service = await tx.service.create({
+        data: {
+          icon: createServiceDto.icon,
+          iconColor: createServiceDto.iconColor,
+          sortOrder: serviceCount + 1,
+          translations: {
+            create: createServiceDto.translations.map((translation) => ({
+              language: translation.language,
+              title: translation.title,
+              description: translation.description,
+            })),
+          },
+        },
+        include: {
+          translations: true,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          userId: adminId,
+          action: AdminAction.CREATE,
+          entity: AdminEntity.SERVICE,
+          entityId: service.id,
+        },
+      });
+
+      return service;
+    });
   }
 
   async findAll(language?: ServiceLanguage) {
-    const where: Prisma.ServiceTranslationWhereInput = language
+    const translationWhere: Prisma.ServiceTranslationWhereInput = language
       ? {
-          language: language,
+          language,
         }
       : {};
 
-    try {
-      const services = await this.prisma.serviceTranslation.findMany({
-        include: {
-          service: {
-            select: {
-              icon: true,
-              iconColor: true,
-            },
+    const services = await this.prisma.service.findMany({
+      where: {
+        deletedAt: null,
+      },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        id: true,
+        icon: true,
+        iconColor: true,
+        sortOrder: true,
+        createdAt: true,
+        translations: {
+          where: translationWhere,
+          orderBy: {
+            language: 'asc',
           },
         },
+      },
+    });
 
-        where,
-      });
-      return services;
-    } catch (error) {
-      throw error;
-    }
+    return services.flatMap((service) =>
+      service.translations.map((translation) => ({
+        ...translation,
+        service: {
+          icon: service.icon,
+          iconColor: service.iconColor,
+          sortOrder: service.sortOrder,
+        },
+      })),
+    );
   }
 
   async findPublic(): Promise<PublicServiceResponse[]> {
@@ -154,6 +191,70 @@ export class ServicesService {
     });
   }
 
+  async createTranslation(
+    serviceId: string,
+    createServiceTranslationDto: CreateServiceTranslationDto,
+    adminId: string,
+  ) {
+    const service = await this.prisma.service.findFirst({
+      where: {
+        id: serviceId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const translation = await tx.serviceTranslation.create({
+          data: {
+            serviceId,
+            language: createServiceTranslationDto.language,
+            title: createServiceTranslationDto.title,
+            description: createServiceTranslationDto.description,
+          },
+          include: {
+            service: {
+              select: {
+                icon: true,
+                iconColor: true,
+                sortOrder: true,
+              },
+            },
+          },
+        });
+
+        await tx.adminLog.create({
+          data: {
+            userId: adminId,
+            action: AdminAction.UPDATE,
+            entity: AdminEntity.SERVICE,
+            entityId: serviceId,
+          },
+        });
+
+        return translation;
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Service translation already exists for this language',
+        );
+      }
+
+      throw error;
+    }
+  }
+
   async findOne(id: string) {
     try {
       const service = await this.prisma.serviceTranslation.findUnique({
@@ -168,13 +269,70 @@ export class ServicesService {
     }
   }
 
-  async update(id: string, updateServiceDto: UpdateServiceDto) {
+  async reorder(serviceIds: string[], adminId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const services = await tx.service.findMany({
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+        },
+      });
+      const existingServiceIds = services.map((service) => service.id);
+      const existingServiceIdSet = new Set(existingServiceIds);
+      const hasCompleteServiceSet =
+        serviceIds.length === existingServiceIds.length &&
+        serviceIds.every((serviceId) => existingServiceIdSet.has(serviceId));
+
+      if (!hasCompleteServiceSet) {
+        throw new BadRequestException(
+          'serviceIds must include every current service exactly once',
+        );
+      }
+
+      await Promise.all(
+        serviceIds.map((serviceId, index) =>
+          tx.service.update({
+            where: {
+              id: serviceId,
+            },
+            data: {
+              sortOrder: index + 1,
+            },
+            select: {
+              id: true,
+            },
+          }),
+        ),
+      );
+
+      await tx.adminLog.create({
+        data: {
+          userId: adminId,
+          action: AdminAction.UPDATE,
+          entity: AdminEntity.SERVICE,
+          entityId: serviceIds.join(','),
+        },
+      });
+
+      return {
+        serviceIds,
+        message: 'Services reordered successfully',
+      };
+    });
+  }
+
+  async update(id: string, updateServiceDto: UpdateServiceDto, adminId: string) {
+    if (!Object.keys(updateServiceDto).length) {
+      throw new BadRequestException('No service fields provided for update');
+    }
+
     const dto = updateServiceDto as unknown as Record<string, any>;
     const data: Record<string, any> = {};
 
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
-    if (dto.language !== undefined) data.language = dto.language;
 
     if (dto.icon !== undefined || dto.iconColor !== undefined) {
       data.service = { update: {} };
@@ -184,29 +342,61 @@ export class ServicesService {
     }
 
     try {
-      const service = await this.prisma.serviceTranslation.update({
-        where: {
-          id: id,
-        },
-        data: data as any,
-      });
+      return await this.prisma.$transaction(async (tx) => {
+        const service = await tx.serviceTranslation.update({
+          where: {
+            id: id,
+          },
+          data: data as any,
+        });
 
-      return service;
+        await tx.adminLog.create({
+          data: {
+            userId: adminId,
+            action: AdminAction.UPDATE,
+            entity: AdminEntity.SERVICE,
+            entityId: service.serviceId,
+          },
+        });
+
+        return service;
+      });
     } catch (error) {
       throw error;
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string, adminId: string) {
     try {
-      const service = await this.prisma.serviceTranslation.delete({
-        where: {
-          id: id,
-        },
-      });
+      return await this.prisma.$transaction(async (tx) => {
+        const service = await tx.service.delete({
+          where: {
+            id: id,
+          },
+          include: {
+            translations: true,
+          },
+        });
 
-      return { service, message: 'Service deleted successfully' };
-    } catch (error) {
+        await tx.adminLog.create({
+          data: {
+            userId: adminId,
+            action: AdminAction.DELETE,
+            entity: AdminEntity.SERVICE,
+            entityId: service.id,
+          },
+        });
+
+        return { service, message: 'Service deleted successfully' };
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException('Service not found');
+      }
+
       throw error;
     }
   }

@@ -1,9 +1,19 @@
 import { registerAs } from '@nestjs/config';
 
+function getRequiredString(name: string): string {
+  const value = process.env[name]?.trim();
+
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+
+  return value;
+}
+
 export default registerAs('jwtConfig', () => ({
-  secret: process.env.JWT_SECRET,
-  audience: process.env.JWT_AUDIENCE,
-  issuer: process.env.JWT_ISSUER,
-  accessTokenExpiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
-  refreshTokenExpiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+  secret: getRequiredString('JWT_SECRET'),
+  audience: getRequiredString('JWT_AUDIENCE'),
+  issuer: getRequiredString('JWT_ISSUER'),
+  accessTokenExpiresIn: getRequiredString('JWT_ACCESS_TOKEN_EXPIRES_IN'),
+  refreshTokenExpiresIn: getRequiredString('JWT_REFRESH_TOKEN_EXPIRES_IN'),
 }));

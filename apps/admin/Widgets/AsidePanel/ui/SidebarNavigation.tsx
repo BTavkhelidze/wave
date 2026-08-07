@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
+import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { canAccessRole } from '../../../features/auth/lib/authorization';
 import { useAuth } from '../../../features/context/AuthContext';
 import { SIDEBAR_NAVIGATION_GROUPS } from '../model/sidebar.constants';
@@ -26,7 +27,7 @@ export function SidebarNavigation() {
               <NavLink
                 key={item.path}
                 to={item.path}
-                end
+                end={item.path !== ADMIN_ROUTE_PATHS.services}
                 className={({ isActive }) =>
                   [
                     'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition',

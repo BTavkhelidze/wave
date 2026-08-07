@@ -7,7 +7,7 @@ export const DEFAULT_SERVICE_LANGUAGE: ServiceLanguage = 'EN';
 export function getServiceLanguageLabel(language: ServiceLanguage): string {
   const labels: Record<ServiceLanguage, string> = {
     EN: 'English',
-    KA: 'Georgian',
+    KA: 'ქართული',
   };
 
   return labels[language];
