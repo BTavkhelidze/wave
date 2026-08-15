@@ -16,7 +16,10 @@ import { SignInDto } from './dtos/signIn.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { ActiveUser } from './decorators/active-user.decorator';
-import { ChangePasswordDto } from './dtos/change-password.dto';
+import {
+  ChangeInitialPasswordDto,
+  ChangePasswordDto,
+} from './dtos/change-password.dto';
 import type { ChangePasswordResponse } from './providers/change-password.provider';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
@@ -100,6 +103,18 @@ export class AuthController {
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<ChangePasswordResponse> {
     return this.authService.changePassword(activeUserId, changePasswordDto);
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Patch('change-initial-password')
+  public changeInitialPassword(
+    @ActiveUser('id') activeUserId: string,
+    @Body() changeInitialPasswordDto: ChangeInitialPasswordDto,
+  ): Promise<ChangePasswordResponse> {
+    return this.authService.changeInitialPassword(
+      activeUserId,
+      changeInitialPasswordDto,
+    );
   }
 
   @UseGuards(AccessTokenGuard)

@@ -24,6 +24,32 @@ export class UpdateServiceDto {
   description?: string;
 
   @ApiPropertyOptional({
+    example: 'fire-and-life-safety',
+  })
+  @Transform(trimString)
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  slug?: string;
+
+  @ApiPropertyOptional({
+    example: 'Fire and Life Safety Services | Wave Engineering',
+  })
+  @Transform(trimString)
+  @IsOptional()
+  @IsString()
+  metaTitle?: string;
+
+  @ApiPropertyOptional({
+    example:
+      'Professional fire and life safety services from Wave Engineering.',
+  })
+  @Transform(trimString)
+  @IsOptional()
+  @IsString()
+  metaDescription?: string;
+
+  @ApiPropertyOptional({
     example: 'FaFireExtinguisher',
   })
   @Transform(trimString)

@@ -1,7 +1,9 @@
 import { apiRequest } from '../../../src/shared/api/httpClient';
 import type {
   AdminBlogsQueryParams,
+  AdminBlogDetail,
   AdminBlogsResponse,
+  BlogMutationPayload,
   PublicBlogDetail,
   PublicBlogsQueryParams,
   PublicBlogsResponse,
@@ -66,6 +68,39 @@ export function getAdminBlogs(
     `/blogs/admin${queryString ? `?${queryString}` : ''}`,
     {
       signal,
+    },
+  );
+}
+
+export function getAdminBlogById(
+  blogId: string,
+  signal?: AbortSignal,
+): Promise<AdminBlogDetail> {
+  return apiRequest<AdminBlogDetail>(`/blogs/${encodeURIComponent(blogId)}`, {
+    signal,
+  });
+}
+
+export function updateBlog(
+  blogId: string,
+  payload: BlogMutationPayload,
+): Promise<AdminBlogDetail> {
+  return apiRequest<AdminBlogDetail>(`/blogs/${encodeURIComponent(blogId)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteBlog(
+  blogId: string,
+): Promise<{ blog: AdminBlogDetail; message: string }> {
+  return apiRequest<{ blog: AdminBlogDetail; message: string }>(
+    `/blogs/${encodeURIComponent(blogId)}`,
+    {
+      method: 'DELETE',
     },
   );
 }

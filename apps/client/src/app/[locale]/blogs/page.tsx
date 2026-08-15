@@ -1,13 +1,17 @@
-import React from 'react';
-import BlogsList from '../../../../fetures/Blogs/Blogs';
+import BlogsList from '@/components/Blogs/BlogsList';
+import CompanyName from '@/components/LandingPage/companyName';
 
 function page() {
   return (
-    <section className='w-full min-h-[50vh] md:pt-30 flex-1 max-w-[1440px] mx-auto my-16 px-6  xl:px-0 2xl:mx-auto xl:pb-10 '>
-      <h2 className='text-white text-center sm:text-start'>Blogs</h2>
-
-      <BlogsList />
-    </section>
+    <main className='relative flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30    pb-[50px] xl:px-[8%]'>
+      <div className='w-full' id='top'></div>
+      <div className='w-full'>
+        <CompanyName />
+      </div>
+      <div className='my-10 w-full'>
+        <BlogsList />
+      </div>
+    </main>
   );
 }
 

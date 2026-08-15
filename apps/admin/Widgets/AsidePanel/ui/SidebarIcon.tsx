@@ -50,6 +50,10 @@ const iconPaths: Record<SidebarIconName, string[]> = {
     'M5.75 20h12.5A1.75 1.75 0 0 0 20 18.25V5.75A1.75 1.75 0 0 0 18.25 4H5.75A1.75 1.75 0 0 0 4 5.75v12.5A1.75 1.75 0 0 0 5.75 20Z',
     'M8 17h1',
   ],
+  messages: [
+    'M4.75 6.75A1.75 1.75 0 0 1 6.5 5h11a1.75 1.75 0 0 1 1.75 1.75v10.5A1.75 1.75 0 0 1 17.5 19h-11a1.75 1.75 0 0 1-1.75-1.75V6.75Z',
+    'm5.25 3.5 4.9 3.6a1.5 1.5 0 0 0 1.8 0l4.9-3.6',
+  ],
 };
 
 export function SidebarIcon({ name, className, ...props }: SidebarIconProps) {

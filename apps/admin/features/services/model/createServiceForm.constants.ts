@@ -5,6 +5,12 @@ export const CREATE_SERVICE_FORM_DEFAULT_VALUES: CreateServiceFormValues = {
   iconColor: '#7C3AED',
   kaTitle: '',
   kaDescription: '',
+  kaSlug: '',
+  kaMetaTitle: '',
+  kaMetaDescription: '',
   enTitle: '',
   enDescription: '',
+  enSlug: '',
+  enMetaTitle: '',
+  enMetaDescription: '',
 };

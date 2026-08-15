@@ -11,8 +11,10 @@ import { AnalyticsPage } from '../../../features/analytics/pages/AnalyticsPage';
 import { AdminLogsPage } from '../../../features/admin-logs';
 import { CreateBlogPage } from '../../../features/blogs/create-blog';
 import { BlogsPage } from '../../../features/blogs/pages/BlogsPage';
+import { EditBlogPage } from '../../../features/blogs/pages/EditBlogPage';
 import { PublicBlogDetailPage } from '../../../features/blogs/pages/PublicBlogDetailPage';
 import { PublicBlogsPage } from '../../../features/blogs/pages/PublicBlogsPage';
+import { MessagesPage } from '../../../features/messages';
 import { CreateServicePage } from '../../../features/services/pages/CreateServicePage';
 import { ServiceDetailPage } from '../../../features/services/pages/ServiceDetailPage';
 import { ServiceTranslationPreviewPage } from '../../../features/services/pages/ServiceTranslationPreviewPage';
@@ -115,6 +117,16 @@ export function AppRoutes() {
           }
         />
         <Route
+          path={ADMIN_ROUTE_PATHS.messages.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.messages]}
+            >
+              <MessagesPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
           path={ADMIN_ROUTE_PATHS.services.slice(1)}
           element={
             <RoleProtectedRoute
@@ -173,6 +185,16 @@ export function AppRoutes() {
               allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.createBlog]}
             >
               <CreateBlogPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.blogDetail.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.blogDetail]}
+            >
+              <EditBlogPage />
             </RoleProtectedRoute>
           }
         />

@@ -22,7 +22,8 @@ const roleErrorId = 'create-user-role-error';
 export function CreateUserForm() {
   const [createdUserCredentials, setCreatedUserCredentials] = useState<{
     email: string;
-    temporaryPassword: string;
+    emailSent: boolean;
+    message: string;
   } | null>(null);
   const createUserMutation = useCreateUserMutation();
   const {
@@ -60,7 +61,8 @@ export function CreateUserForm() {
 
       setCreatedUserCredentials({
         email: response.user.email,
-        temporaryPassword: response.temporaryPassword,
+        emailSent: response.emailSent,
+        message: response.message,
       });
       reset(CREATE_USER_FORM_DEFAULT_VALUES);
     } catch {
@@ -203,19 +205,18 @@ export function CreateUserForm() {
             aria-live='polite'
             className='rounded-md border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm leading-6 text-[#047857]'
           >
-            <p className='font-semibold text-[#065F46]'>User created.</p>
+            <p className='font-semibold text-[#065F46]'>
+              {createdUserCredentials.emailSent
+                ? 'User created and login instructions were emailed.'
+                : 'User created, but the credentials email could not be delivered.'}
+            </p>
             <p className='mt-1'>
-              Email:{' '}
+              User:{' '}
               <span className='font-mono font-semibold'>
                 {createdUserCredentials.email}
               </span>
             </p>
-            <p className='mt-1'>
-              Initial password:{' '}
-              <span className='font-mono font-semibold'>
-                {createdUserCredentials.temporaryPassword}
-              </span>
-            </p>
+            <p className='mt-1'>{createdUserCredentials.message}</p>
           </div>
         )}
       </div>

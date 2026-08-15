@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+
+import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { BlogStatusBadge } from './BlogStatusBadge';
 import type { BlogListItem } from '../model/blog.types';
 
@@ -25,10 +28,16 @@ export function BlogsTable({ blogs }: BlogsTableProps) {
                 Featured
               </th>
               <th scope='col' className='px-5 py-3'>
+                Views
+              </th>
+              <th scope='col' className='px-5 py-3'>
                 Published
               </th>
               <th scope='col' className='px-5 py-3'>
                 Updated
+              </th>
+              <th scope='col' className='px-5 py-3'>
+                Actions
               </th>
             </tr>
           </thead>
@@ -70,11 +79,22 @@ export function BlogsTable({ blogs }: BlogsTableProps) {
                 <td className='whitespace-nowrap px-5 py-4 text-sm text-[#6B7280]'>
                   {blog.isFeatured ? 'Yes' : 'No'}
                 </td>
+                <td className='whitespace-nowrap px-5 py-4 text-sm text-[#111827]'>
+                  {formatNumber(blog.viewCount)}
+                </td>
                 <td className='whitespace-nowrap px-5 py-4 text-sm text-[#6B7280]'>
                   {blog.publishedAt ? formatDate(blog.publishedAt) : 'Not set'}
                 </td>
                 <td className='whitespace-nowrap px-5 py-4 text-sm text-[#6B7280]'>
                   {formatDate(blog.updatedAt)}
+                </td>
+                <td className='whitespace-nowrap px-5 py-4'>
+                  <Link
+                    to={`${ADMIN_ROUTE_PATHS.blogs}/${blog.id}`}
+                    className='rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
+                  >
+                    Edit
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -91,4 +111,8 @@ function formatDate(value: string): string {
     month: 'short',
     year: 'numeric',
   }).format(new Date(value));
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat('en').format(value);
 }

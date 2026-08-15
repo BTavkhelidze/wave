@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { PrismaClient, Language, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { services } from './data';
-import * as bcrypt from 'bcrypt';
+import { genSalt, hash } from 'bcrypt';
+import { normalizeServiceSlug } from '../../../api/services/lib/service-slug.util';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -17,7 +18,8 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const salt = await bcrypt.genSalt(10);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  const salt = await genSalt(10);
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
 
@@ -27,11 +29,18 @@ async function main() {
         icon: service.icon?.trim() ?? null,
         iconColor: service.iconColor?.trim() ?? null,
         translations: {
-          create: service.translations.map((translation) => ({
-            language: translation.language,
-            title: translation.title.trim(),
-            description: translation.description?.trim() ?? null,
-          })),
+          create: service.translations.map((translation, index) => {
+            const normalizedSlug = normalizeServiceSlug(translation.title);
+
+            return {
+              language: translation.language,
+              title: translation.title.trim(),
+              description: translation.description?.trim() ?? null,
+              slug:
+                normalizedSlug ||
+                `service-${index + 1}-${translation.language.toLowerCase()}`,
+            };
+          }),
         },
       },
     });
@@ -53,7 +62,8 @@ async function main() {
       firstName: 'Beka',
       lastName: 'Tavkhelidze',
       email: 'bekatavkhelidze41@gmail.com',
-      password: await bcrypt.hash('beqabeqa', salt),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      password: await hash('beqabeqa', salt),
       hashedRefreshToken: null,
       role: UserRole.SUPER_ADMIN,
       isActive: true,

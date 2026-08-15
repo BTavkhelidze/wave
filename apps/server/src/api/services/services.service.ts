@@ -11,6 +11,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { AdminAction, AdminEntity, Language, Prisma } from '@prisma/client';
 import { ServiceLanguage } from './enums/service-language';
+import { normalizeServiceSlug } from './lib/service-slug.util';
 
 export interface PublicServiceResponse {
   id: string;
@@ -18,9 +19,33 @@ export interface PublicServiceResponse {
   title_en?: string;
   description_ka?: string;
   description_en?: string;
+  slug_ka?: string;
+  slug_en?: string;
+  metaTitle_ka?: string;
+  metaTitle_en?: string;
+  metaDescription_ka?: string;
+  metaDescription_en?: string;
   icon: string;
   iconColor: string;
   colors: string[];
+}
+
+export interface ServicesAnalyticsResponse {
+  services: {
+    total: number;
+    totalViews: number;
+  };
+  blogs: {
+    total: number;
+    totalViews: number;
+  };
+  totalServices: number;
+  totalServiceViews: number;
+  mostViewedService: {
+    id: string;
+    title: string;
+    viewCount: number;
+  } | null;
 }
 
 @Injectable()
@@ -73,41 +98,57 @@ export class ServicesService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
-      const serviceCount = await tx.service.count({
-        where: {
-          deletedAt: null,
-        },
-      });
-      const service = await tx.service.create({
-        data: {
-          icon: createServiceDto.icon,
-          iconColor: createServiceDto.iconColor,
-          sortOrder: serviceCount + 1,
-          translations: {
-            create: createServiceDto.translations.map((translation) => ({
-              language: translation.language,
-              title: translation.title,
-              description: translation.description,
-            })),
+    const translations = createServiceDto.translations.map((translation) => ({
+      ...translation,
+      slug: this.normalizeRequiredSlug(translation.slug),
+      metaTitle: this.normalizeOptionalText(translation.metaTitle),
+      metaDescription: this.normalizeOptionalText(translation.metaDescription),
+    }));
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const serviceCount = await tx.service.count({
+          where: {
+            deletedAt: null,
           },
-        },
-        include: {
-          translations: true,
-        },
-      });
+        });
+        const service = await tx.service.create({
+          data: {
+            icon: createServiceDto.icon,
+            iconColor: createServiceDto.iconColor,
+            sortOrder: serviceCount + 1,
+            translations: {
+              create: translations.map((translation) => ({
+                language: translation.language,
+                title: translation.title,
+                description: translation.description,
+                slug: translation.slug,
+                metaTitle: translation.metaTitle,
+                metaDescription: translation.metaDescription,
+              })),
+            },
+          },
+          include: {
+            translations: true,
+          },
+        });
 
-      await tx.adminLog.create({
-        data: {
-          userId: adminId,
-          action: AdminAction.CREATE,
-          entity: AdminEntity.SERVICE,
-          entityId: service.id,
-        },
-      });
+        await tx.adminLog.create({
+          data: {
+            userId: adminId,
+            action: AdminAction.CREATE,
+            entity: AdminEntity.SERVICE,
+            entityId: service.id,
+          },
+        });
 
-      return service;
-    });
+        return service;
+      });
+    } catch (error: unknown) {
+      this.throwServiceSlugConflict(error);
+
+      throw error;
+    }
   }
 
   async findAll(language?: ServiceLanguage) {
@@ -127,6 +168,7 @@ export class ServicesService {
         icon: true,
         iconColor: true,
         sortOrder: true,
+        viewCount: true,
         createdAt: true,
         translations: {
           where: translationWhere,
@@ -145,6 +187,7 @@ export class ServicesService {
           iconColor: service.iconColor,
           sortOrder: service.sortOrder,
         },
+        viewCount: service.viewCount,
       })),
     );
   }
@@ -165,6 +208,9 @@ export class ServicesService {
             language: true,
             title: true,
             description: true,
+            slug: true,
+            metaTitle: true,
+            metaDescription: true,
           },
         },
       },
@@ -184,11 +230,92 @@ export class ServicesService {
         title_en: enTranslation?.title,
         description_ka: kaTranslation?.description,
         description_en: enTranslation?.description,
+        slug_ka: kaTranslation?.slug,
+        slug_en: enTranslation?.slug,
+        metaTitle_ka: kaTranslation?.metaTitle ?? undefined,
+        metaTitle_en: enTranslation?.metaTitle ?? undefined,
+        metaDescription_ka: kaTranslation?.metaDescription ?? undefined,
+        metaDescription_en: enTranslation?.metaDescription ?? undefined,
         icon: service.icon,
         iconColor: service.iconColor,
         colors: [],
       };
     });
+  }
+
+  async getAnalytics(): Promise<ServicesAnalyticsResponse> {
+    const [
+      totalServices,
+      serviceViewCountAggregate,
+      totalBlogs,
+      blogViewCountAggregate,
+      mostViewedService,
+    ] = await Promise.all([
+      this.prisma.service.count(),
+      this.prisma.service.aggregate({
+        _sum: {
+          viewCount: true,
+        },
+      }),
+      this.prisma.blog.count(),
+      this.prisma.blog.aggregate({
+        _sum: {
+          viewCount: true,
+        },
+      }),
+      this.prisma.service.findFirst({
+        orderBy: [
+          {
+            viewCount: 'desc',
+          },
+          {
+            sortOrder: 'asc',
+          },
+          {
+            createdAt: 'asc',
+          },
+          {
+            id: 'asc',
+          },
+        ],
+        select: {
+          id: true,
+          viewCount: true,
+          translations: {
+            where: {
+              language: Language.EN,
+            },
+            take: 1,
+            select: {
+              title: true,
+            },
+          },
+        },
+      }),
+    ]);
+    const totalServiceViews = serviceViewCountAggregate._sum.viewCount ?? 0;
+    const totalBlogViews = blogViewCountAggregate._sum.viewCount ?? 0;
+
+    return {
+      services: {
+        total: totalServices,
+        totalViews: totalServiceViews,
+      },
+      blogs: {
+        total: totalBlogs,
+        totalViews: totalBlogViews,
+      },
+      totalServices,
+      totalServiceViews,
+      mostViewedService: mostViewedService
+        ? {
+            id: mostViewedService.id,
+            title:
+              mostViewedService.translations[0]?.title ?? 'Untitled service',
+            viewCount: mostViewedService.viewCount,
+          }
+        : null,
+    };
   }
 
   async createTranslation(
@@ -218,6 +345,13 @@ export class ServicesService {
             language: createServiceTranslationDto.language,
             title: createServiceTranslationDto.title,
             description: createServiceTranslationDto.description,
+            slug: this.normalizeRequiredSlug(createServiceTranslationDto.slug),
+            metaTitle: this.normalizeOptionalText(
+              createServiceTranslationDto.metaTitle,
+            ),
+            metaDescription: this.normalizeOptionalText(
+              createServiceTranslationDto.metaDescription,
+            ),
           },
           include: {
             service: {
@@ -246,6 +380,8 @@ export class ServicesService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2002'
       ) {
+        this.throwServiceSlugConflict(error);
+
         throw new ConflictException(
           'Service translation already exists for this language',
         );
@@ -256,17 +392,11 @@ export class ServicesService {
   }
 
   async findOne(id: string) {
-    try {
-      const service = await this.prisma.serviceTranslation.findUnique({
-        where: {
-          id: id,
-        },
-      });
-
-      return service;
-    } catch (error) {
-      throw error;
-    }
+    return this.prisma.serviceTranslation.findUnique({
+      where: {
+        id: id,
+      },
+    });
   }
 
   async reorder(serviceIds: string[], adminId: string) {
@@ -323,22 +453,48 @@ export class ServicesService {
     });
   }
 
-  async update(id: string, updateServiceDto: UpdateServiceDto, adminId: string) {
+  async update(
+    id: string,
+    updateServiceDto: UpdateServiceDto,
+    adminId: string,
+  ) {
     if (!Object.keys(updateServiceDto).length) {
       throw new BadRequestException('No service fields provided for update');
     }
 
-    const dto = updateServiceDto as unknown as Record<string, any>;
-    const data: Record<string, any> = {};
+    const data: Prisma.ServiceTranslationUpdateInput = {};
 
-    if (dto.title !== undefined) data.title = dto.title;
-    if (dto.description !== undefined) data.description = dto.description;
+    if (updateServiceDto.title !== undefined)
+      data.title = updateServiceDto.title;
+    if (updateServiceDto.description !== undefined) {
+      data.description = updateServiceDto.description;
+    }
+    if (updateServiceDto.slug !== undefined) {
+      data.slug = this.normalizeRequiredSlug(updateServiceDto.slug);
+    }
+    if (updateServiceDto.metaTitle !== undefined) {
+      data.metaTitle = this.normalizeOptionalText(updateServiceDto.metaTitle);
+    }
+    if (updateServiceDto.metaDescription !== undefined) {
+      data.metaDescription = this.normalizeOptionalText(
+        updateServiceDto.metaDescription,
+      );
+    }
 
-    if (dto.icon !== undefined || dto.iconColor !== undefined) {
-      data.service = { update: {} };
-      if (dto.icon !== undefined) data.service.update.icon = dto.icon;
-      if (dto.iconColor !== undefined)
-        data.service.update.iconColor = dto.iconColor;
+    if (
+      updateServiceDto.icon !== undefined ||
+      updateServiceDto.iconColor !== undefined
+    ) {
+      const serviceUpdate: Prisma.ServiceUpdateWithoutTranslationsInput = {};
+
+      if (updateServiceDto.icon !== undefined) {
+        serviceUpdate.icon = updateServiceDto.icon;
+      }
+      if (updateServiceDto.iconColor !== undefined) {
+        serviceUpdate.iconColor = updateServiceDto.iconColor;
+      }
+
+      data.service = { update: serviceUpdate };
     }
 
     try {
@@ -347,7 +503,7 @@ export class ServicesService {
           where: {
             id: id,
           },
-          data: data as any,
+          data,
         });
 
         await tx.adminLog.create({
@@ -361,7 +517,9 @@ export class ServicesService {
 
         return service;
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      this.throwServiceSlugConflict(error);
+
       throw error;
     }
   }
@@ -399,5 +557,49 @@ export class ServicesService {
 
       throw error;
     }
+  }
+
+  private normalizeRequiredSlug(slug: string): string {
+    const normalizedSlug = normalizeServiceSlug(slug);
+
+    if (!normalizedSlug) {
+      throw new BadRequestException('Service slug is required');
+    }
+
+    return normalizedSlug;
+  }
+
+  private normalizeOptionalText(value: string | undefined): string | null {
+    if (value === undefined) {
+      return null;
+    }
+
+    const normalizedValue = value.trim();
+
+    return normalizedValue.length > 0 ? normalizedValue : null;
+  }
+
+  private throwServiceSlugConflict(error: unknown): never | void {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002' &&
+      this.isServiceSlugConstraint(error.meta?.target)
+    ) {
+      throw new ConflictException(
+        'A service with this slug already exists for the selected language',
+      );
+    }
+  }
+
+  private isServiceSlugConstraint(target: unknown): boolean {
+    if (typeof target === 'string') {
+      return target.includes('language') && target.includes('slug');
+    }
+
+    return (
+      Array.isArray(target) &&
+      target.includes('language') &&
+      target.includes('slug')
+    );
   }
 }

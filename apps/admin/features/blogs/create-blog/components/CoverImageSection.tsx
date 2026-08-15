@@ -80,7 +80,7 @@ export function CoverImageSection({
         onDrop={handleDrop}
         className='group cursor-pointer rounded-lg border border-dashed border-[#C4B5FD] bg-[#F8FAFC] p-4 text-center outline-none transition hover:border-[#7C3AED] hover:bg-[#F5F3FF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
       >
-        {previewUrl && selectedFile ? (
+        {previewUrl ? (
           <div className='space-y-3'>
             <div className='overflow-hidden rounded-md border border-[#E5E7EB] bg-white'>
               <img
@@ -91,11 +91,13 @@ export function CoverImageSection({
             </div>
             <div className='text-left'>
               <p className='truncate text-sm font-medium text-[#111827]'>
-                {selectedFile.name}
+                {selectedFile?.name ?? 'Existing cover image'}
               </p>
-              <p className='mt-1 text-xs text-[#6B7280]'>
-                {formatFileSize(selectedFile.size)}
-              </p>
+              {selectedFile && (
+                <p className='mt-1 text-xs text-[#6B7280]'>
+                  {formatFileSize(selectedFile.size)}
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -137,9 +139,9 @@ export function CoverImageSection({
           onClick={openFileDialog}
           className='rounded-md border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
         >
-          {selectedFile ? 'Replace image' : 'Select image'}
+          {previewUrl ? 'Replace image' : 'Select image'}
         </button>
-        {selectedFile && (
+        {previewUrl && (
           <button
             type='button'
             onClick={onRemoveFile}

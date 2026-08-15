@@ -16,7 +16,11 @@ export type ServiceListItemData = {
   language: ServiceLanguage;
   title: string;
   description: string;
+  slug: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
   service: ServiceAsset;
+  viewCount: number;
 };
 
 export type ServiceTranslationMutationResponse = {
@@ -25,6 +29,9 @@ export type ServiceTranslationMutationResponse = {
   language: ServiceLanguage;
   title: string;
   description: string;
+  slug: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
 };
 
 export type ServiceTranslationContent = {
@@ -32,11 +39,17 @@ export type ServiceTranslationContent = {
   language: ServiceLanguage;
   title: string;
   description: string;
+  slug: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
 };
 
 export type ServiceTranslationFormValues = {
   title: string;
   description: string;
+  slug: string;
+  metaTitle: string;
+  metaDescription: string;
 };
 
 export type CreateServiceTranslationPayload = ServiceTranslationFormValues & {
@@ -50,8 +63,14 @@ export type CreateServiceFormValues = {
   iconColor: string;
   kaTitle: string;
   kaDescription: string;
+  kaSlug: string;
+  kaMetaTitle: string;
+  kaMetaDescription: string;
   enTitle: string;
   enDescription: string;
+  enSlug: string;
+  enMetaTitle: string;
+  enMetaDescription: string;
 };
 
 export type CreateServicePayload = {
@@ -61,6 +80,9 @@ export type CreateServicePayload = {
     language: ServiceLanguage;
     title: string;
     description: string;
+    slug: string;
+    metaTitle?: string;
+    metaDescription?: string;
   }>;
 };
 
@@ -85,6 +107,7 @@ export type ServiceCatalogItemData = {
   languages: ServiceLanguage[];
   title: string;
   description: string;
+  viewCount: number;
 };
 
 export type ReorderServicesPayload = {
@@ -94,4 +117,22 @@ export type ReorderServicesPayload = {
 export type ReorderServicesResponse = {
   serviceIds: string[];
   message: string;
+};
+
+export type ServicesAnalyticsResponse = {
+  services: {
+    total: number;
+    totalViews: number;
+  };
+  blogs: {
+    total: number;
+    totalViews: number;
+  };
+  totalServices: number;
+  totalServiceViews: number;
+  mostViewedService: {
+    id: string;
+    title: string;
+    viewCount: number;
+  } | null;
 };

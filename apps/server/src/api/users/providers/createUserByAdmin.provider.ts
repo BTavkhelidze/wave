@@ -2,10 +2,12 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { AdminAction, AdminEntity } from '@prisma/client';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { HashProvider } from 'src/api/auth/providers/hash.provider';
+import { MailService } from 'src/api/mail/mail.service';
 import { CreateUserByAdminDto } from '../dtos/create-user-by-admin.dto';
 import { generateTemporaryPassword } from 'src/common/utils/generate-temporary-password.util';
 import {
@@ -15,7 +17,8 @@ import {
 
 export type CreateUserByAdminResponse = {
   user: SafeUser;
-  temporaryPassword: string;
+  emailSent: boolean;
+  message: string;
 };
 
 type PrismaKnownError = {
@@ -33,9 +36,12 @@ const isPrismaKnownError = (error: unknown): error is PrismaKnownError => {
 
 @Injectable()
 export class CreateUserByAdminProvider {
+  private readonly logger = new Logger(CreateUserByAdminProvider.name);
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly hashProvider: HashProvider,
+    private readonly mailService: MailService,
   ) {}
 
   public async createUserByAdmin(
@@ -73,9 +79,30 @@ export class CreateUserByAdminProvider {
         return createdUser;
       });
 
+      let emailSent = false;
+
+      try {
+        await this.mailService.sendAdminTemporaryPasswordEmail({
+          to: user.email,
+          temporaryPassword,
+          reason: 'USER_CREATED',
+        });
+        emailSent = true;
+      } catch (error: unknown) {
+        this.logEmailDeliveryFailure({
+          operation: 'USER_CREATED',
+          userId: user.id,
+          recipient: user.email,
+          error,
+        });
+      }
+
       return {
         user,
-        temporaryPassword,
+        emailSent,
+        message: emailSent
+          ? 'User created and temporary password email sent.'
+          : 'User created, but the temporary password email could not be delivered.',
       };
     } catch (error: unknown) {
       if (isPrismaKnownError(error) && error.code === 'P2002') {
@@ -84,5 +111,32 @@ export class CreateUserByAdminProvider {
 
       throw new InternalServerErrorException('Could not create user');
     }
+  }
+
+  private logEmailDeliveryFailure({
+    operation,
+    userId,
+    recipient,
+    error,
+  }: {
+    operation: 'USER_CREATED';
+    userId: string;
+    recipient: string;
+    error: unknown;
+  }): void {
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    const errorCode =
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      typeof (error as { code?: unknown }).code === 'string'
+        ? (error as { code: string }).code
+        : undefined;
+
+    this.logger.warn(
+      `Temporary password email failed. operation=${operation} userId=${userId} recipient=${recipient} error=${errorName}${
+        errorCode ? ` code=${errorCode}` : ''
+      }`,
+    );
   }
 }

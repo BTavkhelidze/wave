@@ -20,7 +20,11 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { PublicServiceResponse, ServicesService } from './services.service';
+import {
+  PublicServiceResponse,
+  ServicesAnalyticsResponse,
+  ServicesService,
+} from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { CreateServiceTranslationDto } from './dto/create-service-translation.dto';
 import { ReorderServicesDto } from './dto/reorder-services.dto';
@@ -84,6 +88,35 @@ export class ServicesController {
   })
   findPublic(): Promise<PublicServiceResponse[]> {
     return this.servicesService.findPublic();
+  }
+
+  @Get('analytics')
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @ApiOperation({ summary: 'Get read-only service analytics for Admin' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        services: {
+          total: 12,
+          totalViews: 1542,
+        },
+        blogs: {
+          total: 6,
+          totalViews: 420,
+        },
+        totalServices: 12,
+        totalServiceViews: 1542,
+        mostViewedService: {
+          id: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+          title: 'Web Development',
+          viewCount: 483,
+        },
+      },
+    },
+  })
+  getAnalytics(): Promise<ServicesAnalyticsResponse> {
+    return this.servicesService.getAnalytics();
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)
@@ -173,7 +206,9 @@ export class ServicesController {
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete service and all translations by service ID' })
+  @ApiOperation({
+    summary: 'Delete service and all translations by service ID',
+  })
   @ApiParam({
     name: 'id',
     example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',

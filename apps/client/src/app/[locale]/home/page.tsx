@@ -9,7 +9,7 @@ import MotionInViewSection from '@/components/ui/MotionInViewSectionProps';
 
 export default function Home() {
   return (
-    <main className='overflow-hidden'>
+    <main className='overflow-hidden '>
       <div className='min-h-[100dvh] overflow-hidden  h-full w-full   flex flex-col'>
         <CompanyName />
         <WellcomeScrollSect2 />

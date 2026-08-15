@@ -11,11 +11,14 @@ export type ChangeInitialPasswordResponse = {
 export function changeInitialPassword(
   payload: ChangeInitialPasswordPayload,
 ): Promise<ChangeInitialPasswordResponse> {
-  return apiRequest<ChangeInitialPasswordResponse>('/auth/change-password', {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
+  return apiRequest<ChangeInitialPasswordResponse>(
+    '/auth/change-initial-password',
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     },
-    body: JSON.stringify(payload),
-  });
+  );
 }

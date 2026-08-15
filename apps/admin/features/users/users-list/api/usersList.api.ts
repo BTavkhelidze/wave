@@ -26,3 +26,17 @@ export function deleteUserByAdmin(userId: string): Promise<UserListItemData> {
     method: 'DELETE',
   });
 }
+
+export type ResetUserPasswordResponse = {
+  user: UserListItemData;
+  emailSent: boolean;
+  message: string;
+};
+
+export function resetUserPasswordByAdmin(
+  userId: string,
+): Promise<ResetUserPasswordResponse> {
+  return apiRequest<ResetUserPasswordResponse>(`/users/${userId}/reset-password`, {
+    method: 'POST',
+  });
+}

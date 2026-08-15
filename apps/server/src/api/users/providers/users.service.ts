@@ -12,6 +12,10 @@ import { FindUserByIdForAdminProvider } from './find-user-by-id-for-admin.provid
 import { UpdateUserByAdminProvider } from './update-user-by-admin.provider';
 import { UpdateUserByAdminDto } from '../dtos/update-user-by-admin.dto';
 import { DeleteUserByAdminProvider } from './delete-user-by-admin.provider';
+import {
+  ResetUserPasswordByAdminProvider,
+  type ResetUserPasswordByAdminResponse,
+} from './reset-user-password-by-admin.provider';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +29,7 @@ export class UsersService {
     private findUserByIdForAdminProvider: FindUserByIdForAdminProvider,
     private updateUserByAdminProvider: UpdateUserByAdminProvider,
     private deleteUserByAdminProvider: DeleteUserByAdminProvider,
+    private resetUserPasswordByAdminProvider: ResetUserPasswordByAdminProvider,
   ) {}
 
   public findUserByEmail(email: string) {
@@ -90,6 +95,16 @@ export class UsersService {
   ): Promise<CreateUserByAdminResponse> {
     return this.createUserByAdminProvider.createUserByAdmin(
       createUserByAdminDto,
+      superAdminId,
+    );
+  }
+
+  public async resetUserPasswordByAdmin(
+    userId: string,
+    superAdminId: string,
+  ): Promise<ResetUserPasswordByAdminResponse> {
+    return this.resetUserPasswordByAdminProvider.resetUserPasswordByAdmin(
+      userId,
       superAdminId,
     );
   }

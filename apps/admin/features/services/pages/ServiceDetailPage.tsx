@@ -57,7 +57,8 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
 
   if (servicesQuery.isError) {
     const isAccessDenied =
-      isApiRequestError(servicesQuery.error) && servicesQuery.error.status === 403;
+      isApiRequestError(servicesQuery.error) &&
+      servicesQuery.error.status === 403;
 
     return (
       <ServiceDetailShell>
@@ -171,7 +172,10 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
           <dl className='mt-4 grid gap-4 text-sm sm:grid-cols-2'>
             <MetadataItem label='Service ID' value={service.id} mono />
             <MetadataItem label='Icon' value={service.service.icon} />
-            <MetadataItem label='Icon color' value={service.service.iconColor} />
+            <MetadataItem
+              label='Icon color'
+              value={service.service.iconColor}
+            />
             <MetadataItem
               label='Translations'
               value={
@@ -261,6 +265,17 @@ function TranslationPanel({ language, service }: TranslationPanelProps) {
       <p className='mt-3 whitespace-pre-line text-sm leading-6 text-[#4B5563]'>
         {translation.description}
       </p>
+      <dl className='mt-4 space-y-2 rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-3 text-sm'>
+        <MetadataItem label='Slug' value={translation.slug} mono />
+        <MetadataItem
+          label='Meta title'
+          value={translation.metaTitle ?? 'Not set'}
+        />
+        <MetadataItem
+          label='Meta description'
+          value={translation.metaDescription ?? 'Not set'}
+        />
+      </dl>
       <div className='mt-5 flex flex-wrap items-center justify-between gap-3'>
         <p className='font-mono text-xs text-[#9CA3AF]'>
           Translation ID: {translation.id}
@@ -289,7 +304,7 @@ function MetadataItem({ label, value, mono = false }: MetadataItemProps) {
         {label}
       </dt>
       <dd
-        className={`mt-1 break-words text-[#111827] ${
+        className={`mt-1 wrap-break-word text-[#111827] ${
           mono ? 'font-mono text-xs' : ''
         }`}
       >

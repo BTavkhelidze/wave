@@ -27,9 +27,9 @@ function Footer() {
 
   return (
     <>
-      <footer className='relative z-50   text-white'>
-        <div className='max-w-[1440px] w-full mx-auto px-6  xl:px-0 pb-12 flex flex-col relative'>
-          <div className='flex mb-4 min-h-[260px]  justify-between gap-10 md:flex-row flex-col items-center'>
+      <footer className='relative z-50    text-white'>
+        <div className='max-w-[1440px] w-full mx-auto   xl:px-0 pb-12 flex flex-col relative'>
+          <div className='flex mb-4 min-h-[260px]  justify-between gap-10 md:flex-row flex-col '>
             <div className='flex max-w-[500px] w-full b order-2 lg:-order-1  items-center justify-center lg:justify-center'>
               <ContactUs />
             </div>
@@ -37,15 +37,7 @@ function Footer() {
               <h2 className='text-2xl font-semibold mb-4'>
                 {contactT('title')}
               </h2>
-              {/* <p className='text-gray-200 text-lg  text-start md:text-start'>
-                <span className='text-gray-400 text-base'>
-                  {' '}
-                  {contactT('Email')}:{' '}
-                </span>
-                <a href='mailto:info@waveengineering.ge'>
-                  info@waveengineering.ge
-                </a>
-              </p> */}
+
               <div className='text-gray-200   text-start md:text-start'>
                 <p>
                   <span className='text-gray-400 text-base'>

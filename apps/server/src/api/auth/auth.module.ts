@@ -27,6 +27,7 @@ import { ResetPasswordProvider } from './providers/reset-password.provider';
 import { PasswordResetTokenProvider } from './providers/password-reset-token.provider';
 import { PasswordResetEmailService } from './email/password-reset-email.service';
 import { PasswordResetRateLimitProvider } from './providers/password-reset-rate-limit.provider';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   controllers: [AuthController],
@@ -54,6 +55,7 @@ import { PasswordResetRateLimitProvider } from './providers/password-reset-rate-
   imports: [
     UsersModule,
     PrismaModule,
+    MailModule,
     ConfigModule.forFeature(appConfig),
     ConfigModule.forFeature(jwtConfig),
     JwtModule.register({

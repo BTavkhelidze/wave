@@ -35,6 +35,9 @@ export function groupServiceTranslations(
       language: translation.language,
       title: translation.title,
       description: translation.description,
+      slug: translation.slug,
+      metaTitle: translation.metaTitle,
+      metaDescription: translation.metaDescription,
     };
 
     servicesById.set(serviceId, serviceGroup);
@@ -55,6 +58,9 @@ export function groupServiceTranslations(
       ),
       title: primaryTranslation?.title ?? 'Untitled service',
       description: primaryTranslation?.description ?? '',
+      viewCount:
+        translations.find((translation) => translation.serviceId === serviceGroup.id)
+          ?.viewCount ?? 0,
     };
   });
 }

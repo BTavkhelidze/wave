@@ -5,6 +5,7 @@ import type {
   CreateServiceTranslationPayload,
   ReorderServicesPayload,
   ReorderServicesResponse,
+  ServicesAnalyticsResponse,
   ServiceListItemData,
   ServiceListQueryParams,
   ServiceTranslationMutationResponse,
@@ -27,6 +28,14 @@ export function fetchServices(
     `/services${queryString ? `?${queryString}` : ''}`,
     { signal },
   );
+}
+
+export function fetchServicesAnalytics(
+  signal?: AbortSignal,
+): Promise<ServicesAnalyticsResponse> {
+  return apiRequest<ServicesAnalyticsResponse>('/services/analytics', {
+    signal,
+  });
 }
 
 export function createService(

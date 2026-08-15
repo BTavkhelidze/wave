@@ -6,7 +6,7 @@ import React from 'react';
 
 function page() {
   return (
-    <main className='relative flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30    pb-[50px]'>
+    <main className='relative xl:px-[8%] flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30    pb-[50px]'>
       <div className='w-full' id='top'></div>
       <div className='w-full'>
         <CompanyName />

@@ -38,7 +38,7 @@ export function DeleteServiceDialog({
             Are you sure you want to delete this service? The Georgian and
             English versions will both be permanently deleted.
           </p>
-          <p className='break-words text-sm font-semibold text-[#111827]'>
+          <p className='wrap-break-word text-sm font-semibold text-[#111827]'>
             {serviceTitle}
           </p>
           {errorMessage && (

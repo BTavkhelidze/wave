@@ -33,7 +33,9 @@ export function ServiceTranslationPreviewPage() {
   }
 
   if (!serviceLanguage) {
-    return <Navigate to={`${ADMIN_ROUTE_PATHS.services}/${serviceId}`} replace />;
+    return (
+      <Navigate to={`${ADMIN_ROUTE_PATHS.services}/${serviceId}`} replace />
+    );
   }
 
   return (
@@ -55,7 +57,8 @@ function ServiceTranslationManageContent({
 }: ServiceTranslationManageContentProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const translationQuery = useServiceTranslationQuery(serviceId, language);
-  const createTranslationMutation = useCreateServiceTranslationMutation(serviceId);
+  const createTranslationMutation =
+    useCreateServiceTranslationMutation(serviceId);
   const service = translationQuery.data?.service;
   const translation = translationQuery.data?.translation;
   const updateTranslationMutation = useUpdateServiceTranslationMutation(
@@ -159,7 +162,9 @@ function ServiceTranslationManageContent({
                 <div className='flex flex-wrap items-center gap-2'>
                   <ServiceLanguageBadge language={language} />
                   <span className='rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-semibold text-[#6B7280]'>
-                    {translation ? 'Existing translation' : 'Missing translation'}
+                    {translation
+                      ? 'Existing translation'
+                      : 'Missing translation'}
                   </span>
                 </div>
                 <h1 className='mt-3 text-2xl font-semibold tracking-tight text-[#111827]'>
@@ -201,6 +206,17 @@ function ServiceTranslationManageContent({
                 <p className='mt-3 whitespace-pre-line text-sm leading-6 text-[#4B5563]'>
                   {translation.description}
                 </p>
+                <dl className='mt-4 space-y-3 rounded-md border border-[#E5E7EB] bg-[#F8FAFC] p-3 text-sm'>
+                  <MetadataItem label='Slug' value={translation.slug} mono />
+                  <MetadataItem
+                    label='Meta title'
+                    value={translation.metaTitle ?? 'Not set'}
+                  />
+                  <MetadataItem
+                    label='Meta description'
+                    value={translation.metaDescription ?? 'Not set'}
+                  />
+                </dl>
               </div>
             ) : (
               <p className='mt-4 text-sm leading-6 text-[#6B7280]'>
@@ -305,7 +321,7 @@ function MetadataItem({ label, value, mono = false }: MetadataItemProps) {
         {label}
       </dt>
       <dd
-        className={`mt-1 break-words text-[#111827] ${
+        className={`mt-1 wrap-break-word text-[#111827] ${
           mono ? 'font-mono text-xs' : ''
         }`}
       >

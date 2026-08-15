@@ -3,6 +3,7 @@ export type SidebarIconName =
   | 'blogs'
   | 'dashboard'
   | 'logs'
+  | 'messages'
   | 'services'
   | 'userPlus'
   | 'users';
@@ -11,6 +12,7 @@ export type SidebarNavigationItem = {
   label: string;
   path: string;
   icon: SidebarIconName;
+  badge?: 'unreadMessages';
   allowedRoles: readonly import('../../../features/auth/model/user.types').UserRole[];
 };
 

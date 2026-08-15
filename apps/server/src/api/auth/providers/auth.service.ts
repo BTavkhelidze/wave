@@ -6,7 +6,10 @@ import { SignInProvider } from './signIn.provider';
 import { RefreshTokenProvider } from './refresh-tokens.provider';
 import { ActiveUserProvider } from './active-user.provider';
 import { LogoutProvider } from './logout.provider';
-import { ChangePasswordDto } from '../dtos/change-password.dto';
+import {
+  ChangeInitialPasswordDto,
+  ChangePasswordDto,
+} from '../dtos/change-password.dto';
 import {
   ChangePasswordProvider,
   type ChangePasswordResponse,
@@ -62,6 +65,16 @@ export class AuthService {
     return this.changePasswordProvider.changePassword(
       activeUserId,
       changePasswordDto,
+    );
+  }
+
+  public async changeInitialPassword(
+    activeUserId: string,
+    changeInitialPasswordDto: ChangeInitialPasswordDto,
+  ): Promise<ChangePasswordResponse> {
+    return this.changePasswordProvider.changeInitialPassword(
+      activeUserId,
+      changeInitialPasswordDto,
     );
   }
 

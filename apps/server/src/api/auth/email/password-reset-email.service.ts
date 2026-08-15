@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
+import { MailService } from 'src/api/mail/mail.service';
 
 type PasswordResetEmail = {
   to: string;
@@ -15,6 +16,7 @@ export class PasswordResetEmailService {
   constructor(
     @Inject(appConfig.KEY)
     private readonly appConfiguration: ConfigType<typeof appConfig>,
+    private readonly mailService: MailService,
   ) {}
 
   public async sendPasswordResetEmail({
@@ -45,13 +47,12 @@ export class PasswordResetEmailService {
       return;
     }
 
-    void to;
-    void resetUrl;
-    void expiresInMinutes;
-
-    this.logger.error(
-      'Password reset SMTP delivery is not implemented yet. Configure a concrete mail transport before production use.',
-    );
+    await this.mailService.sendMail({
+      to,
+      subject: 'Reset your Wave Engineering admin password',
+      text: this.buildPasswordResetText(resetUrl, expiresInMinutes),
+      html: this.buildPasswordResetHtml(resetUrl, expiresInMinutes),
+    });
   }
 
   private hasSmtpConfiguration(): boolean {
@@ -64,5 +65,41 @@ export class PasswordResetEmailService {
       mail.smtp.user &&
       mail.smtp.password,
     );
+  }
+
+  private buildPasswordResetText(
+    resetUrl: string,
+    expiresInMinutes: number,
+  ): string {
+    return [
+      'A password reset was requested for your Wave Engineering admin account.',
+      '',
+      `Open this link to reset your password: ${resetUrl}`,
+      '',
+      `This link expires in ${expiresInMinutes} minutes.`,
+      'If you did not request this, you can ignore this email.',
+    ].join('\n');
+  }
+
+  private buildPasswordResetHtml(
+    resetUrl: string,
+    expiresInMinutes: number,
+  ): string {
+    return `
+      <h2>Password reset requested</h2>
+      <p>A password reset was requested for your Wave Engineering admin account.</p>
+      <p><a href="${this.escapeHtml(resetUrl)}">Reset your password</a></p>
+      <p>This link expires in ${expiresInMinutes} minutes.</p>
+      <p>If you did not request this, you can ignore this email.</p>
+    `;
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

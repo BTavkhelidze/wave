@@ -20,6 +20,13 @@ const titleFieldId = 'service-translation-title';
 const titleErrorId = 'service-translation-title-error';
 const descriptionFieldId = 'service-translation-description';
 const descriptionErrorId = 'service-translation-description-error';
+const slugFieldId = 'service-translation-slug';
+const slugErrorId = 'service-translation-slug-error';
+const metaTitleFieldId = 'service-translation-meta-title';
+const metaTitleErrorId = 'service-translation-meta-title-error';
+const metaDescriptionFieldId = 'service-translation-meta-description';
+const metaDescriptionErrorId = 'service-translation-meta-description-error';
+const slugPattern = /^[A-Za-z0-9]+(?:[\s-]+[A-Za-z0-9]+)*$/;
 
 export function ServiceTranslationForm({
   language,
@@ -39,6 +46,9 @@ export function ServiceTranslationForm({
     defaultValues: {
       title: translation?.title ?? '',
       description: translation?.description ?? '',
+      slug: translation?.slug ?? '',
+      metaTitle: translation?.metaTitle ?? '',
+      metaDescription: translation?.metaDescription ?? '',
     },
     mode: 'onBlur',
   });
@@ -47,11 +57,17 @@ export function ServiceTranslationForm({
     reset({
       title: translation?.title ?? '',
       description: translation?.description ?? '',
+      slug: translation?.slug ?? '',
+      metaTitle: translation?.metaTitle ?? '',
+      metaDescription: translation?.metaDescription ?? '',
     });
   }, [reset, translation]);
 
   const titleError = errors.title?.message;
   const descriptionError = errors.description?.message;
+  const slugError = errors.slug?.message;
+  const metaTitleError = errors.metaTitle?.message;
+  const metaDescriptionError = errors.metaDescription?.message;
 
   const handleFormSubmit: SubmitHandler<ServiceTranslationFormValues> = async (
     values,
@@ -59,6 +75,9 @@ export function ServiceTranslationForm({
     await onSubmit({
       title: values.title.trim(),
       description: values.description.trim(),
+      slug: values.slug.trim(),
+      metaTitle: values.metaTitle.trim(),
+      metaDescription: values.metaDescription.trim(),
     });
   };
 
@@ -126,6 +145,91 @@ export function ServiceTranslationForm({
           {descriptionError && (
             <p id={descriptionErrorId} className='mt-2 text-sm text-[#DC2626]'>
               {descriptionError}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={slugFieldId}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Slug
+          </label>
+          <input
+            id={slugFieldId}
+            type='text'
+            placeholder='web-development'
+            aria-invalid={Boolean(slugError)}
+            aria-describedby={slugError ? slugErrorId : undefined}
+            className='mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...register('slug', {
+              validate: (value) => {
+                const trimmedValue = value.trim();
+
+                if (!trimmedValue) {
+                  return 'Slug is required.';
+                }
+
+                return (
+                  slugPattern.test(trimmedValue) ||
+                  'Slug must use letters, numbers, spaces, and hyphens.'
+                );
+              },
+            })}
+          />
+          {slugError && (
+            <p id={slugErrorId} className='mt-2 text-sm text-[#DC2626]'>
+              {slugError}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={metaTitleFieldId}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Meta title
+          </label>
+          <input
+            id={metaTitleFieldId}
+            type='text'
+            aria-invalid={Boolean(metaTitleError)}
+            aria-describedby={metaTitleError ? metaTitleErrorId : undefined}
+            className='mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...register('metaTitle')}
+          />
+          {metaTitleError && (
+            <p id={metaTitleErrorId} className='mt-2 text-sm text-[#DC2626]'>
+              {metaTitleError}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={metaDescriptionFieldId}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Meta description
+          </label>
+          <textarea
+            id={metaDescriptionFieldId}
+            rows={4}
+            aria-invalid={Boolean(metaDescriptionError)}
+            aria-describedby={
+              metaDescriptionError ? metaDescriptionErrorId : undefined
+            }
+            className='mt-2 w-full resize-y rounded-md border border-[#D1D5DB] px-3 py-2 text-sm leading-6 text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...register('metaDescription')}
+          />
+          {metaDescriptionError && (
+            <p
+              id={metaDescriptionErrorId}
+              className='mt-2 text-sm text-[#DC2626]'
+            >
+              {metaDescriptionError}
             </p>
           )}
         </div>

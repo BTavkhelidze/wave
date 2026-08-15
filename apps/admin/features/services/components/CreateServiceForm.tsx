@@ -98,6 +98,21 @@ export function CreateServiceForm() {
             error: errors.kaDescription?.message,
             registration: register('kaDescription'),
           }}
+          slugField={{
+            id: 'create-service-ka-slug',
+            error: errors.kaSlug?.message,
+            registration: register('kaSlug'),
+          }}
+          metaTitleField={{
+            id: 'create-service-ka-meta-title',
+            error: errors.kaMetaTitle?.message,
+            registration: register('kaMetaTitle'),
+          }}
+          metaDescriptionField={{
+            id: 'create-service-ka-meta-description',
+            error: errors.kaMetaDescription?.message,
+            registration: register('kaMetaDescription'),
+          }}
         />
         <TranslationSection
           title='English'
@@ -111,6 +126,21 @@ export function CreateServiceForm() {
             id: 'create-service-en-description',
             error: errors.enDescription?.message,
             registration: register('enDescription'),
+          }}
+          slugField={{
+            id: 'create-service-en-slug',
+            error: errors.enSlug?.message,
+            registration: register('enSlug'),
+          }}
+          metaTitleField={{
+            id: 'create-service-en-meta-title',
+            error: errors.enMetaTitle?.message,
+            registration: register('enMetaTitle'),
+          }}
+          metaDescriptionField={{
+            id: 'create-service-en-meta-description',
+            error: errors.enMetaDescription?.message,
+            registration: register('enMetaDescription'),
           }}
         />
       </section>
@@ -206,6 +236,21 @@ type TranslationSectionProps = {
     error: string | undefined;
     registration: UseFormRegisterReturn;
   };
+  slugField: {
+    id: string;
+    error: string | undefined;
+    registration: UseFormRegisterReturn;
+  };
+  metaTitleField: {
+    id: string;
+    error: string | undefined;
+    registration: UseFormRegisterReturn;
+  };
+  metaDescriptionField: {
+    id: string;
+    error: string | undefined;
+    registration: UseFormRegisterReturn;
+  };
 };
 
 function TranslationSection({
@@ -213,9 +258,15 @@ function TranslationSection({
   description,
   titleField,
   descriptionField,
+  slugField,
+  metaTitleField,
+  metaDescriptionField,
 }: TranslationSectionProps) {
   const titleErrorId = `${titleField.id}-error`;
   const descriptionErrorId = `${descriptionField.id}-error`;
+  const slugErrorId = `${slugField.id}-error`;
+  const metaTitleErrorId = `${metaTitleField.id}-error`;
+  const metaDescriptionErrorId = `${metaDescriptionField.id}-error`;
 
   return (
     <section className='rounded-lg border border-[#E5E7EB] bg-white shadow-sm'>
@@ -266,6 +317,82 @@ function TranslationSection({
           {descriptionField.error && (
             <p id={descriptionErrorId} className='mt-2 text-sm text-[#DC2626]'>
               {descriptionField.error}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={slugField.id}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Slug
+          </label>
+          <input
+            id={slugField.id}
+            type='text'
+            placeholder='web-development'
+            aria-invalid={Boolean(slugField.error)}
+            aria-describedby={slugField.error ? slugErrorId : undefined}
+            className='mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...slugField.registration}
+          />
+          {slugField.error && (
+            <p id={slugErrorId} className='mt-2 text-sm text-[#DC2626]'>
+              {slugField.error}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={metaTitleField.id}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Meta title
+          </label>
+          <input
+            id={metaTitleField.id}
+            type='text'
+            aria-invalid={Boolean(metaTitleField.error)}
+            aria-describedby={
+              metaTitleField.error ? metaTitleErrorId : undefined
+            }
+            className='mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...metaTitleField.registration}
+          />
+          {metaTitleField.error && (
+            <p id={metaTitleErrorId} className='mt-2 text-sm text-[#DC2626]'>
+              {metaTitleField.error}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor={metaDescriptionField.id}
+            className='block text-sm font-medium text-[#111827]'
+          >
+            Meta description
+          </label>
+          <textarea
+            id={metaDescriptionField.id}
+            rows={4}
+            aria-invalid={Boolean(metaDescriptionField.error)}
+            aria-describedby={
+              metaDescriptionField.error
+                ? metaDescriptionErrorId
+                : undefined
+            }
+            className='mt-2 w-full resize-y rounded-md border border-[#D1D5DB] px-3 py-2 text-sm leading-6 text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
+            {...metaDescriptionField.registration}
+          />
+          {metaDescriptionField.error && (
+            <p
+              id={metaDescriptionErrorId}
+              className='mt-2 text-sm text-[#DC2626]'
+            >
+              {metaDescriptionField.error}
             </p>
           )}
         </div>

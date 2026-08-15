@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminLogsRootQueryKey } from '../../admin-logs/api/adminLogs.queries';
 import {
   createService,
   createServiceTranslation,
   deleteService,
+  fetchServicesAnalytics,
   fetchServices,
   reorderServices,
   updateServiceTranslation,
@@ -18,6 +20,7 @@ import type {
   ServiceLanguage,
   ServiceListQueryParams,
   ServiceTranslationContent,
+  ServicesAnalyticsResponse,
   UpdateServiceTranslationPayload,
 } from '../model/service.types';
 
@@ -25,6 +28,8 @@ export const servicesQueryKey = (params: ServiceListQueryParams) =>
   ['services', params] as const;
 
 export const serviceCatalogQueryKey = ['services', 'catalog'] as const;
+
+export const servicesAnalyticsQueryKey = ['services', 'analytics'] as const;
 
 export const serviceTranslationQueryKey = (
   serviceId: string,
@@ -50,6 +55,17 @@ export function useServiceCatalogQuery() {
   });
 }
 
+export function useServicesAnalyticsQuery() {
+  return useQuery<ServicesAnalyticsResponse>({
+    queryKey: servicesAnalyticsQueryKey,
+    queryFn: ({ signal }) => fetchServicesAnalytics(signal),
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+  });
+}
+
 export function useCreateServiceMutation() {
   const queryClient = useQueryClient();
 
@@ -58,6 +74,10 @@ export function useCreateServiceMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: serviceCatalogQueryKey });
       await queryClient.invalidateQueries({ queryKey: ['services'] });
+      await queryClient.invalidateQueries({
+        queryKey: servicesAnalyticsQueryKey,
+      });
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
     },
   });
 }
@@ -98,6 +118,10 @@ export function useCreateServiceTranslationMutation(serviceId: string) {
         serviceId,
         payload.language,
       );
+      await queryClient.invalidateQueries({
+        queryKey: servicesAnalyticsQueryKey,
+      });
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
     },
   });
 }
@@ -114,6 +138,10 @@ export function useUpdateServiceTranslationMutation(
       updateServiceTranslation(translationId, payload),
     onSuccess: async () => {
       await invalidateServiceTranslationQueries(queryClient, serviceId, language);
+      await queryClient.invalidateQueries({
+        queryKey: servicesAnalyticsQueryKey,
+      });
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
     },
   });
 }
@@ -127,6 +155,8 @@ export function useDeleteServiceMutation(serviceId: string) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: serviceCatalogQueryKey }),
         queryClient.invalidateQueries({ queryKey: ['services'] }),
+        queryClient.invalidateQueries({ queryKey: servicesAnalyticsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey }),
         queryClient.removeQueries({
           queryKey: [...serviceCatalogQueryKey, serviceId],
         }),
@@ -164,6 +194,12 @@ export function useReorderServicesMutation() {
           context.previousCatalog,
         );
       }
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: servicesAnalyticsQueryKey,
+      });
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: serviceCatalogQueryKey });
@@ -220,14 +256,26 @@ function buildCreateServicePayload(
         language: 'KA',
         title: values.kaTitle.trim(),
         description: values.kaDescription.trim(),
+        slug: values.kaSlug.trim(),
+        metaTitle: optionalTrimmedValue(values.kaMetaTitle),
+        metaDescription: optionalTrimmedValue(values.kaMetaDescription),
       },
       {
         language: 'EN',
         title: values.enTitle.trim(),
         description: values.enDescription.trim(),
+        slug: values.enSlug.trim(),
+        metaTitle: optionalTrimmedValue(values.enMetaTitle),
+        metaDescription: optionalTrimmedValue(values.enMetaDescription),
       },
     ],
   };
+}
+
+function optionalTrimmedValue(value: string): string | undefined {
+  const trimmedValue = value.trim();
+
+  return trimmedValue.length > 0 ? trimmedValue : undefined;
 }
 
 function reorderCatalogByServiceIds(

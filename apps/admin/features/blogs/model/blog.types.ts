@@ -30,13 +30,26 @@ export type BlogListItem = {
   language: BlogLanguage;
   status: BlogStatus;
   isFeatured: boolean;
+  viewCount: number;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
+export type BlogTranslation = {
+  id: string;
+  language: BlogLanguage;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+};
+
 export type PublicBlogDetail = BlogListItem & {
   content: string;
+  translations?: BlogTranslation[];
 };
 
 export type BlogsPagination = {
@@ -52,3 +65,25 @@ export type PublicBlogsResponse = {
 };
 
 export type AdminBlogsResponse = PublicBlogsResponse;
+
+export type AdminBlogDetail = BlogListItem & {
+  content: string;
+  translations: BlogTranslation[];
+};
+
+export type BlogMutationPayload = {
+  coverImageKey: string;
+  coverImageUrl: string;
+  status: BlogStatus;
+  isFeatured: boolean;
+  publishedAt?: string;
+  translations: Array<{
+    language: BlogLanguage;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    metaTitle?: string;
+    metaDescription?: string;
+  }>;
+};

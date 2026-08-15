@@ -3,11 +3,14 @@ import { NavLink } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { canAccessRole } from '../../../features/auth/lib/authorization';
 import { useAuth } from '../../../features/context/AuthContext';
+import { useUnreadContactMessagesCountQuery } from '../../../features/messages/api/messages.queries';
 import { SIDEBAR_NAVIGATION_GROUPS } from '../model/sidebar.constants';
 import { SidebarIcon } from './SidebarIcon';
 
 export function SidebarNavigation() {
   const { user } = useAuth();
+  const unreadCountQuery = useUnreadContactMessagesCountQuery();
+  const unreadCount = unreadCountQuery.data?.count ?? 0;
   const visibleGroups = SIDEBAR_NAVIGATION_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter((item) =>
@@ -41,7 +44,16 @@ export function SidebarNavigation() {
                   <SidebarIcon name={item.icon} className='h-4 w-4 shrink-0' />
                   <span className='truncate'>{item.label}</span>
                 </span>
-                <span className='text-xs opacity-60'>/</span>
+                {item.badge === 'unreadMessages' && unreadCount > 0 ? (
+                  <span
+                    className='ml-2 rounded-full bg-[#7C3AED] px-2 py-0.5 text-xs font-semibold text-white'
+                    aria-label={`${unreadCount} unread messages`}
+                  >
+                    {unreadCount}
+                  </span>
+                ) : (
+                  <span className='text-xs opacity-60'>/</span>
+                )}
               </NavLink>
             ))}
           </div>

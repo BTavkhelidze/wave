@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 
-import '@/app/globals.css';
 import { Spotlight } from '../ui/spotlight-new';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -29,20 +28,20 @@ function CompanyName() {
         stagger: 0.1,
 
         opacity: 1,
-      }
+      },
     ).to(
       '#CompanyDescText',
       {
         duration: 1,
         clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%) ',
       },
-      '-=0.5'
+      '-=0.5',
     );
   }, []);
 
   return (
     <section className='w-full  flex-1 max-w-[1440px] px-6  xl:px-0   mx-auto pt-0 '>
-      <div className='relative   pt-50  gap-6 flex flex-col  items-center justify-center h-full '>
+      <div className='relative   pt-30  gap-6 flex flex-col  items-center justify-center h-full '>
         <div className=' w-full  z-10 h-full absolute top-0 left-0 '>
           <Spotlight />
         </div>

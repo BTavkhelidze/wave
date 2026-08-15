@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ServiceLanguage } from '../enums/service-language';
 import { trimString } from './trim-string.transform';
 
@@ -28,4 +28,31 @@ export class CreateServiceTranslationDto {
   @IsString()
   @IsNotEmpty()
   description: string;
+
+  @ApiProperty({
+    example: 'fire-and-life-safety',
+  })
+  @Transform(trimString)
+  @IsString()
+  @IsNotEmpty()
+  slug: string;
+
+  @ApiProperty({
+    example: 'Fire and Life Safety Services | Wave Engineering',
+    required: false,
+  })
+  @Transform(trimString)
+  @IsOptional()
+  @IsString()
+  metaTitle?: string;
+
+  @ApiProperty({
+    example:
+      'Professional fire and life safety services from Wave Engineering.',
+    required: false,
+  })
+  @Transform(trimString)
+  @IsOptional()
+  @IsString()
+  metaDescription?: string;
 }

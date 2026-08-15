@@ -32,15 +32,15 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`bg-[#0B1012]`}>
         <NextIntlClientProvider>
-          <main className='flex flex-col  justify-between overflow-hidden '>
-            <LayoutClientSide />
-            <div className='flex-1'>
-              <Providers>{children}</Providers>
-            </div>
-            <SpeedInsights />
-            <LayoutClientSideFooter />
-            <GoogleAnalytics gaId='G-0B93WP5255' />
-          </main>
+          <Providers>
+            <main className='flex flex-col  justify-between overflow-hidden '>
+              <LayoutClientSide />
+              <div className='flex-1'>{children}</div>
+              <SpeedInsights />
+              <LayoutClientSideFooter />
+              <GoogleAnalytics gaId='G-0B93WP5255' />
+            </main>
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

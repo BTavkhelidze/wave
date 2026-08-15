@@ -103,7 +103,8 @@ export const ButtonNav: FC<IType> = ({ onSetOpen }) => {
             />
           )}
         </Link>
-        {/* <Link
+        <Link
+          onClick={() => handleClick()}
           href='/blogs'
           className={`sm:text-sm text-xs font-light tracking-wide relative transition-colors duration-200 ${
             active === 'blogs' ? 'text-[#FFFFFF] ' : 'text-[#F9F9F9] '
@@ -126,7 +127,7 @@ export const ButtonNav: FC<IType> = ({ onSetOpen }) => {
               }`}
             />
           )}
-        </Link> */}
+        </Link>
         <Link
           onClick={() => handleClick()}
           href='/aboutUs'

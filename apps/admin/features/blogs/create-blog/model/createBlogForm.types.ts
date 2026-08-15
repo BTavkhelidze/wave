@@ -1,17 +1,22 @@
-export type BlogLanguage = 'EN' | 'KA';
+export type BlogLanguage = "EN" | "KA";
 
-export type BlogStatus = 'DRAFT' | 'PUBLISHED';
+export type BlogStatus = "DRAFT" | "PUBLISHED";
 
-export type CreateBlogFormValues = {
+export type CreateBlogTranslationFormValues = {
   title: string;
   slug: string;
   excerpt: string;
   content: string;
-  language: BlogLanguage;
+  seoTitle: string;
+  metaDescription: string;
+};
+
+export type CreateBlogFormValues = {
   coverImage: File | null;
+  existingCoverImageKey?: string;
+  existingCoverImageUrl?: string;
   status: BlogStatus;
   publishDate: string;
   isFeatured: boolean;
-  seoTitle: string;
-  metaDescription: string;
+  translations: Record<BlogLanguage, CreateBlogTranslationFormValues>;
 };

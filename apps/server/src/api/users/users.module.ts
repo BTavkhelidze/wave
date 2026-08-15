@@ -19,6 +19,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { FindUserByIdForAdminProvider } from './providers/find-user-by-id-for-admin.provider';
 import { UpdateUserByAdminProvider } from './providers/update-user-by-admin.provider';
 import { DeleteUserByAdminProvider } from './providers/delete-user-by-admin.provider';
+import { MailModule } from '../mail/mail.module';
+import appConfig from 'src/config/app.config';
+import { ResetUserPasswordByAdminProvider } from './providers/reset-user-password-by-admin.provider';
 
 @Module({
   controllers: [UsersController],
@@ -37,6 +40,7 @@ import { DeleteUserByAdminProvider } from './providers/delete-user-by-admin.prov
     FindUserByIdForAdminProvider,
     UpdateUserByAdminProvider,
     DeleteUserByAdminProvider,
+    ResetUserPasswordByAdminProvider,
     AccessTokenGuard,
     ActiveUserGuard,
     RolesGuard,
@@ -49,6 +53,8 @@ import { DeleteUserByAdminProvider } from './providers/delete-user-by-admin.prov
   ],
   imports: [
     PrismaModule,
+    MailModule,
+    ConfigModule.forFeature(appConfig),
     ConfigModule.forFeature(jwtConfig),
     JwtModule.register({}),
   ],

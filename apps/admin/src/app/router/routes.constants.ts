@@ -4,12 +4,14 @@ export const ADMIN_ROUTE_PATHS = {
   users: '/users',
   createUser: '/users/create',
   adminLogs: '/admin-logs',
+  messages: '/messages',
   services: '/services',
   createService: '/services/create',
   serviceDetail: '/services/:serviceId',
   serviceTranslationDetail: '/services/:serviceId/:language',
   blogs: '/blogs',
   createBlog: '/blogs/create',
+  blogDetail: '/blogs/:blogId',
   changeInitialPassword: '/change-initial-password',
 } as const;
 

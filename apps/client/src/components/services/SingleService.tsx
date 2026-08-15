@@ -11,6 +11,7 @@ import { useLocale } from 'next-intl';
 import { usePublicServicesQuery } from './services.queries';
 import {
   getLocalizedServiceDescription,
+  matchesLocalizedServiceSlug,
   getLocalizedServiceTitle,
 } from './services.locale';
 
@@ -23,19 +24,17 @@ function SingleService({ service }: SingleServiceProps) {
   const [isHover, setIsHover] = useState<boolean>(false);
   const locale = useLocale();
 
-  const {
-    data: services,
-    isPending,
-    isError,
-  } = usePublicServicesQuery(locale);
+  const { data: services, isPending, isError } = usePublicServicesQuery(locale);
 
   useEffect(() => {
     if (!services) return;
 
-    const index = services.findIndex((el) => el.id === service);
+    const index = services.findIndex((el) =>
+      matchesLocalizedServiceSlug(el, locale, service),
+    );
 
     setCurIndex(index);
-  }, [service, services]);
+  }, [locale, service, services]);
 
   if (isPending)
     return (

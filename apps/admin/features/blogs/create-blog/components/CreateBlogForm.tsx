@@ -1,34 +1,115 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState } from "react";
+import {
+  useForm,
+  type FieldErrors,
+  type SubmitErrorHandler,
+  type SubmitHandler,
+} from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
-import { ADMIN_ROUTE_PATHS } from '../../../../src/app/router/routes.constants';
-import { useCreateBlogMutation } from '../api/createBlog.queries';
-import { CoverImageSection } from './CoverImageSection';
-import { CreateBlogFormActions } from './CreateBlogFormActions';
-import { MainInformationSection } from './MainInformationSection';
-import { PublicationSettingsSection } from './PublicationSettingsSection';
-import { SeoSection } from './SeoSection';
-import { CREATE_BLOG_FORM_DEFAULT_VALUES } from '../model/createBlogForm.constants';
+import { ADMIN_ROUTE_PATHS } from "../../../../src/app/router/routes.constants";
+import {
+  uploadBlogImage,
+  type UploadImageResponse,
+} from "../api/createBlog.api";
+import { useCreateBlogMutation } from "../api/createBlog.queries";
+import { CoverImageSection } from "./CoverImageSection";
+import { CreateBlogFormActions } from "./CreateBlogFormActions";
+import { MainInformationSection } from "./MainInformationSection";
+import { PublicationSettingsSection } from "./PublicationSettingsSection";
+import { SeoSection } from "./SeoSection";
+import { CREATE_BLOG_FORM_DEFAULT_VALUES } from "../model/createBlogForm.constants";
 import {
   CreateBlogFormSchema,
   createSlugFromTitle,
-} from '../model/createBlogForm.schema';
+} from "../model/createBlogForm.schema";
 import type {
+  BlogLanguage,
   BlogStatus,
   CreateBlogFormValues,
-} from '../model/createBlogForm.types';
+} from "../model/createBlogForm.types";
 
-type SubmitIntent = 'draft' | 'publish';
+type SubmitIntent = "draft" | "publish";
+
+function getValidationMessage(
+  errors: FieldErrors<CreateBlogFormValues>,
+): string | null {
+  if (errors.coverImage?.message) {
+    return errors.coverImage.message;
+  }
+
+  if (errors.publishDate?.message) {
+    return errors.publishDate.message;
+  }
+
+  for (const language of ["KA", "EN"] as const) {
+    const translationErrors = errors.translations?.[language];
+
+    if (!translationErrors) {
+      continue;
+    }
+
+    if (translationErrors.title?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} title: ${translationErrors.title.message}`;
+    }
+
+    if (translationErrors.slug?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} slug: ${translationErrors.slug.message}`;
+    }
+
+    if (translationErrors.excerpt?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} short description: ${translationErrors.excerpt.message}`;
+    }
+
+    if (translationErrors.content?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} content: ${translationErrors.content.message}`;
+    }
+
+    if (translationErrors.seoTitle?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} SEO title: ${translationErrors.seoTitle.message}`;
+    }
+
+    if (translationErrors.metaDescription?.message) {
+      return `${language === "KA" ? "Georgian" : "English"} meta description: ${translationErrors.metaDescription.message}`;
+    }
+  }
+
+  return null;
+}
+
+function getFirstInvalidLanguage(
+  errors: FieldErrors<CreateBlogFormValues>,
+): BlogLanguage | null {
+  for (const language of ["KA", "EN"] as const) {
+    if (errors.translations?.[language]) {
+      return language;
+    }
+  }
+
+  return null;
+}
 
 export function CreateBlogForm() {
   const navigate = useNavigate();
-  const submitIntentRef = useRef<SubmitIntent>('draft');
-  const [submitIntent, setSubmitIntentState] = useState<SubmitIntent>('draft');
-  const [hasEditedSlug, setHasEditedSlug] = useState(false);
+  const submitIntentRef = useRef<SubmitIntent>("draft");
+  const inlineImageUploadsRef = useRef<
+    Map<string, Promise<UploadImageResponse>>
+  >(new Map());
+  const uploadedInlineImageKeysRef = useRef<Set<string>>(new Set());
+  const [submitIntent, setSubmitIntentState] = useState<SubmitIntent>("draft");
+  const [activeLanguage, setActiveLanguage] = useState<BlogLanguage>("KA");
+  const [hasEditedSlug, setHasEditedSlug] = useState<
+    Record<BlogLanguage, boolean>
+  >({
+    EN: false,
+    KA: false,
+  });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [createdBlogSlug, setCreatedBlogSlug] = useState<string | null>(null);
+  const [validationMessage, setValidationMessage] = useState<string | null>(
+    null,
+  );
   const createBlogMutation = useCreateBlogMutation();
   const {
     register,
@@ -41,26 +122,38 @@ export function CreateBlogForm() {
   } = useForm<CreateBlogFormValues>({
     resolver: zodResolver(CreateBlogFormSchema),
     defaultValues: CREATE_BLOG_FORM_DEFAULT_VALUES,
-    mode: 'onBlur',
+    mode: "onBlur",
   });
 
-  const title = watch('title');
-  const coverImage = watch('coverImage');
-  const isFeatured = watch('isFeatured');
-  const metaDescription = watch('metaDescription');
+  const translations = watch("translations");
+  const coverImage = watch("coverImage");
+  const isFeatured = watch("isFeatured");
+  const activeMetaDescription =
+    translations[activeLanguage]?.metaDescription ?? "";
   const submitError =
     createBlogMutation.error instanceof Error
       ? createBlogMutation.error.message
       : null;
 
   useEffect(() => {
-    if (!hasEditedSlug) {
-      setValue('slug', createSlugFromTitle(title), {
+    (["KA", "EN"] as const).forEach((language) => {
+      if (hasEditedSlug[language]) {
+        return;
+      }
+
+      const title = translations[language]?.title ?? "";
+      const nextSlug = createSlugFromTitle(title);
+
+      if (translations[language]?.slug === nextSlug) {
+        return;
+      }
+
+      setValue(`translations.${language}.slug`, nextSlug, {
         shouldDirty: Boolean(title),
         shouldValidate: Boolean(title),
       });
-    }
-  }, [hasEditedSlug, setValue, title]);
+    });
+  }, [hasEditedSlug, setValue, translations]);
 
   useEffect(() => {
     if (!coverImage) {
@@ -76,8 +169,14 @@ export function CreateBlogForm() {
     };
   }, [coverImage]);
 
+  useEffect(() => {
+    if (isValid) {
+      setValidationMessage(null);
+    }
+  }, [isValid]);
+
   const handleSelectCoverImage = (file: File) => {
-    setValue('coverImage', file, {
+    setValue("coverImage", file, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -85,7 +184,7 @@ export function CreateBlogForm() {
   };
 
   const handleRemoveCoverImage = () => {
-    setValue('coverImage', null, {
+    setValue("coverImage", null, {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -93,35 +192,67 @@ export function CreateBlogForm() {
   };
 
   const setSubmitIntent = (intent: SubmitIntent) => {
-    const status: BlogStatus = intent === 'publish' ? 'PUBLISHED' : 'DRAFT';
+    const status: BlogStatus = intent === "publish" ? "PUBLISHED" : "DRAFT";
 
     submitIntentRef.current = intent;
     setSubmitIntentState(intent);
-    setValue('status', status, {
+    setValue("status", status, {
       shouldDirty: true,
       shouldValidate: true,
     });
   };
 
+  const handleUploadInlineImage = async (file: File) => {
+    const uploadKey = `${file.name}:${file.size}:${file.lastModified}`;
+    let uploadRequest = inlineImageUploadsRef.current.get(uploadKey);
+
+    if (!uploadRequest) {
+      uploadRequest = uploadBlogImage(file);
+      inlineImageUploadsRef.current.set(uploadKey, uploadRequest);
+    }
+
+    const uploadedImage = await uploadRequest;
+    uploadedInlineImageKeysRef.current.add(uploadedImage.key);
+
+    return uploadedImage;
+  };
+
   const onSubmit: SubmitHandler<CreateBlogFormValues> = async (values) => {
     setCreatedBlogSlug(null);
+    setValidationMessage(null);
 
     const status =
-      submitIntentRef.current === 'publish'
-        ? ('PUBLISHED' as const)
-        : ('DRAFT' as const);
+      submitIntentRef.current === "publish"
+        ? ("PUBLISHED" as const)
+        : ("DRAFT" as const);
 
     try {
       const createdBlog = await createBlogMutation.mutateAsync({
         values,
         status,
+        uploadedInlineImageKeys: Array.from(uploadedInlineImageKeysRef.current),
       });
 
       setCreatedBlogSlug(createdBlog.slug);
-      setHasEditedSlug(false);
+      setHasEditedSlug({ EN: false, KA: false });
+      inlineImageUploadsRef.current.clear();
+      uploadedInlineImageKeysRef.current.clear();
       reset(CREATE_BLOG_FORM_DEFAULT_VALUES);
     } catch {
+      inlineImageUploadsRef.current.clear();
+      uploadedInlineImageKeysRef.current.clear();
       setCreatedBlogSlug(null);
+    }
+  };
+
+  const onInvalid: SubmitErrorHandler<CreateBlogFormValues> = (formErrors) => {
+    setCreatedBlogSlug(null);
+    setValidationMessage(getValidationMessage(formErrors));
+
+    const firstInvalidLanguage = getFirstInvalidLanguage(formErrors);
+
+    if (firstInvalidLanguage) {
+      setActiveLanguage(firstInvalidLanguage);
     }
   };
 
@@ -130,18 +261,51 @@ export function CreateBlogForm() {
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
-      <div className='grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]'>
-        <div className='min-w-0'>
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
+      className="space-y-6"
+    >
+      <div className="inline-flex rounded-lg border border-[#D1D5DB] bg-white p-1 shadow-sm">
+        {(["KA", "EN"] as const).map((language) => {
+          const isActive = activeLanguage === language;
+
+          return (
+            <button
+              key={language}
+              type="button"
+              onClick={() => setActiveLanguage(language)}
+              className={`rounded-md px-4 py-2 text-sm font-semibold transition ${
+                isActive
+                  ? "bg-[#7C3AED] text-white"
+                  : "text-[#374151] hover:bg-[#F8FAFC]"
+              }`}
+            >
+              {language === "KA" ? "Georgian" : "English"}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0">
           <MainInformationSection
+            key={activeLanguage}
+            activeLanguage={activeLanguage}
             control={control}
             register={register}
             errors={errors}
-            onSlugEdited={() => setHasEditedSlug(true)}
+            onSlugEdited={() =>
+              setHasEditedSlug((current) => ({
+                ...current,
+                [activeLanguage]: true,
+              }))
+            }
+            onUploadImage={handleUploadInlineImage}
           />
         </div>
 
-        <div className='space-y-6'>
+        <div className="space-y-6">
           <CoverImageSection
             selectedFile={coverImage}
             previewUrl={previewUrl}
@@ -155,39 +319,47 @@ export function CreateBlogForm() {
             isFeatured={isFeatured}
           />
           <SeoSection
+            key={`seo-${activeLanguage}`}
+            activeLanguage={activeLanguage}
             register={register}
             errors={errors}
-            metaDescriptionLength={metaDescription.length}
+            metaDescriptionLength={activeMetaDescription.length}
           />
         </div>
       </div>
 
       {submitError && (
-        <div className='rounded-md border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-sm leading-6 text-[#B91C1C]'>
+        <div className="rounded-md border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-sm leading-6 text-[#B91C1C]">
           {submitError}
+        </div>
+      )}
+
+      {validationMessage && !submitError && (
+        <div className="rounded-md border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-sm leading-6 text-[#92400E]">
+          {validationMessage}
         </div>
       )}
 
       {createdBlogSlug && (
         <div
-          aria-live='polite'
-          className='rounded-md border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm leading-6 text-[#047857]'
+          aria-live="polite"
+          className="rounded-md border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm leading-6 text-[#047857]"
         >
-          <p className='font-semibold text-[#065F46]'>Blog created.</p>
-          <p className='mt-1'>
-            Slug:{' '}
-            <span className='font-mono font-semibold'>{createdBlogSlug}</span>
+          <p className="font-semibold text-[#065F46]">Blog created.</p>
+          <p className="mt-1">
+            Slug:{" "}
+            <span className="font-mono font-semibold">{createdBlogSlug}</span>
           </p>
         </div>
       )}
 
       <CreateBlogFormActions
-        canSubmit={isDirty && isValid}
+        canSubmit={isDirty || !isValid}
         isSubmitting={createBlogMutation.isPending}
         submitIntent={submitIntent}
         onCancel={handleCancel}
-        onSaveDraft={() => setSubmitIntent('draft')}
-        onPublish={() => setSubmitIntent('publish')}
+        onSaveDraft={() => setSubmitIntent("draft")}
+        onPublish={() => setSubmitIntent("publish")}
       />
     </form>
   );

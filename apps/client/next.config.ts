@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
       'files.oaiusercontent.com',
       'i.pinimg.com',
     ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   async redirects() {
     return [

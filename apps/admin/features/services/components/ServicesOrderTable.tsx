@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
-import { formatServiceIconName } from '../model/serviceCatalog';
+
 import type { ServiceCatalogItemData } from '../model/service.types';
-import { ServiceLanguageBadge } from './ServiceStatusBadge';
 
 type ServicesOrderTableProps = {
   services: ServiceCatalogItemData[];
@@ -30,10 +29,7 @@ export function ServicesOrderTable({
                 Service
               </th>
               <th scope='col' className='px-5 py-3'>
-                Languages
-              </th>
-              <th scope='col' className='px-5 py-3'>
-                Description
+                Views
               </th>
               <th scope='col' className='px-5 py-3'>
                 Actions
@@ -51,37 +47,19 @@ export function ServicesOrderTable({
                 </td>
                 <td className='min-w-[260px] px-5 py-4'>
                   <div className='flex items-center gap-3'>
-                    <span
-                      className='flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-[#E5E7EB] bg-[#F8FAFC] text-[10px] font-semibold leading-3'
-                      style={{ color: service.service.iconColor }}
-                      title={service.service.icon}
+                    <Link
+                      to={`${ADMIN_ROUTE_PATHS.services}/${service.id}`}
+                      className='line-clamp-1 text-sm font-semibold text-[#111827] underline-offset-4 hover:text-[#6D28D9] hover:underline focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
                     >
-                      {formatServiceIconName(service.service.icon)}
-                    </span>
-                    <div className='min-w-0'>
-                      <Link
-                        to={`${ADMIN_ROUTE_PATHS.services}/${service.id}`}
-                        className='line-clamp-1 text-sm font-semibold text-[#111827] underline-offset-4 hover:text-[#6D28D9] hover:underline focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
-                      >
-                        {service.title}
-                      </Link>
-                      <p className='mt-1 font-mono text-xs text-[#9CA3AF]'>
-                        {service.id}
-                      </p>
-                    </div>
+                      {service.title}
+                    </Link>
+                    <p className='mt-1 font-mono text-xs text-[#9CA3AF]'>
+                      {service.id}
+                    </p>
                   </div>
                 </td>
-                <td className='whitespace-nowrap px-5 py-4'>
-                  <div className='flex flex-wrap gap-2'>
-                    {service.languages.map((language) => (
-                      <ServiceLanguageBadge key={language} language={language} />
-                    ))}
-                  </div>
-                </td>
-                <td className='max-w-[360px] px-5 py-4 text-sm leading-6 text-[#6B7280]'>
-                  <span className='line-clamp-2'>
-                    {service.description || 'No description has been added yet.'}
-                  </span>
+                <td className='whitespace-nowrap px-5 py-4 text-sm text-[#111827]'>
+                  {service.viewCount}
                 </td>
                 <td className='whitespace-nowrap px-5 py-4'>
                   <div className='flex gap-2'>
