@@ -11,7 +11,6 @@ import { useSubmitContactMessageMutation } from './contact/contact.queries';
 interface IFormSchema {
   name: string;
   email: string;
-  phone: string;
   message: string;
 }
 
@@ -22,7 +21,6 @@ function ContactUs() {
   const [formData, setFormData] = useState<IFormSchema>({
     name: '',
     email: '',
-    phone: '',
     message: '',
   });
 
@@ -69,13 +67,12 @@ function ContactUs() {
       {
         fullName: formData.name.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim() || undefined,
         message: formData.message.trim(),
       },
       {
         onSuccess: () => {
           setSuccessMessage(t('success'));
-          setFormData({ name: '', email: '', phone: '', message: '' });
+          setFormData({ name: '', email: '', message: '' });
           setErrors({});
         },
       }
@@ -153,18 +150,6 @@ function ContactUs() {
             {errors.email}
           </p>
         )}
-      </LabelInputContainer>
-
-      <LabelInputContainer className='mt-2'>
-        <Label htmlFor='phone'></Label>
-        <Input
-          id='phone'
-          value={formData.phone}
-          onChange={(e) => handleFieldChange('phone', e.target.value)}
-          type='tel'
-          maxLength={30}
-          placeholder={t('Phone')}
-        />
       </LabelInputContainer>
 
       <LabelInputContainer className='mt-2 px-[1px]'>

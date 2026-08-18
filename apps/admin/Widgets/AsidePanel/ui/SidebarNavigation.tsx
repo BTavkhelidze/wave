@@ -19,18 +19,21 @@ export function SidebarNavigation() {
   })).filter((group) => group.items.length > 0);
 
   return (
-    <div className='space-y-7'>
+    <div className="space-y-7">
       {visibleGroups.map((group) => (
         <nav key={group.title} aria-label={group.title}>
-          <p className='mb-2 px-2 text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
+          <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wide text-[#6B7280]">
             {group.title}
           </p>
-          <div className='space-y-1'>
+          <div className="space-y-1">
             {group.items.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path !== ADMIN_ROUTE_PATHS.services}
+                end={
+                  item.path !== ADMIN_ROUTE_PATHS.services &&
+                  item.path !== ADMIN_ROUTE_PATHS.emails
+                }
                 className={({ isActive }) =>
                   [
                     'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition',
@@ -40,19 +43,19 @@ export function SidebarNavigation() {
                   ].join(' ')
                 }
               >
-                <span className='flex min-w-0 items-center gap-3'>
-                  <SidebarIcon name={item.icon} className='h-4 w-4 shrink-0' />
-                  <span className='truncate'>{item.label}</span>
+                <span className="flex min-w-0 items-center gap-3">
+                  <SidebarIcon name={item.icon} className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </span>
                 {item.badge === 'unreadMessages' && unreadCount > 0 ? (
                   <span
-                    className='ml-2 rounded-full bg-[#7C3AED] px-2 py-0.5 text-xs font-semibold text-white'
+                    className="ml-2 rounded-full bg-[#7C3AED] px-2 py-0.5 text-xs font-semibold text-white"
                     aria-label={`${unreadCount} unread messages`}
                   >
                     {unreadCount}
                   </span>
                 ) : (
-                  <span className='text-xs opacity-60'>/</span>
+                  <span className="text-xs opacity-60">/</span>
                 )}
               </NavLink>
             ))}

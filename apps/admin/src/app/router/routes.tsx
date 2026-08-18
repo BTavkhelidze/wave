@@ -15,6 +15,11 @@ import { EditBlogPage } from '../../../features/blogs/pages/EditBlogPage';
 import { PublicBlogDetailPage } from '../../../features/blogs/pages/PublicBlogDetailPage';
 import { PublicBlogsPage } from '../../../features/blogs/pages/PublicBlogsPage';
 import { MessagesPage } from '../../../features/messages';
+import {
+  ComposeEmailPage,
+  EmailDetailPage,
+  EmailsPage,
+} from '../../../features/outbound-emails';
 import { CreateServicePage } from '../../../features/services/pages/CreateServicePage';
 import { ServiceDetailPage } from '../../../features/services/pages/ServiceDetailPage';
 import { ServiceTranslationPreviewPage } from '../../../features/services/pages/ServiceTranslationPreviewPage';
@@ -31,17 +36,14 @@ import { ADMIN_ROUTE_ACCESS } from './routes.permissions';
 export function AppRoutes() {
   return (
     <Routes>
-      <Route
-        path={PUBLIC_ROUTE_PATHS.blogs}
-        element={<PublicBlogsPage />}
-      />
+      <Route path={PUBLIC_ROUTE_PATHS.blogs} element={<PublicBlogsPage />} />
       <Route
         path={PUBLIC_ROUTE_PATHS.blogDetail}
         element={<PublicBlogDetailPage />}
       />
 
       <Route
-        path='/login'
+        path="/login"
         element={
           <PublicRoute>
             <LoginPage />
@@ -127,6 +129,36 @@ export function AppRoutes() {
           }
         />
         <Route
+          path={ADMIN_ROUTE_PATHS.emails.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.emails]}
+            >
+              <EmailsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.composeEmail.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.composeEmail]}
+            >
+              <ComposeEmailPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path={ADMIN_ROUTE_PATHS.emailDetail.slice(1)}
+          element={
+            <RoleProtectedRoute
+              allowedRoles={ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.emailDetail]}
+            >
+              <EmailDetailPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
           path={ADMIN_ROUTE_PATHS.services.slice(1)}
           element={
             <RoleProtectedRoute
@@ -198,7 +230,10 @@ export function AppRoutes() {
             </RoleProtectedRoute>
           }
         />
-        <Route path='*' element={<Navigate to={ADMIN_DEFAULT_ROUTE} replace />} />
+        <Route
+          path="*"
+          element={<Navigate to={ADMIN_DEFAULT_ROUTE} replace />}
+        />
       </Route>
     </Routes>
   );

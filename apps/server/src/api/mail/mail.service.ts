@@ -2,6 +2,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
+import { buildBusinessEmailContent } from './templates/business-email.template';
 
 export type SendMailInput = {
   to: string;
@@ -35,6 +36,30 @@ export type AdminTemporaryPasswordMailInput = {
   reason: TemporaryPasswordReason;
 };
 
+export type BusinessEmailMailInput = {
+  to: string;
+  subject: string;
+  recipientName?: string;
+  heading?: string;
+  message: string;
+  buttonText?: string;
+  buttonUrl?: string;
+};
+
+export type BusinessEmailDeliveryResult = {
+  providerMessageId?: string;
+};
+
+export class MailDeliveryError extends Error {
+  constructor(
+    message: string,
+    public readonly deliveryCode: string,
+  ) {
+    super(message);
+    this.name = 'MailDeliveryError';
+  }
+}
+
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -46,23 +71,58 @@ export class MailService {
   ) {}
 
   public async sendMail(input: SendMailInput): Promise<void> {
+    await this.deliverMail(input);
+  }
+
+  public async sendBusinessEmail(
+    input: BusinessEmailMailInput,
+  ): Promise<BusinessEmailDeliveryResult> {
+    const content = buildBusinessEmailContent({
+      recipientName: input.recipientName,
+      heading: input.heading,
+      message: input.message,
+      buttonText: input.buttonText,
+      buttonUrl: input.buttonUrl,
+      websiteUrl: this.appConfiguration.publicWebsiteUrl,
+      logoUrl: this.appConfiguration.emailLogoUrl,
+    });
+    const result = await this.deliverMail({
+      to: input.to,
+      subject: this.normalizeHeaderText(input.subject),
+      text: content.text,
+      html: content.html,
+      replyTo: this.getMailFrom(),
+    });
+
+    return {
+      providerMessageId: this.extractMessageId(result),
+    };
+  }
+
+  private async deliverMail(input: SendMailInput): Promise<unknown> {
     if (!this.isSmtpConfigured()) {
       this.logger.error('Email was not sent because SMTP is not configured.');
-      throw new Error('SMTP transport is not configured');
+      throw new MailDeliveryError(
+        'SMTP transport is not configured',
+        'SMTP_NOT_CONFIGURED',
+      );
     }
 
     try {
-      await this.emailService.sendMail({
+      return await this.emailService.sendMail({
         from: this.getMailFrom(),
         to: input.to,
-        subject: input.subject,
+        subject: this.normalizeHeaderText(input.subject),
         text: input.text,
         html: input.html,
         replyTo: input.replyTo,
       });
     } catch (error: unknown) {
       this.logMailDeliveryError(error);
-      throw new Error('Email delivery failed');
+      throw new MailDeliveryError(
+        'Email delivery failed',
+        this.resolveDeliveryCode(error),
+      );
     }
   }
 
@@ -373,6 +433,50 @@ export class MailService {
 
   private normalizeHeaderText(value: string): string {
     return value.replace(/[\r\n]+/g, ' ').trim();
+  }
+
+  private extractMessageId(result: unknown): string | undefined {
+    if (
+      typeof result === 'object' &&
+      result !== null &&
+      'messageId' in result &&
+      typeof (result as { messageId?: unknown }).messageId === 'string'
+    ) {
+      return (result as { messageId: string }).messageId;
+    }
+
+    return undefined;
+  }
+
+  private resolveDeliveryCode(error: unknown): string {
+    const errorCode =
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      typeof (error as { code?: unknown }).code === 'string'
+        ? (error as { code: string }).code
+        : undefined;
+    const responseCode =
+      typeof error === 'object' &&
+      error !== null &&
+      'responseCode' in error &&
+      typeof (error as { responseCode?: unknown }).responseCode === 'number'
+        ? `SMTP_${(error as { responseCode: number }).responseCode}`
+        : undefined;
+    const errorName = error instanceof Error ? error.name : undefined;
+
+    return this.normalizeDeliveryCode(
+      errorCode ?? responseCode ?? errorName ?? 'SMTP_DELIVERY_FAILED',
+    );
+  }
+
+  private normalizeDeliveryCode(value: string): string {
+    const normalizedValue = value
+      .toUpperCase()
+      .replace(/[^A-Z0-9_:-]/g, '_')
+      .slice(0, 100);
+
+    return normalizedValue || 'SMTP_DELIVERY_FAILED';
   }
 
   private escapeHtml(value: string): string {

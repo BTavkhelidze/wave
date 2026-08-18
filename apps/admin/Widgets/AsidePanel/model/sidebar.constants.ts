@@ -65,6 +65,12 @@ export const SIDEBAR_NAVIGATION_GROUPS: readonly SidebarNavigationGroup[] = [
         badge: 'unreadMessages',
         allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.messages],
       },
+      {
+        label: 'Emails',
+        path: ADMIN_ROUTE_PATHS.emails,
+        icon: 'messages',
+        allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.emails],
+      },
     ],
   },
 ];

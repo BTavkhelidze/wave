@@ -5,6 +5,7 @@ const DEFAULT_HTTP_PORT = 5000;
 const DEFAULT_PASSWORD_RESET_EXPIRES_MINUTES = 30;
 const DEFAULT_MAIL_PORT = 587;
 const DEFAULT_ADMIN_APP_URL = 'http://localhost:5173';
+const DEFAULT_PUBLIC_WEBSITE_URL = 'https://waveengineering.ge';
 
 function getRequiredString(name: string): string {
   const value = process.env[name]?.trim();
@@ -115,6 +116,10 @@ export default registerAs('appConfig', () => {
   const environment = process.env.NODE_ENV?.trim() || 'development';
   const port = parseHttpPort(process.env.HTTP_PORT);
   const apiPrefix = process.env.HTTP_API_PREFIX?.trim() || DEFAULT_API_PREFIX;
+  const publicWebsiteUrl = getValidatedUrl(
+    'PUBLIC_WEBSITE_URL',
+    DEFAULT_PUBLIC_WEBSITE_URL,
+  );
   const passwordResetExpiresInMinutes = parsePositiveInteger(
     process.env.PASSWORD_RESET_EXPIRES_IN_MINUTES,
     DEFAULT_PASSWORD_RESET_EXPIRES_MINUTES,
@@ -144,6 +149,11 @@ export default registerAs('appConfig', () => {
 
   return {
     environment,
+    publicWebsiteUrl,
+    emailLogoUrl: getValidatedUrl(
+      'EMAIL_LOGO_URL',
+      new URL('/logo-16k.svg', publicWebsiteUrl).toString(),
+    ),
     frontendUrl: process.env.FRONTEND_URL?.trim() || 'http://localhost:5173',
     adminAppUrl: getValidatedUrl('ADMIN_APP_URL', DEFAULT_ADMIN_APP_URL),
     mail: {
