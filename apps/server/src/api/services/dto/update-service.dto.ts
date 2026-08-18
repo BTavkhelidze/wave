@@ -1,7 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Matches,
+} from 'class-validator';
 import { trimString } from './trim-string.transform';
+import { DEFAULT_SERVICE_ANIMATION_COLORS } from '../lib/service-animation-colors.util';
 
 export class UpdateServiceDto {
   @ApiPropertyOptional({
@@ -66,4 +75,18 @@ export class UpdateServiceDto {
   @IsString()
   @IsNotEmpty()
   iconColor?: string;
+
+  @ApiPropertyOptional({
+    example: DEFAULT_SERVICE_ANIMATION_COLORS,
+    type: [String],
+    minItems: 5,
+    maxItems: 5,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(5)
+  @ArrayMaxSize(5)
+  @IsString({ each: true })
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { each: true })
+  animationColors?: string[];
 }

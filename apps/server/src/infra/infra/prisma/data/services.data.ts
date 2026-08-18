@@ -2,10 +2,19 @@
 
 import { Language } from '@prisma/client';
 
+const defaultAnimationColors = [
+  '#B22222',
+  '#FF8C00',
+  '#FFD700',
+  '#2F4F4F',
+  '#DCDCDC',
+] as const;
+
 export const services = [
   {
     icon: 'FaFireExtinguisher',
     iconColor: 'red',
+    animationColors: [...defaultAnimationColors],
     translations: [
       {
         language: Language.EN,

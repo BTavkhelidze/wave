@@ -132,7 +132,7 @@ function ServiceTranslationManageContent({
     }
 
     await createTranslationMutation.mutateAsync({
-      ...values,
+      ...getTranslationContentValues(values),
       language,
     });
     setSuccessMessage('Translation created.');
@@ -184,6 +184,7 @@ function ServiceTranslationManageContent({
           <ServiceTranslationForm
             language={language}
             translation={translation}
+            service={service.service}
             isSubmitting={
               createTranslationMutation.isPending ||
               updateTranslationMutation.isPending
@@ -240,6 +241,16 @@ function ServiceTranslationManageContent({
       </div>
     </ServiceTranslationManageShell>
   );
+}
+
+function getTranslationContentValues(values: ServiceTranslationFormValues) {
+  return {
+    title: values.title,
+    description: values.description,
+    slug: values.slug,
+    metaTitle: values.metaTitle,
+    metaDescription: values.metaDescription,
+  };
 }
 
 type ServiceTranslationManageShellProps = {

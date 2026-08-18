@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { createNoise3D } from 'simplex-noise';
+import { getSafeServiceAnimationColors } from '../services/serviceAnimationColors';
 
 export const WavyBackground = ({
   children,
@@ -58,13 +59,7 @@ export const WavyBackground = ({
       ctx.filter = `blur(${blur}px)`;
     };
 
-    const waveColors = colors ?? [
-      '#38bdf8',
-      '#818cf8',
-      '#c084fc',
-      '#e879f9',
-      '#22d3ee',
-    ];
+    const waveColors = getSafeServiceAnimationColors(colors);
 
     const drawWave = (n: number) => {
       nt += getSpeed();

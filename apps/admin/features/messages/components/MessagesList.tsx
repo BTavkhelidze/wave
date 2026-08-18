@@ -1,12 +1,20 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { isApiRequestError } from '../../../src/shared/api/httpClient';
-import { useContactMessagesQuery } from '../api/messages.queries';
+import { CONTENT_MANAGER_ROLES, canAccessRole } from '../../auth/lib/authorization';
+import { useAuth } from '../../context/AuthContext';
+import {
+  useContactMessagesQuery,
+  useUpdateContactMessageStatusMutation,
+} from '../api/messages.queries';
 import {
   getMessagesParamsFromSearch,
   setMessagesSearchParam,
 } from '../model/messagesSearchParams';
-import type { ContactMessagesQueryParams } from '../model/message.types';
+import type {
+  ContactMessagesQueryParams,
+  MessageStatus,
+} from '../model/message.types';
 import { MessageDetailsDialog } from './MessageDetailsDialog';
 import { MessagesFilters } from './MessagesFilters';
 import { MessagesLoadingSkeleton } from './MessagesLoadingSkeleton';
@@ -18,12 +26,16 @@ export function MessagesList() {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
     null,
   );
+  const processedAutoReadMessageIdRef = useRef<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const canUpdateStatus = canAccessRole(user?.role, CONTENT_MANAGER_ROLES);
   const params = useMemo(
     () => getMessagesParamsFromSearch(searchParams),
     [searchParams],
   );
   const messagesQuery = useContactMessagesQuery(params);
+  const updateStatusMutation = useUpdateContactMessageStatusMutation();
 
   const handleFilterChange = (
     key: keyof ContactMessagesQueryParams,
@@ -40,6 +52,33 @@ export function MessagesList() {
 
   const handleResetFilters = () => {
     setSearchParams(new URLSearchParams());
+  };
+
+  const handleOpenMessage = (messageId: string, status: MessageStatus) => {
+    if (
+      selectedMessageId !== messageId &&
+      processedAutoReadMessageIdRef.current !== messageId
+    ) {
+      processedAutoReadMessageIdRef.current = null;
+    }
+
+    setSelectedMessageId(messageId);
+
+    if (
+      !canUpdateStatus ||
+      status !== 'UNREAD' ||
+      processedAutoReadMessageIdRef.current === messageId
+    ) {
+      return;
+    }
+
+    processedAutoReadMessageIdRef.current = messageId;
+    updateStatusMutation.mutate({ messageId, status: 'READ' });
+  };
+
+  const handleCloseMessage = () => {
+    processedAutoReadMessageIdRef.current = null;
+    setSelectedMessageId(null);
   };
 
   const filters = (
@@ -99,7 +138,7 @@ export function MessagesList() {
       {messages.length > 0 ? (
         <MessagesTable
           messages={messages}
-          onOpenMessage={setSelectedMessageId}
+          onOpenMessage={handleOpenMessage}
         />
       ) : (
         <MessagesStateCard
@@ -118,7 +157,7 @@ export function MessagesList() {
 
       <MessageDetailsDialog
         messageId={selectedMessageId}
-        onClose={() => setSelectedMessageId(null)}
+        onClose={handleCloseMessage}
       />
     </div>
   );

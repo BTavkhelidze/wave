@@ -11,11 +11,11 @@ async function page() {
         <CompanyName />
       </div>
       <div className='max-w-[1440px] mx-auto my-20 w-full '>
-        <div className='flex justify-between     text-center  w-full'>
+        <div className='flex justify-between lg:flex-row flex-col items-center text-center  w-full'>
           <h1 className='text-xl text-gray-400 font-semibold mb-4'>
             {calcI8N('title')}
           </h1>
-          <p className='text-gray-300  max-w-2xl'>
+          <p className='text-gray-300  max-w-2xl text-[14px] lg:text-base'>
             {calcI8N('mainDescription')}
           </p>
         </div>

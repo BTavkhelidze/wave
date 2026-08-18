@@ -6,12 +6,14 @@ import type { ServiceCatalogItemData } from '../model/service.types';
 type ServicesOrderTableProps = {
   services: ServiceCatalogItemData[];
   isReordering: boolean;
+  canReorder: boolean;
   onMove: (fromIndex: number, toIndex: number) => void;
 };
 
 export function ServicesOrderTable({
   services,
   isReordering,
+  canReorder,
   onMove,
 }: ServicesOrderTableProps) {
   const lastIndex = services.length - 1;
@@ -31,9 +33,11 @@ export function ServicesOrderTable({
               <th scope='col' className='px-5 py-3'>
                 Views
               </th>
-              <th scope='col' className='px-5 py-3'>
-                Actions
-              </th>
+              {canReorder && (
+                <th scope='col' className='px-5 py-3'>
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -61,6 +65,7 @@ export function ServicesOrderTable({
                 <td className='whitespace-nowrap px-5 py-4 text-sm text-[#111827]'>
                   {service.viewCount}
                 </td>
+                {canReorder && (
                 <td className='whitespace-nowrap px-5 py-4'>
                   <div className='flex gap-2'>
                     <ReorderButton
@@ -77,6 +82,7 @@ export function ServicesOrderTable({
                     />
                   </div>
                 </td>
+                )}
               </tr>
             ))}
           </tbody>

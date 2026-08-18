@@ -1,5 +1,10 @@
 import { isApiRequestError } from '../../../src/shared/api/httpClient';
 import {
+  CONTENT_MANAGER_ROLES,
+  canAccessRole,
+} from '../../auth/lib/authorization';
+import { useAuth } from '../../context/AuthContext';
+import {
   useReorderServicesMutation,
   useServiceCatalogQuery,
 } from '../api/services.queries';
@@ -8,6 +13,8 @@ import { ServicesOrderTable } from './ServicesOrderTable';
 import { ServicesStateCard } from './ServicesStateCard';
 
 export function ServicesList() {
+  const { user } = useAuth();
+  const canManageServices = canAccessRole(user?.role, CONTENT_MANAGER_ROLES);
   const servicesQuery = useServiceCatalogQuery();
   const reorderServicesMutation = useReorderServicesMutation();
 
@@ -61,6 +68,7 @@ export function ServicesList() {
 
   const handleMoveService = (fromIndex: number, toIndex: number) => {
     if (
+      !canManageServices ||
       reorderServicesMutation.isPending ||
       toIndex < 0 ||
       toIndex >= services.length
@@ -80,9 +88,10 @@ export function ServicesList() {
       <ServicesToolbar
         totalServices={services.length}
         isReordering={reorderServicesMutation.isPending}
+        canReorder={canManageServices}
       />
 
-      {reorderError && (
+      {canManageServices && reorderError && (
         <ServicesStateCard
           tone='error'
           title='Could not reorder services'
@@ -94,6 +103,7 @@ export function ServicesList() {
         <ServicesOrderTable
           services={services}
           isReordering={reorderServicesMutation.isPending}
+          canReorder={canManageServices}
           onMove={handleMoveService}
         />
       ) : (
@@ -109,11 +119,13 @@ export function ServicesList() {
 
 type ServicesToolbarProps = {
   totalServices: number | undefined;
+  canReorder?: boolean;
   isReordering?: boolean;
 };
 
 function ServicesToolbar({
   totalServices,
+  canReorder = false,
   isReordering = false,
 }: ServicesToolbarProps) {
   return (
@@ -125,11 +137,12 @@ function ServicesToolbar({
             : `${totalServices} service${totalServices === 1 ? '' : 's'}`}
         </p>
         <p className='mt-1 text-sm leading-6 text-[#6B7280]'>
-          Showing services in persisted order. Use Move Up and Move Down to
-          update the order shown on the public website.
+          {canReorder
+            ? 'Showing services in persisted order. Use Move Up and Move Down to update the order shown on the public website.'
+            : 'Showing services in persisted order.'}
         </p>
       </div>
-      {isReordering && (
+      {canReorder && isReordering && (
         <p className='mt-3 text-sm font-medium text-[#6D28D9]'>
           Saving order...
         </p>

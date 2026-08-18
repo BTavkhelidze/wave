@@ -100,12 +100,13 @@ model PasswordResetToken {
 }
 
 model Service {
-  id        String  @id @default(uuid())
-  icon      String
-  iconColor String  @map("icon_color")
-  isActive  Boolean @default(true) @map("is_active")
-  sortOrder Int     @default(0) @map("sort_order")
-  viewCount Int     @default(0) @map("view_count")
+  id              String   @id @default(uuid())
+  icon            String
+  iconColor       String   @map("icon_color")
+  animationColors String[] @default([]) @map("animation_colors")
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  viewCount       Int      @default(0) @map("view_count")
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)

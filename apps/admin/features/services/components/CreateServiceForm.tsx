@@ -11,6 +11,7 @@ import { useCreateServiceMutation } from '../api/services.queries';
 import { CREATE_SERVICE_FORM_DEFAULT_VALUES } from '../model/createServiceForm.constants';
 import { CreateServiceFormSchema } from '../model/createServiceForm.schema';
 import type { CreateServiceFormValues } from '../model/service.types';
+import { AnimationColorsField } from './AnimationColorsField';
 
 export function CreateServiceForm() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function CreateServiceForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     watch,
     formState: { errors, isDirty, isValid },
   } = useForm<CreateServiceFormValues>({
@@ -28,6 +30,7 @@ export function CreateServiceForm() {
     mode: 'onBlur',
   });
   const iconColor = watch('iconColor');
+  const animationColors = watch('animationColors');
   const submitError =
     createServiceMutation.error instanceof Error
       ? createServiceMutation.error.message
@@ -83,6 +86,20 @@ export function CreateServiceForm() {
           </div>
         </div>
       </section>
+
+      <AnimationColorsField
+        idPrefix='create-service-animation-colors'
+        colors={animationColors}
+        error={errors.animationColors?.message}
+        disabled={createServiceMutation.isPending}
+        onChange={(colors) =>
+          setValue('animationColors', colors, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          })
+        }
+      />
 
       <section className='grid gap-6 xl:grid-cols-2'>
         <TranslationSection

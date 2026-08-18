@@ -17,6 +17,6 @@ export interface IServices {
   metaDescription_en?: string;
   metaDescription_ka?: string;
   icon: string;
-  colors: string[];
+  animationColors: string[];
   iconColor: string;
 }

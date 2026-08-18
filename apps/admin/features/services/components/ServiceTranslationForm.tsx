@@ -1,15 +1,21 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import type {
+  ServiceAsset,
   ServiceLanguage,
   ServiceTranslationContent,
   ServiceTranslationFormValues,
 } from '../model/service.types';
 import { getServiceLanguageLabel } from '../model/service.constants';
+import { ServiceTranslationFormSchema } from '../model/createServiceForm.schema';
+import { DEFAULT_SERVICE_ANIMATION_COLORS } from '../model/serviceAnimationColors';
+import { AnimationColorsField } from './AnimationColorsField';
 
 type ServiceTranslationFormProps = {
   language: ServiceLanguage;
   translation: ServiceTranslationContent | undefined;
+  service: ServiceAsset;
   isSubmitting: boolean;
   submitError: string | null;
   successMessage: string | null;
@@ -31,6 +37,7 @@ const slugPattern = /^[A-Za-z0-9]+(?:[\s-]+[A-Za-z0-9]+)*$/;
 export function ServiceTranslationForm({
   language,
   translation,
+  service,
   isSubmitting,
   submitError,
   successMessage,
@@ -41,17 +48,24 @@ export function ServiceTranslationForm({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isDirty, isValid },
   } = useForm<ServiceTranslationFormValues>({
+    resolver: zodResolver(ServiceTranslationFormSchema),
     defaultValues: {
       title: translation?.title ?? '',
       description: translation?.description ?? '',
       slug: translation?.slug ?? '',
       metaTitle: translation?.metaTitle ?? '',
       metaDescription: translation?.metaDescription ?? '',
+      animationColors: service.animationColors ?? [
+        ...DEFAULT_SERVICE_ANIMATION_COLORS,
+      ],
     },
     mode: 'onBlur',
   });
+  const animationColors = watch('animationColors');
 
   useEffect(() => {
     reset({
@@ -60,14 +74,18 @@ export function ServiceTranslationForm({
       slug: translation?.slug ?? '',
       metaTitle: translation?.metaTitle ?? '',
       metaDescription: translation?.metaDescription ?? '',
+      animationColors: service.animationColors ?? [
+        ...DEFAULT_SERVICE_ANIMATION_COLORS,
+      ],
     });
-  }, [reset, translation]);
+  }, [reset, service.animationColors, translation]);
 
   const titleError = errors.title?.message;
   const descriptionError = errors.description?.message;
   const slugError = errors.slug?.message;
   const metaTitleError = errors.metaTitle?.message;
   const metaDescriptionError = errors.metaDescription?.message;
+  const animationColorsError = errors.animationColors?.message;
 
   const handleFormSubmit: SubmitHandler<ServiceTranslationFormValues> = async (
     values,
@@ -78,6 +96,9 @@ export function ServiceTranslationForm({
       slug: values.slug.trim(),
       metaTitle: values.metaTitle.trim(),
       metaDescription: values.metaDescription.trim(),
+      animationColors: values.animationColors.map((color) =>
+        color.trim().toUpperCase(),
+      ),
     });
   };
 
@@ -233,6 +254,22 @@ export function ServiceTranslationForm({
             </p>
           )}
         </div>
+
+        {isEditing && (
+          <AnimationColorsField
+            idPrefix='service-translation-animation-colors'
+            colors={animationColors}
+            error={animationColorsError}
+            disabled={isSubmitting}
+            onChange={(colors) =>
+              setValue('animationColors', colors, {
+                shouldDirty: true,
+                shouldTouch: true,
+                shouldValidate: true,
+              })
+            }
+          />
+        )}
 
         {submitError && (
           <div className='rounded-md border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-sm leading-6 text-[#B91C1C]'>

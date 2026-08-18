@@ -104,7 +104,7 @@ function SingleService({ service }: SingleServiceProps) {
     <article className='max-w-[1440px] overflow-hidden mx-auto px-[2%] pt-30 flex flex-col min-h-screen'>
       <Link
         href={`/${locale}/services`}
-        className='flex gap-2 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012] w-fit'
+        className='flex gap-2 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012] w-fit px-6 xl:px-[8%]'
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
       >
@@ -128,7 +128,7 @@ function SingleService({ service }: SingleServiceProps) {
         >
           <WavyBackground
             className='w-full h-[10%]'
-            colors={currentService.colors}
+            colors={currentService.animationColors}
           ></WavyBackground>
         </div>
 
@@ -137,18 +137,18 @@ function SingleService({ service }: SingleServiceProps) {
           className='flex flex-col gap-10 max-w-[100%] w-full md:max-w-[80%] lg:max-w-[70%] px-6 sm:px-10 md:px-14 '
         >
           <IconComponent
-            className={cn(`text-2xl md:text-4xl self-center mt-10`)}
+            className={cn(`text-2xl md:text-4xl self-center mt-6`)}
             style={{ color: `${currentService.iconColor}` }}
             aria-hidden='true'
             focusable='false'
           />
           <h1
-            className='text-lg sm:text-xl md:text-4xl lg:text-3xl font-bold inter-var text-center text-white break-words leading-tight'
+            className='text-xl sm:2xl md:text-4xl lg:text-3xl font-bold inter-var text-center text-white wrap-break-word leading-tight'
             id='service-title'
           >
             {serviceTitle}
           </h1>
-          <p className='text-sm sm:text-base text-[#898D8E] break-words leading-relaxed'>
+          <p className='text-base sm:text-xl text-[#898D8E] wrap-break-word leading-relaxed'>
             {serviceDescription}
           </p>
         </div>

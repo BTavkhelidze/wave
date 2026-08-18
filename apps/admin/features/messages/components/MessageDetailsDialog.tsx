@@ -1,17 +1,17 @@
-import { useEffect } from 'react';
-import { CONTENT_MANAGER_ROLES, canAccessRole } from '../../auth/lib/authorization';
+import { useIsMutating } from '@tanstack/react-query';
+import {
+  CONTENT_MANAGER_ROLES,
+  canAccessRole,
+} from '../../auth/lib/authorization';
 import { useAuth } from '../../context/AuthContext';
 import {
   useContactMessageQuery,
+  type UpdateContactMessageStatusVariables,
   useUpdateContactMessageStatusMutation,
 } from '../api/messages.queries';
 import { getMessageStatusLabel } from '../model/message.constants';
 import type { MessageStatus } from '../model/message.types';
-import {
-  buildMailtoHref,
-  buildTelHref,
-  formatDateTime,
-} from './MessagesTable';
+import { buildMailtoHref, buildTelHref, formatDateTime } from './MessagesTable';
 import { MessageStatusBadge } from './MessageStatusBadge';
 
 type MessageDetailsDialogProps = {
@@ -26,29 +26,32 @@ export function MessageDetailsDialog({
   const { user } = useAuth();
   const canUpdateStatus = canAccessRole(user?.role, CONTENT_MANAGER_ROLES);
   const messageQuery = useContactMessageQuery(messageId);
-  const updateStatusMutation = useUpdateContactMessageStatusMutation(messageId ?? '');
+  const updateStatusMutation = useUpdateContactMessageStatusMutation({
+    onSuccessBeforeInvalidate: (_message, variables) => {
+      if (variables.status === 'UNREAD') {
+        onClose();
+      }
+    },
+  });
+  const pendingStatusUpdates = useIsMutating({
+    predicate: (mutation) =>
+      isUpdateContactMessageStatusVariables(mutation.state.variables) &&
+      mutation.state.variables.messageId === messageId,
+  });
   const message = messageQuery.data;
-  const { isPending, mutate } = updateStatusMutation;
-
-  useEffect(() => {
-    if (
-      !message ||
-      !canUpdateStatus ||
-      message.status !== 'UNREAD' ||
-      isPending
-    ) {
-      return;
-    }
-
-    mutate('READ');
-  }, [canUpdateStatus, isPending, message, mutate]);
+  const isStatusUpdatePending =
+    updateStatusMutation.isPending || pendingStatusUpdates > 0;
 
   if (!messageId) {
     return null;
   }
 
   const handleStatusChange = (status: MessageStatus) => {
-    mutate(status);
+    if (!messageId || message?.status === status || isStatusUpdatePending) {
+      return;
+    }
+
+    updateStatusMutation.mutate({ messageId, status });
   };
 
   return (
@@ -140,7 +143,9 @@ export function MessageDetailsDialog({
                 />
                 <DetailItem
                   label='Read at'
-                  value={message.readAt ? formatDateTime(message.readAt) : 'Not read'}
+                  value={
+                    message.readAt ? formatDateTime(message.readAt) : 'Not read'
+                  }
                 />
                 <DetailItem
                   label='Archived at'
@@ -164,19 +169,19 @@ export function MessageDetailsDialog({
                   <StatusActionButton
                     status='READ'
                     currentStatus={message.status}
-                    isPending={updateStatusMutation.isPending}
+                    isPending={isStatusUpdatePending}
                     onClick={handleStatusChange}
                   />
                   <StatusActionButton
                     status='UNREAD'
                     currentStatus={message.status}
-                    isPending={updateStatusMutation.isPending}
+                    isPending={isStatusUpdatePending}
                     onClick={handleStatusChange}
                   />
                   <StatusActionButton
                     status='ARCHIVED'
                     currentStatus={message.status}
-                    isPending={updateStatusMutation.isPending}
+                    isPending={isStatusUpdatePending}
                     onClick={handleStatusChange}
                   />
                   {updateStatusMutation.isError && (
@@ -194,6 +199,17 @@ export function MessageDetailsDialog({
   );
 }
 
+function isUpdateContactMessageStatusVariables(
+  value: unknown,
+): value is UpdateContactMessageStatusVariables {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'messageId' in value &&
+    'status' in value
+  );
+}
+
 type DetailItemProps = {
   label: string;
   value: string | null;
@@ -205,7 +221,7 @@ function DetailItem({ label, value }: DetailItemProps) {
       <dt className='text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
         {label}
       </dt>
-      <dd className='mt-1 break-words text-sm font-medium text-[#111827]'>
+      <dd className='mt-1 wrap-break-word text-sm font-medium text-[#111827]'>
         {value || 'Not provided'}
       </dd>
     </div>
@@ -226,7 +242,7 @@ function DetailLink({ label, value, href }: DetailLinkProps) {
       <dt className='text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
         {label}
       </dt>
-      <dd className='mt-1 break-words text-sm font-medium'>
+      <dd className='mt-1 wrap-break-word text-sm font-medium'>
         <a className='text-[#7C3AED] hover:text-[#6D28D9]' href={href}>
           {value}
         </a>

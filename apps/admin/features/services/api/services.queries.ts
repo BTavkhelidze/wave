@@ -251,6 +251,9 @@ function buildCreateServicePayload(
   return {
     icon: values.icon.trim(),
     iconColor: values.iconColor.trim(),
+    animationColors: values.animationColors.map((color) =>
+      color.trim().toUpperCase(),
+    ),
     translations: [
       {
         language: 'KA',

@@ -7,6 +7,7 @@ export type ServiceListQueryParams = {
 export type ServiceAsset = {
   icon: string;
   iconColor: string;
+  animationColors: string[];
   sortOrder: number;
 };
 
@@ -32,6 +33,7 @@ export type ServiceTranslationMutationResponse = {
   slug: string;
   metaTitle: string | null;
   metaDescription: string | null;
+  service?: ServiceAsset;
 };
 
 export type ServiceTranslationContent = {
@@ -50,9 +52,15 @@ export type ServiceTranslationFormValues = {
   slug: string;
   metaTitle: string;
   metaDescription: string;
+  animationColors: string[];
 };
 
-export type CreateServiceTranslationPayload = ServiceTranslationFormValues & {
+export type ServiceTranslationContentFormValues = Omit<
+  ServiceTranslationFormValues,
+  'animationColors'
+>;
+
+export type CreateServiceTranslationPayload = ServiceTranslationContentFormValues & {
   language: ServiceLanguage;
 };
 
@@ -61,6 +69,7 @@ export type UpdateServiceTranslationPayload = ServiceTranslationFormValues;
 export type CreateServiceFormValues = {
   icon: string;
   iconColor: string;
+  animationColors: string[];
   kaTitle: string;
   kaDescription: string;
   kaSlug: string;
@@ -76,6 +85,7 @@ export type CreateServiceFormValues = {
 export type CreateServicePayload = {
   icon: string;
   iconColor: string;
+  animationColors: string[];
   translations: Array<{
     language: ServiceLanguage;
     title: string;
@@ -90,6 +100,7 @@ export type CreateServiceResponse = {
   id: string;
   icon: string;
   iconColor: string;
+  animationColors: string[];
   isActive: boolean;
   sortOrder: number;
   viewCount: number;

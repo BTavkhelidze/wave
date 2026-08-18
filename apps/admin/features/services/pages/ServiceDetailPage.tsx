@@ -4,6 +4,11 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { isApiRequestError } from '../../../src/shared/api/httpClient';
 import {
+  CONTENT_MANAGER_ROLES,
+  canAccessRole,
+} from '../../auth/lib/authorization';
+import { useAuth } from '../../context/AuthContext';
+import {
   useDeleteServiceMutation,
   useServiceCatalogQuery,
 } from '../api/services.queries';
@@ -38,10 +43,12 @@ type ServiceDetailContentProps = {
 };
 
 function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const servicesQuery = useServiceCatalogQuery();
   const deleteServiceMutation = useDeleteServiceMutation(serviceId);
+  const canManageServices = canAccessRole(user?.role, CONTENT_MANAGER_ROLES);
 
   if (servicesQuery.isLoading) {
     return (
@@ -148,6 +155,7 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
               key={language}
               language={language}
               service={service}
+              canManageTranslations={canManageServices}
             />
           ))}
         </section>
@@ -157,17 +165,21 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
             <div>
               <h2 className='text-sm font-semibold text-[#111827]'>Metadata</h2>
               <p className='mt-1 text-sm leading-6 text-[#6B7280]'>
-                Delete Service removes the service and both translations.
+                {canManageServices
+                  ? 'Delete Service removes the service and both translations.'
+                  : 'Service metadata is read-only for your role.'}
               </p>
             </div>
-            <button
-              type='button'
-              onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={deleteServiceMutation.isPending}
-              className='rounded-md border border-[#FCA5A5] bg-white px-4 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEF2F2] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20 disabled:cursor-not-allowed disabled:opacity-60'
-            >
-              Delete Service
-            </button>
+            {canManageServices && (
+              <button
+                type='button'
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={deleteServiceMutation.isPending}
+                className='rounded-md border border-[#FCA5A5] bg-white px-4 py-2 text-sm font-medium text-[#B91C1C] transition hover:bg-[#FEF2F2] focus:outline-none focus:ring-2 focus:ring-[#DC2626]/20 disabled:cursor-not-allowed disabled:opacity-60'
+              >
+                Delete Service
+              </button>
+            )}
           </div>
           <dl className='mt-4 grid gap-4 text-sm sm:grid-cols-2'>
             <MetadataItem label='Service ID' value={service.id} mono />
@@ -175,6 +187,10 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
             <MetadataItem
               label='Icon color'
               value={service.service.iconColor}
+            />
+            <MetadataItem
+              label='Animation colors'
+              value={service.service.animationColors.join(', ')}
             />
             <MetadataItem
               label='Translations'
@@ -187,7 +203,7 @@ function ServiceDetailContent({ serviceId }: ServiceDetailContentProps) {
           </dl>
         </section>
       </article>
-      {isDeleteDialogOpen && (
+      {canManageServices && isDeleteDialogOpen && (
         <DeleteServiceDialog
           serviceTitle={service.title}
           isDeleting={deleteServiceMutation.isPending}
@@ -221,9 +237,14 @@ function ServiceDetailShell({ children }: ServiceDetailShellProps) {
 type TranslationPanelProps = {
   language: ServiceLanguage;
   service: ServiceCatalogItemData;
+  canManageTranslations: boolean;
 };
 
-function TranslationPanel({ language, service }: TranslationPanelProps) {
+function TranslationPanel({
+  language,
+  service,
+  canManageTranslations,
+}: TranslationPanelProps) {
   const translation = service.translations[language];
 
   if (!translation) {
@@ -241,12 +262,14 @@ function TranslationPanel({ language, service }: TranslationPanelProps) {
           No {getServiceLanguageLabel(language).toLowerCase()} translation has
           been returned for this service.
         </p>
-        <Link
-          to={`${ADMIN_ROUTE_PATHS.services}/${service.id}/${language.toLowerCase()}`}
-          className='mt-5 inline-flex rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
-        >
-          Create translation
-        </Link>
+        {canManageTranslations && (
+          <Link
+            to={`${ADMIN_ROUTE_PATHS.services}/${service.id}/${language.toLowerCase()}`}
+            className='mt-5 inline-flex rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
+          >
+            Create translation
+          </Link>
+        )}
       </div>
     );
   }
@@ -280,12 +303,14 @@ function TranslationPanel({ language, service }: TranslationPanelProps) {
         <p className='font-mono text-xs text-[#9CA3AF]'>
           Translation ID: {translation.id}
         </p>
-        <Link
-          to={`${ADMIN_ROUTE_PATHS.services}/${service.id}/${language.toLowerCase()}`}
-          className='rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
-        >
-          Manage translation
-        </Link>
+        {canManageTranslations && (
+          <Link
+            to={`${ADMIN_ROUTE_PATHS.services}/${service.id}/${language.toLowerCase()}`}
+            className='rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
+          >
+            Manage translation
+          </Link>
+        )}
       </div>
     </div>
   );

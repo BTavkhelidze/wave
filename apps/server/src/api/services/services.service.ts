@@ -11,6 +11,10 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { AdminAction, AdminEntity, Language, Prisma } from '@prisma/client';
 import { ServiceLanguage } from './enums/service-language';
+import {
+  DEFAULT_SERVICE_ANIMATION_COLORS,
+  normalizeServiceAnimationColors,
+} from './lib/service-animation-colors.util';
 import { normalizeServiceSlug } from './lib/service-slug.util';
 
 export interface PublicServiceResponse {
@@ -27,7 +31,7 @@ export interface PublicServiceResponse {
   metaDescription_en?: string;
   icon: string;
   iconColor: string;
-  colors: string[];
+  animationColors: string[];
 }
 
 export interface ServicesAnalyticsResponse {
@@ -116,6 +120,11 @@ export class ServicesService {
           data: {
             icon: createServiceDto.icon,
             iconColor: createServiceDto.iconColor,
+            animationColors: normalizeServiceAnimationColors(
+              createServiceDto.animationColors ?? [
+                ...DEFAULT_SERVICE_ANIMATION_COLORS,
+              ],
+            ),
             sortOrder: serviceCount + 1,
             translations: {
               create: translations.map((translation) => ({
@@ -167,6 +176,7 @@ export class ServicesService {
         id: true,
         icon: true,
         iconColor: true,
+        animationColors: true,
         sortOrder: true,
         viewCount: true,
         createdAt: true,
@@ -185,6 +195,7 @@ export class ServicesService {
         service: {
           icon: service.icon,
           iconColor: service.iconColor,
+          animationColors: service.animationColors,
           sortOrder: service.sortOrder,
         },
         viewCount: service.viewCount,
@@ -203,6 +214,7 @@ export class ServicesService {
         id: true,
         icon: true,
         iconColor: true,
+        animationColors: true,
         translations: {
           select: {
             language: true,
@@ -238,7 +250,7 @@ export class ServicesService {
         metaDescription_en: enTranslation?.metaDescription ?? undefined,
         icon: service.icon,
         iconColor: service.iconColor,
-        colors: [],
+        animationColors: service.animationColors,
       };
     });
   }
@@ -358,6 +370,7 @@ export class ServicesService {
               select: {
                 icon: true,
                 iconColor: true,
+                animationColors: true,
                 sortOrder: true,
               },
             },
@@ -395,6 +408,16 @@ export class ServicesService {
     return this.prisma.serviceTranslation.findUnique({
       where: {
         id: id,
+      },
+      include: {
+        service: {
+          select: {
+            icon: true,
+            iconColor: true,
+            animationColors: true,
+            sortOrder: true,
+          },
+        },
       },
     });
   }
@@ -483,7 +506,8 @@ export class ServicesService {
 
     if (
       updateServiceDto.icon !== undefined ||
-      updateServiceDto.iconColor !== undefined
+      updateServiceDto.iconColor !== undefined ||
+      updateServiceDto.animationColors !== undefined
     ) {
       const serviceUpdate: Prisma.ServiceUpdateWithoutTranslationsInput = {};
 
@@ -492,6 +516,11 @@ export class ServicesService {
       }
       if (updateServiceDto.iconColor !== undefined) {
         serviceUpdate.iconColor = updateServiceDto.iconColor;
+      }
+      if (updateServiceDto.animationColors !== undefined) {
+        serviceUpdate.animationColors = normalizeServiceAnimationColors(
+          updateServiceDto.animationColors,
+        );
       }
 
       data.service = { update: serviceUpdate };
@@ -504,6 +533,16 @@ export class ServicesService {
             id: id,
           },
           data,
+          include: {
+            service: {
+              select: {
+                icon: true,
+                iconColor: true,
+                animationColors: true,
+                sortOrder: true,
+              },
+            },
+          },
         });
 
         await tx.adminLog.create({

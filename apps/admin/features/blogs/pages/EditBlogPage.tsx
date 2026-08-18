@@ -200,6 +200,8 @@ function EditBlogForm({ blog }: EditBlogFormProps) {
     updateBlogMutation.error instanceof Error
       ? updateBlogMutation.error.message
       : null;
+  const isSubmitting = updateBlogMutation.isPending;
+  const canSubmit = isDirty && isValid && !isSubmitting;
 
   useEffect(() => {
     const nextValues = getBlogFormValues(blog);
@@ -414,7 +416,7 @@ function EditBlogForm({ blog }: EditBlogFormProps) {
         <button
           type='button'
           onClick={() => navigate(ADMIN_ROUTE_PATHS.blogs)}
-          disabled={updateBlogMutation.isPending}
+          disabled={isSubmitting}
           className='rounded-md border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 disabled:cursor-not-allowed disabled:opacity-60'
         >
           Cancel
@@ -422,20 +424,20 @@ function EditBlogForm({ blog }: EditBlogFormProps) {
         <button
           type='submit'
           onClick={() => setSubmitIntent('draft')}
-          disabled={(!isDirty && isValid) || updateBlogMutation.isPending}
+          disabled={!canSubmit}
           className='rounded-md border border-[#C4B5FD] bg-white px-4 py-2 text-sm font-semibold text-[#6D28D9] transition hover:bg-[#F5F3FF] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 disabled:cursor-not-allowed disabled:opacity-60'
         >
-          {updateBlogMutation.isPending && submitIntent === 'draft'
+          {isSubmitting && submitIntent === 'draft'
             ? 'Saving...'
             : 'Save Draft'}
         </button>
         <button
           type='submit'
           onClick={() => setSubmitIntent('publish')}
-          disabled={(!isDirty && isValid) || updateBlogMutation.isPending}
+          disabled={!canSubmit}
           className='rounded-md bg-[#7C3AED] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#6D28D9] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 disabled:cursor-not-allowed disabled:opacity-60'
         >
-          {updateBlogMutation.isPending && submitIntent === 'publish'
+          {isSubmitting && submitIntent === 'publish'
             ? 'Publishing...'
             : 'Publish Update'}
         </button>

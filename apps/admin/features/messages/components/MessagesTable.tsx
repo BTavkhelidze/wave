@@ -1,9 +1,9 @@
 import { MessageStatusBadge } from './MessageStatusBadge';
-import type { ContactMessage } from '../model/message.types';
+import type { ContactMessage, MessageStatus } from '../model/message.types';
 
 type MessagesTableProps = {
   messages: ContactMessage[];
-  onOpenMessage: (messageId: string) => void;
+  onOpenMessage: (messageId: string, status: MessageStatus) => void;
 };
 
 export function MessagesTable({ messages, onOpenMessage }: MessagesTableProps) {
@@ -93,7 +93,7 @@ export function MessagesTable({ messages, onOpenMessage }: MessagesTableProps) {
                   <td className='whitespace-nowrap px-5 py-4'>
                     <button
                       type='button'
-                      onClick={() => onOpenMessage(message.id)}
+                      onClick={() => onOpenMessage(message.id, message.status)}
                       className='rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
                     >
                       View

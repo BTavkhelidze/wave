@@ -134,6 +134,8 @@ export function CreateBlogForm() {
     createBlogMutation.error instanceof Error
       ? createBlogMutation.error.message
       : null;
+  const isSubmitting = createBlogMutation.isPending;
+  const canSubmit = isDirty && isValid && !isSubmitting;
 
   useEffect(() => {
     (["KA", "EN"] as const).forEach((language) => {
@@ -354,8 +356,8 @@ export function CreateBlogForm() {
       )}
 
       <CreateBlogFormActions
-        canSubmit={isDirty || !isValid}
-        isSubmitting={createBlogMutation.isPending}
+        canSubmit={canSubmit}
+        isSubmitting={isSubmitting}
         submitIntent={submitIntent}
         onCancel={handleCancel}
         onSaveDraft={() => setSubmitIntent("draft")}

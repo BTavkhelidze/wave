@@ -28,6 +28,7 @@ async function main() {
       data: {
         icon: service.icon?.trim() ?? null,
         iconColor: service.iconColor?.trim() ?? null,
+        animationColors: service.animationColors,
         translations: {
           create: service.translations.map((translation, index) => {
             const normalizedSlug = normalizeServiceSlug(translation.title);

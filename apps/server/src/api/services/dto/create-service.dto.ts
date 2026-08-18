@@ -1,17 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsEnum,
   IsOptional,
   IsNotEmpty,
   IsString,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { IsEnum } from 'class-validator';
 import { ServiceLanguage } from '../enums/service-language';
 import { trimString } from './trim-string.transform';
+import { DEFAULT_SERVICE_ANIMATION_COLORS } from '../lib/service-animation-colors.util';
 
 class ServiceTranslationDto {
   @ApiProperty({
@@ -82,6 +84,20 @@ export class CreateServiceDto {
   @IsString()
   @IsNotEmpty()
   iconColor: string;
+
+  @ApiPropertyOptional({
+    example: DEFAULT_SERVICE_ANIMATION_COLORS,
+    type: [String],
+    minItems: 5,
+    maxItems: 5,
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(5)
+  @ArrayMaxSize(5)
+  @IsString({ each: true })
+  @Matches(/^#[0-9A-Fa-f]{6}$/, { each: true })
+  animationColors?: string[];
 
   @ApiProperty({
     type: [ServiceTranslationDto],

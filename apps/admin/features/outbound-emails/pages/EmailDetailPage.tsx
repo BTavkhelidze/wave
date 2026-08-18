@@ -37,9 +37,9 @@ function EmailDetailContent({ emailId }: EmailDetailContentProps) {
     return (
       <EmailDetailShell>
         <OutboundEmailsStateCard
-          tone="neutral"
-          title="Loading email"
-          message="Fetching the selected delivery record."
+          tone='neutral'
+          title='Loading email'
+          message='Fetching the selected delivery record.'
         />
       </EmailDetailShell>
     );
@@ -86,9 +86,9 @@ function EmailDetailContent({ emailId }: EmailDetailContentProps) {
     return (
       <EmailDetailShell>
         <OutboundEmailsStateCard
-          tone="neutral"
-          title="Email not found"
-          message="No outbound email was found for this route."
+          tone='neutral'
+          title='Email not found'
+          message='No outbound email was found for this route.'
         />
       </EmailDetailShell>
     );
@@ -98,54 +98,54 @@ function EmailDetailContent({ emailId }: EmailDetailContentProps) {
     <EmailDetailShell>
       {locationState?.successMessage && (
         <OutboundEmailsStateCard
-          tone="success"
-          title="Email sent"
+          tone='success'
+          title='Email sent'
           message={locationState.successMessage}
         />
       )}
 
-      <article className="overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-sm">
-        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E7EB] bg-[#F8FAFC] p-6">
-          <div className="min-w-0">
-            <h1 className="max-w-3xl break-words text-2xl font-semibold tracking-tight text-[#111827]">
+      <article className='overflow-hidden rounded-lg border border-[#E5E7EB] bg-white shadow-sm'>
+        <header className='flex flex-wrap items-start justify-between gap-4 border-b border-[#E5E7EB] bg-[#F8FAFC] p-6'>
+          <div className='min-w-0'>
+            <h1 className='max-w-3xl wrap-break-word text-2xl font-semibold tracking-tight text-[#111827]'>
               {email.subject}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-[#6B7280]">
+            <p className='mt-2 text-sm leading-6 text-[#6B7280]'>
               Created {formatOutboundEmailDateTime(email.createdAt)}
             </p>
           </div>
           <OutboundEmailStatusBadge status={email.status} />
         </header>
 
-        <section className="space-y-6 p-6">
-          <dl className="grid gap-4 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4 text-sm sm:grid-cols-2">
+        <section className='space-y-6 p-6'>
+          <dl className='grid gap-4 rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4 text-sm sm:grid-cols-2'>
             <DetailItem
-              label="Recipient name"
+              label='Recipient name'
               value={email.recipientName ?? 'Not provided'}
             />
-            <DetailItem label="Recipient email" value={email.recipientEmail} />
+            <DetailItem label='Recipient email' value={email.recipientEmail} />
             <DetailItem
-              label="Sent by"
+              label='Sent by'
               value={formatSenderName(email.createdBy)}
             />
-            <DetailItem label="Sender role" value={email.createdBy.role} />
+            <DetailItem label='Sender role' value={email.createdBy.role} />
             <DetailItem
-              label="Created date"
+              label='Created date'
               value={formatOutboundEmailDateTime(email.createdAt)}
             />
             <DetailItem
-              label="Sent date"
+              label='Sent date'
               value={formatOutboundEmailDateTime(email.sentAt)}
             />
             {email.providerMessageId && (
               <DetailItem
-                label="Provider message ID"
+                label='Provider message ID'
                 value={email.providerMessageId}
                 mono
               />
             )}
             {email.failureCode && (
-              <DetailItem label="Failure code" value={email.failureCode} mono />
+              <DetailItem label='Failure code' value={email.failureCode} mono />
             )}
           </dl>
 
@@ -158,10 +158,10 @@ function EmailDetailContent({ emailId }: EmailDetailContentProps) {
 
 function EmailDetailShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className='mx-auto max-w-5xl space-y-6'>
       <Link
         to={ADMIN_ROUTE_PATHS.emails}
-        className="inline-flex rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30"
+        className='inline-flex rounded-md border border-[#D1D5DB] bg-white px-3 py-1.5 text-sm font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30'
       >
         Back to emails
       </Link>
@@ -172,24 +172,24 @@ function EmailDetailShell({ children }: { children: React.ReactNode }) {
 
 function EmailContent({ email }: { email: OutboundEmailDetail }) {
   return (
-    <div className="space-y-5">
+    <div className='space-y-5'>
       <section>
-        <h2 className="text-sm font-semibold text-[#111827]">Heading</h2>
-        <p className="mt-2 rounded-lg border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#374151]">
+        <h2 className='text-sm font-semibold text-[#111827]'>Heading</h2>
+        <p className='mt-2 rounded-lg border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#374151]'>
           {email.heading || 'Not provided'}
         </p>
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-[#111827]">Message</h2>
-        <p className="mt-2 whitespace-pre-wrap rounded-lg border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#374151]">
+        <h2 className='text-sm font-semibold text-[#111827]'>Message</h2>
+        <p className='mt-2 whitespace-pre-wrap rounded-lg border border-[#E5E7EB] bg-white p-4 text-sm leading-6 text-[#374151]'>
           {email.message}
         </p>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        <DetailPanel label="CTA button text" value={email.buttonText} />
-        <DetailPanel label="CTA button URL" value={email.buttonUrl} mono />
+      <section className='grid gap-4 sm:grid-cols-2'>
+        <DetailPanel label='CTA button text' value={email.buttonText} />
+        <DetailPanel label='CTA button URL' value={email.buttonUrl} mono />
       </section>
     </div>
   );
@@ -205,12 +205,12 @@ function DetailPanel({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-[#E5E7EB] bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
+    <div className='rounded-lg border border-[#E5E7EB] bg-white p-4'>
+      <p className='text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
         {label}
       </p>
       <p
-        className={`mt-2 break-words text-sm text-[#111827] ${
+        className={`mt-2 wrap-break-word text-sm text-[#111827] ${
           mono ? 'font-mono text-xs' : ''
         }`}
       >
@@ -231,11 +231,11 @@ function DetailItem({
 }) {
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
+      <dt className='text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
         {label}
       </dt>
       <dd
-        className={`mt-1 break-words font-medium text-[#111827] ${
+        className={`mt-1 wrap-break-word font-medium text-[#111827] ${
           mono ? 'font-mono text-xs' : ''
         }`}
       >

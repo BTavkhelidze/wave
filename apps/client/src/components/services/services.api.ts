@@ -4,10 +4,10 @@ import {
   getApiBaseUrl,
   getResponseErrorMessage,
   isRecord,
-  isStringArray,
   readOptionalString,
   readRequiredString,
 } from '@/lib/api';
+import { getSafeServiceAnimationColors } from './serviceAnimationColors';
 
 const SERVICES_PUBLIC_PATH = '/services/public';
 
@@ -17,8 +17,6 @@ function parsePublicService(value: unknown, index: number): IServices {
   if (!isRecord(value)) {
     throw new Error(`Invalid service response: item ${index} is not an object`);
   }
-
-  const colors = value.colors;
 
   return {
     id: readRequiredString(value, 'id', context),
@@ -34,7 +32,7 @@ function parsePublicService(value: unknown, index: number): IServices {
     metaDescription_en: readOptionalString(value, 'metaDescription_en'),
     icon: readRequiredString(value, 'icon', context),
     iconColor: readRequiredString(value, 'iconColor', context),
-    colors: isStringArray(colors) ? colors : [],
+    animationColors: getSafeServiceAnimationColors(value.animationColors),
   };
 }
 
