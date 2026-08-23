@@ -1,19 +1,22 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+
+const remoteImageHostnames = [
+  'fiverr-res.cloudinary.com',
+  'files.oaiusercontent.com',
+  'i.pinimg.com',
+  ...(process.env.NEXT_PUBLIC_IMAGE_HOSTNAMES?.split(',') ?? []),
+]
+  .map((hostname) => hostname.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: [
-      'fiverr-res.cloudinary.com',
-      'files.oaiusercontent.com',
-      'i.pinimg.com',
-    ],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
-    ],
+    remotePatterns: remoteImageHostnames.map((hostname) => ({
+      protocol: 'https',
+      hostname,
+    })),
   },
   async redirects() {
     return [

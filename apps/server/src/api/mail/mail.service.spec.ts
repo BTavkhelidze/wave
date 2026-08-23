@@ -1,7 +1,7 @@
 import type { MailerService } from '@nestjs-modules/mailer';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
-import { MailService } from './mail.service';
+import { MailDeliveryError, MailService } from './mail.service';
 
 describe('MailService', () => {
   const contactMessage = {
@@ -65,5 +65,28 @@ describe('MailService', () => {
     expect(input?.text).toContain(
       'Open messages: https://admin.waveengineering.ge/messages',
     );
+  });
+
+  it('sanitizes SMTP TLS certificate failures', async () => {
+    const certificateError = Object.assign(
+      new Error('self-signed certificate in certificate chain'),
+      {
+        code: 'ESOCKET',
+        command: 'CONN',
+      },
+    );
+    sendMail.mockRejectedValueOnce(certificateError);
+
+    await expect(
+      service.sendMail({
+        to: 'recipient@example.com',
+        subject: 'Security notice',
+        text: 'Hello',
+      }),
+    ).rejects.toMatchObject({
+      name: MailDeliveryError.name,
+      message: 'Email delivery failed',
+      deliveryCode: 'ESOCKET',
+    });
   });
 });

@@ -55,10 +55,17 @@ export function useServiceCatalogQuery() {
   });
 }
 
-export function useServicesAnalyticsQuery() {
+type UseServicesAnalyticsQueryOptions = {
+  enabled?: boolean;
+};
+
+export function useServicesAnalyticsQuery({
+  enabled = true,
+}: UseServicesAnalyticsQueryOptions = {}) {
   return useQuery<ServicesAnalyticsResponse>({
     queryKey: servicesAnalyticsQueryKey,
     queryFn: ({ signal }) => fetchServicesAnalytics(signal),
+    enabled,
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
@@ -137,7 +144,11 @@ export function useUpdateServiceTranslationMutation(
     mutationFn: (payload: UpdateServiceTranslationPayload) =>
       updateServiceTranslation(translationId, payload),
     onSuccess: async () => {
-      await invalidateServiceTranslationQueries(queryClient, serviceId, language);
+      await invalidateServiceTranslationQueries(
+        queryClient,
+        serviceId,
+        language,
+      );
       await queryClient.invalidateQueries({
         queryKey: servicesAnalyticsQueryKey,
       });
@@ -173,10 +184,9 @@ export function useReorderServicesMutation() {
     onMutate: async (payload) => {
       await queryClient.cancelQueries({ queryKey: serviceCatalogQueryKey });
 
-      const previousCatalog =
-        queryClient.getQueryData<ServiceCatalogItemData[]>(
-          serviceCatalogQueryKey,
-        );
+      const previousCatalog = queryClient.getQueryData<
+        ServiceCatalogItemData[]
+      >(serviceCatalogQueryKey);
 
       if (previousCatalog) {
         queryClient.setQueryData<ServiceCatalogItemData[]>(

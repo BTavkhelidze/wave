@@ -20,6 +20,7 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   PublicServiceResponse,
   ServicesAnalyticsResponse,
@@ -98,7 +99,7 @@ export class ServicesController {
 
   @Get('analytics')
   @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({ summary: 'Get read-only service analytics for Admin' })
   @ApiOkResponse({
     schema: {
@@ -148,6 +149,8 @@ export class ServicesController {
   }
 
   @Post(':id/view')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({ summary: 'Increment service view count' })
   @ApiParam({
     name: 'id',

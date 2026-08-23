@@ -43,6 +43,8 @@ export async function fetchPublicServices(
     signal,
   });
 
+  console.log('fetchPublicServices response:', response);
+
   if (!response.ok) {
     throw new ApiRequestError(
       await getResponseErrorMessage(response, 'Services request'),

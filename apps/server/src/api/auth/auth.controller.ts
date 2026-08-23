@@ -25,6 +25,7 @@ import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import type { ForgotPasswordResponse } from './providers/forgot-password.provider';
 import type { ResetPasswordResponse } from './providers/reset-password.provider';
+import { AuthSignInThrottlerGuard } from './guards/auth-signin-throttler.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -32,6 +33,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signin')
+  @UseGuards(AuthSignInThrottlerGuard)
   public async signIn(
     @Body() signInDto: SignInDto,
     @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
@@ -101,8 +103,13 @@ export class AuthController {
   public changePassword(
     @ActiveUser('id') activeUserId: string,
     @Body() changePasswordDto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
   ): Promise<ChangePasswordResponse> {
-    return this.authService.changePassword(activeUserId, changePasswordDto);
+    return this.authService.changePassword(
+      activeUserId,
+      changePasswordDto,
+      res,
+    );
   }
 
   @UseGuards(AccessTokenGuard)
@@ -110,10 +117,12 @@ export class AuthController {
   public changeInitialPassword(
     @ActiveUser('id') activeUserId: string,
     @Body() changeInitialPasswordDto: ChangeInitialPasswordDto,
+    @Res({ passthrough: true }) res: Response<any, Record<string, any>>,
   ): Promise<ChangePasswordResponse> {
     return this.authService.changeInitialPassword(
       activeUserId,
       changeInitialPasswordDto,
+      res,
     );
   }
 

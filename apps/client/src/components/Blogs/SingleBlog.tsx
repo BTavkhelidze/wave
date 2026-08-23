@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { CalendarDays } from 'lucide-react';
 import { motion } from 'framer-motion';
-import * as FaIcons from 'react-icons/fa';
+import { FaAngleLeft } from 'react-icons/fa';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { ApiRequestError } from '@/lib/api';
@@ -82,7 +82,7 @@ export default function SingleBlog({ blog: blogSlug }: { blog: string }) {
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
       >
-        <FaIcons.FaAngleLeft aria-hidden='true' focusable='false' />
+        <FaAngleLeft aria-hidden='true' focusable='false' />
         <motion.span
           initial={{ x: 0 }}
           animate={isHover ? { x: 10 } : { x: 0 }}

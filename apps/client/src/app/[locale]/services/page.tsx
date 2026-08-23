@@ -1,8 +1,9 @@
-import CompanyName from '@/components/LandingPage/companyName';
+import dynamic from 'next/dynamic';
 
-import ServisesListS2 from '@/components/services/ServisesListS2';
-
-import React from 'react';
+const CompanyName = dynamic(() => import('@/components/LandingPage/companyName'));
+const ServisesListS2 = dynamic(
+  () => import('@/components/services/ServisesListS2'),
+);
 
 function page() {
   return (

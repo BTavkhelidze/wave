@@ -19,7 +19,7 @@ const PrivateRoute = ({
 
   if (isLoading) return <div>Loading...</div>;
 
-  if (!user) return <Navigate to='/login' replace />;
+  if (!user) return <Navigate to={ADMIN_ROUTE_PATHS.login} replace />;
 
   if (user.mustChangePassword && !allowInitialPasswordChange) {
     return <Navigate to={ADMIN_ROUTE_PATHS.changeInitialPassword} replace />;

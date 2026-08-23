@@ -2,13 +2,15 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import type { CookieOptions, Response } from 'express';
+import type { Response } from 'express';
 
 import jwtConfig from 'src/config/jwt.config';
 import { GenerateTokenProvider } from './generate-tokens.provider';
 import { UsersService } from 'src/api/users/providers/users.service';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
 import { HashProvider } from './hash.provider';
+import { isValidSessionVersionClaim } from '../utils/session-version-claim.util';
+import { setAuthCookies } from 'src/common/http/auth-cookie-options';
 
 @Injectable()
 export class RefreshTokenProvider {
@@ -28,18 +30,27 @@ export class RefreshTokenProvider {
     res: Response<any, Record<string, any>>,
   ) {
     try {
-      const { sub } = await this.jwtService.verifyAsync<
-        Pick<ActiveUserData, 'sub'>
+      const payload = await this.jwtService.verifyAsync<
+        Record<string, unknown>
       >(refreshToken, {
         secret: this.jwtConfiguration.secret,
         audience: this.jwtConfiguration.audience,
         issuer: this.jwtConfiguration.issuer,
       });
 
+      if (!this.isRefreshTokenPayload(payload)) {
+        throw new UnauthorizedException();
+      }
+
+      const { sub, sessionVersion } = payload;
       const user = await this.userService.findUserById(sub);
 
       if (!user || !user.isActive) {
         throw new UnauthorizedException('User is inactive');
+      }
+
+      if (user.sessionVersion !== sessionVersion) {
+        throw new UnauthorizedException();
       }
 
       if (!user.hashedRefreshToken) {
@@ -65,25 +76,7 @@ export class RefreshTokenProvider {
         hashedRefreshToken,
       );
 
-      const isProduction =
-        this.configService.get<string>('appConfig.environment') ===
-        'production';
-      const cookieOptions: CookieOptions = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'strict' : 'lax',
-        path: '/',
-      };
-
-      res.cookie('refreshToken', tokens.refreshToken, {
-        ...cookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-
-      res.cookie('accessToken', tokens.accessToken, {
-        ...cookieOptions,
-        maxAge: 15 * 60 * 1000,
-      });
+      setAuthCookies(res, tokens, this.configService);
 
       return {
         status: 200,
@@ -96,5 +89,19 @@ export class RefreshTokenProvider {
 
       throw new UnauthorizedException();
     }
+  }
+
+  private isRefreshTokenPayload(
+    payload: unknown,
+  ): payload is Pick<ActiveUserData, 'sub' | 'sessionVersion'> {
+    return (
+      typeof payload === 'object' &&
+      payload !== null &&
+      'sub' in payload &&
+      'sessionVersion' in payload &&
+      typeof payload.sub === 'string' &&
+      payload.sub.length > 0 &&
+      isValidSessionVersionClaim(payload.sessionVersion)
+    );
   }
 }

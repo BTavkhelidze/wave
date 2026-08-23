@@ -1,5 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../src/app/router/routes.constants';
+import {
+  CONTENT_MANAGER_ROLES,
+  canAccessRole,
+} from '../auth/lib/authorization';
+import { useAuth } from '../context/AuthContext';
 import { useUnreadContactMessagesCountQuery } from '../messages/api/messages.queries';
 import { useServicesAnalyticsQuery } from '../services/api/services.queries';
 
@@ -13,13 +18,18 @@ type Metric = {
 const numberFormatter = new Intl.NumberFormat('en-US');
 
 function DashboardPage() {
-  const overviewQuery = useServicesAnalyticsQuery();
+  const { user } = useAuth();
+  const canViewAnalytics = canAccessRole(user?.role, CONTENT_MANAGER_ROLES);
+  const overviewQuery = useServicesAnalyticsQuery({
+    enabled: canViewAnalytics,
+  });
   const unreadMessagesQuery = useUnreadContactMessagesCountQuery();
   const metrics = getOverviewMetrics({
     totalServices: overviewQuery.data?.services.total ?? 0,
     totalServiceViews: overviewQuery.data?.services.totalViews ?? 0,
     totalBlogs: overviewQuery.data?.blogs.total ?? 0,
     totalBlogViews: overviewQuery.data?.blogs.totalViews ?? 0,
+    canViewAnalytics,
     isLoading: overviewQuery.isLoading,
     isError: overviewQuery.isError,
   });
@@ -114,6 +124,7 @@ type OverviewMetricsInput = {
   totalServiceViews: number;
   totalBlogs: number;
   totalBlogViews: number;
+  canViewAnalytics: boolean;
   isLoading: boolean;
   isError: boolean;
 };
@@ -123,19 +134,44 @@ function getOverviewMetrics({
   totalServiceViews,
   totalBlogs,
   totalBlogViews,
+  canViewAnalytics,
   isLoading,
   isError,
 }: OverviewMetricsInput): Metric[] {
+  if (!canViewAnalytics) {
+    return [
+      buildMetric('Total Services', 'N/A', 'Available to admins.', 'neutral'),
+      buildMetric(
+        'Total Service Views',
+        'N/A',
+        'Available to admins.',
+        'neutral',
+      ),
+      buildMetric('Total Blogs', 'N/A', 'Available to admins.', 'neutral'),
+      buildMetric('Total Blog Views', 'N/A', 'Available to admins.', 'neutral'),
+    ];
+  }
+
   if (isLoading) {
     return [
-      buildMetric('Total Services', 'Loading...', 'Fetching service count.', 'neutral'),
+      buildMetric(
+        'Total Services',
+        'Loading...',
+        'Fetching service count.',
+        'neutral',
+      ),
       buildMetric(
         'Total Service Views',
         'Loading...',
         'Fetching service view totals.',
         'neutral',
       ),
-      buildMetric('Total Blogs', 'Loading...', 'Fetching blog count.', 'neutral'),
+      buildMetric(
+        'Total Blogs',
+        'Loading...',
+        'Fetching blog count.',
+        'neutral',
+      ),
       buildMetric(
         'Total Blog Views',
         'Loading...',
@@ -147,14 +183,24 @@ function getOverviewMetrics({
 
   if (isError) {
     return [
-      buildMetric('Total Services', '0', 'Could not load overview statistics.', 'error'),
+      buildMetric(
+        'Total Services',
+        '0',
+        'Could not load overview statistics.',
+        'error',
+      ),
       buildMetric(
         'Total Service Views',
         '0',
         'Could not load overview statistics.',
         'error',
       ),
-      buildMetric('Total Blogs', '0', 'Could not load overview statistics.', 'error'),
+      buildMetric(
+        'Total Blogs',
+        '0',
+        'Could not load overview statistics.',
+        'error',
+      ),
       buildMetric(
         'Total Blog Views',
         '0',
@@ -225,7 +271,9 @@ function MetricCard({ metric }: { metric: Metric }) {
             {metric.value}
           </p>
         </div>
-        <span className={`rounded-md px-2 py-1 text-xs font-semibold ${accentClassName}`}>
+        <span
+          className={`rounded-md px-2 py-1 text-xs font-semibold ${accentClassName}`}
+        >
           Live
         </span>
       </div>

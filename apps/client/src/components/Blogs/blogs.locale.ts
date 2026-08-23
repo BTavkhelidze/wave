@@ -1,4 +1,9 @@
-import type { BlogDetail, BlogListItem, BlogTranslation } from './blogs.api';
+import type {
+  BlogDetail,
+  BlogListItem,
+  BlogListTranslation,
+  BlogTranslation,
+} from './blogs.api';
 
 function getLocaleLanguage(locale: string): 'KA' | 'EN' {
   return locale === 'ka' ? 'KA' : 'EN';
@@ -7,10 +12,19 @@ function getLocaleLanguage(locale: string): 'KA' | 'EN' {
 function getLocalizedTranslation(
   blog: BlogListItem | BlogDetail,
   locale: string,
-): BlogTranslation | undefined {
+): BlogListTranslation | undefined {
   const language = getLocaleLanguage(locale);
 
   return blog.translations?.find((translation) => translation.language === language);
+}
+
+function getLocalizedDetailTranslation(
+  blog: BlogDetail,
+  locale: string,
+): BlogTranslation | undefined {
+  const language = getLocaleLanguage(locale);
+
+  return blog.translations.find((translation) => translation.language === language);
 }
 
 export function getLocalizedBlogTitle(
@@ -35,7 +49,7 @@ export function getLocalizedBlogSlug(
 }
 
 export function getLocalizedBlogContent(blog: BlogDetail, locale: string): string {
-  return getLocalizedTranslation(blog, locale)?.content ?? blog.content;
+  return getLocalizedDetailTranslation(blog, locale)?.content ?? blog.content;
 }
 
 export function getLocalizedBlogMetaTitle(

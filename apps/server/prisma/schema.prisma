@@ -63,6 +63,7 @@ model User {
 
   password           String?
   hashedRefreshToken String? @map("hashed_refresh_token")
+  sessionVersion     Int     @default(0) @map("session_version")
 
   role     UserRole @default(ADMIN)
   isActive Boolean  @default(true) @map("is_active")

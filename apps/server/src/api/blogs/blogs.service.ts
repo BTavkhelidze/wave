@@ -39,6 +39,20 @@ const blogListSelect = {
   publishedAt: true,
   createdAt: true,
   updatedAt: true,
+  translations: {
+    select: {
+      id: true,
+      language: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      metaTitle: true,
+      metaDescription: true,
+    },
+    orderBy: {
+      language: 'asc',
+    },
+  },
 } satisfies Prisma.BlogSelect;
 
 const blogDetailSelect = {

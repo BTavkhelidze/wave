@@ -24,6 +24,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -62,7 +63,7 @@ export class BlogsController {
 
   @Get('admin')
   @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get blogs for admin users, including drafts' })
   @ApiOkResponse({ type: BlogsResponseDto })
@@ -84,6 +85,8 @@ export class BlogsController {
   }
 
   @Post('slug/:slug/view')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({ summary: 'Increment blog view count by slug' })
   @ApiParam({ name: 'slug', example: 'fire-safety-checklist' })
   @ApiOkResponse({
@@ -102,7 +105,7 @@ export class BlogsController {
 
   @Get(':id')
   @UseGuards(AccessTokenGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get complete blog by ID for admin users' })
   @ApiParam({ name: 'id', example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25' })

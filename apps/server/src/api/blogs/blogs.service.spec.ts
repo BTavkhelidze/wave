@@ -159,6 +159,108 @@ describe('BlogsService create', () => {
   });
 });
 
+describe('BlogsService public reads', () => {
+  const publishedBlog = {
+    id: 'published-blog-id',
+    title: 'Published English title',
+    slug: 'published-english-title',
+    excerpt: 'Published English excerpt',
+    content: '<p>Published English content</p>',
+    coverImageKey: 'images/published-cover.webp',
+    coverImageUrl: 'https://bucket.example.com/images/published-cover.webp',
+    language: Language.EN,
+    status: BlogStatus.PUBLISHED,
+    isFeatured: false,
+    viewCount: 10,
+    publishedAt: new Date('2026-08-08T12:00:00.000Z'),
+    createdAt: new Date('2026-08-08T10:00:00.000Z'),
+    updatedAt: new Date('2026-08-08T12:00:00.000Z'),
+  };
+
+  type BlogList = (typeof publishedBlog)[];
+  type PublicBlogQueryArg = {
+    where?: {
+      slug?: string;
+      status?: BlogStatus;
+      publishedAt?: {
+        lte?: unknown;
+      };
+    };
+  };
+  let prismaService: {
+    blog: {
+      findMany: jest.Mock<Promise<BlogList>, [unknown]>;
+      count: jest.Mock<Promise<number>, [unknown]>;
+      findFirst: jest.Mock<Promise<typeof publishedBlog | null>, [unknown]>;
+    };
+    $transaction: jest.Mock<
+      Promise<[BlogList, number]>,
+      [operations: Array<Promise<unknown>>]
+    >;
+  };
+  let service: BlogsService;
+
+  beforeEach(() => {
+    prismaService = {
+      blog: {
+        findMany: jest
+          .fn<Promise<BlogList>, [unknown]>()
+          .mockResolvedValue([publishedBlog]),
+        count: jest.fn<Promise<number>, [unknown]>().mockResolvedValue(1),
+        findFirst: jest
+          .fn<Promise<typeof publishedBlog | null>, [unknown]>()
+          .mockResolvedValue(publishedBlog),
+      },
+      $transaction: jest
+        .fn<
+          Promise<[BlogList, number]>,
+          [operations: Array<Promise<unknown>>]
+        >()
+        .mockImplementation(async (operations) => {
+          const results = await Promise.all(operations);
+
+          return results as [BlogList, number];
+        }),
+    };
+    service = new BlogsService(prismaService as unknown as PrismaService);
+  });
+
+  it('lists only published blogs with a non-future publication date', async () => {
+    await expect(service.findPublic({})).resolves.toEqual({
+      data: [publishedBlog],
+      pagination: {
+        page: 1,
+        limit: 10,
+        totalItems: 1,
+        totalPages: 1,
+      },
+    });
+
+    const [findManyArg] = prismaService.blog.findMany.mock.calls[0] ?? [];
+    const [countArg] = prismaService.blog.count.mock.calls[0] ?? [];
+    const findManyWhere = (findManyArg as PublicBlogQueryArg).where;
+    const countWhere = (countArg as PublicBlogQueryArg).where;
+
+    expect(findManyWhere?.status).toBe(BlogStatus.PUBLISHED);
+    expect(findManyWhere?.publishedAt?.lte).toBeInstanceOf(Date);
+    expect(countWhere?.status).toBe(BlogStatus.PUBLISHED);
+    expect(countWhere?.publishedAt?.lte).toBeInstanceOf(Date);
+  });
+
+  it('loads public blog details only from published non-future slugs', async () => {
+    await expect(
+      service.findPublicBySlug('Published English Title'),
+    ).resolves.toEqual(publishedBlog);
+
+    const [findFirstArg] = prismaService.blog.findFirst.mock.calls[0] ?? [];
+    const findFirstWhere = (findFirstArg as PublicBlogQueryArg).where;
+
+    expect(findFirstWhere?.slug).toBe('published-english-title');
+    expect(findFirstWhere?.status).toBe(BlogStatus.PUBLISHED);
+    expect(findFirstWhere?.publishedAt?.lte).toBeInstanceOf(Date);
+  });
+});
+
 describe('BlogsService update', () => {
   const adminId = 'admin-id';
   const updatedBlog = {

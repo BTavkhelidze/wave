@@ -2,10 +2,20 @@
 
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import * as FaIcons from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+import type { IconType } from 'react-icons';
+import {
+  FaAngleLeft,
+  FaAngleRight,
+  FaBolt,
+  FaFaucet,
+  FaFireExtinguisher,
+  FaSnowflake,
+  FaTools,
+  FaWind,
+} from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
-import { WavyBackground } from '../ui/wavy-background';
 import { cn } from '@/lib/utils';
 import { useLocale } from 'next-intl';
 import { usePublicServicesQuery } from './services.queries';
@@ -14,6 +24,20 @@ import {
   matchesLocalizedServiceSlug,
   getLocalizedServiceTitle,
 } from './services.locale';
+
+const WavyBackground = dynamic(
+  () => import('../ui/wavy-background').then((mod) => mod.WavyBackground),
+  { ssr: false },
+);
+
+const SERVICE_ICON_REGISTRY: Record<string, IconType> = {
+  FaBolt,
+  FaFaucet,
+  FaFireExtinguisher,
+  FaSnowflake,
+  FaTools,
+  FaWind,
+};
 
 interface SingleServiceProps {
   service: string;
@@ -82,7 +106,7 @@ function SingleService({ service }: SingleServiceProps) {
     );
 
   const IconComponent =
-    FaIcons[currentService.icon as keyof typeof FaIcons] || FaIcons.FaTools;
+    SERVICE_ICON_REGISTRY[currentService.icon] ?? FaTools;
   const serviceTitle =
     getLocalizedServiceTitle(currentService, locale) ?? 'Service';
   const serviceDescription =
@@ -108,7 +132,7 @@ function SingleService({ service }: SingleServiceProps) {
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
       >
-        <FaIcons.FaAngleLeft aria-hidden='true' focusable='false' />
+        <FaAngleLeft aria-hidden='true' focusable='false' />
         <motion.span
           initial={{ x: 0 }}
           animate={isHover ? { x: 10 } : { x: 0 }}
@@ -164,7 +188,7 @@ function SingleService({ service }: SingleServiceProps) {
               className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
               onClick={handlePrev}
             >
-              <FaIcons.FaAngleLeft aria-hidden='true' focusable='false' /> PREV
+              <FaAngleLeft aria-hidden='true' focusable='false' /> PREV
             </motion.button>
           )}
 
@@ -178,7 +202,7 @@ function SingleService({ service }: SingleServiceProps) {
               className='flex gap-1 items-center px-3 py-2 justify-center bg-[#141C1D] text-sm rounded-sm cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
               onClick={handleNext}
             >
-              NEXT <FaIcons.FaAngleRight aria-hidden='true' focusable='false' />
+              NEXT <FaAngleRight aria-hidden='true' focusable='false' />
             </motion.button>
           )}
         </div>

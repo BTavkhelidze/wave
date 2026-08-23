@@ -6,11 +6,16 @@ import {
 } from '../../../features/auth/lib/authorization';
 import { ADMIN_ROUTE_PATHS } from './routes.constants';
 
+type ProtectedAdminRoutePath = Exclude<
+  (typeof ADMIN_ROUTE_PATHS)[keyof typeof ADMIN_ROUTE_PATHS],
+  | typeof ADMIN_ROUTE_PATHS.login
+  | typeof ADMIN_ROUTE_PATHS.changeInitialPassword
+  | typeof ADMIN_ROUTE_PATHS.forgotPassword
+  | typeof ADMIN_ROUTE_PATHS.resetPassword
+>;
+
 export const ADMIN_ROUTE_ACCESS: Record<
-  Exclude<
-    (typeof ADMIN_ROUTE_PATHS)[keyof typeof ADMIN_ROUTE_PATHS],
-    typeof ADMIN_ROUTE_PATHS.changeInitialPassword
-  >,
+  ProtectedAdminRoutePath,
   RoleAccessRule
 > = {
   [ADMIN_ROUTE_PATHS.dashboard]: ALL_ADMIN_ROLES,

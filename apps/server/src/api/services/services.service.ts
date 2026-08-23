@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -58,9 +59,23 @@ export class ServicesService {
 
   async incrementViewCount(id: string): Promise<{ viewCount: number }> {
     try {
-      const service = await this.prisma.service.update({
+      const existingService = await this.prisma.service.findFirst({
         where: {
           id,
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!existingService) {
+        throw new NotFoundException('Service not found');
+      }
+
+      const service = await this.prisma.service.update({
+        where: {
+          id: existingService.id,
         },
         data: {
           viewCount: {
@@ -74,6 +89,10 @@ export class ServicesService {
 
       return service;
     } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2025'
@@ -263,8 +282,15 @@ export class ServicesService {
       blogViewCountAggregate,
       mostViewedService,
     ] = await Promise.all([
-      this.prisma.service.count(),
+      this.prisma.service.count({
+        where: {
+          deletedAt: null,
+        },
+      }),
       this.prisma.service.aggregate({
+        where: {
+          deletedAt: null,
+        },
         _sum: {
           viewCount: true,
         },
@@ -276,6 +302,9 @@ export class ServicesService {
         },
       }),
       this.prisma.service.findFirst({
+        where: {
+          deletedAt: null,
+        },
         orderBy: [
           {
             viewCount: 'desc',
@@ -405,9 +434,12 @@ export class ServicesService {
   }
 
   async findOne(id: string) {
-    return this.prisma.serviceTranslation.findUnique({
+    return this.prisma.serviceTranslation.findFirst({
       where: {
-        id: id,
+        id,
+        service: {
+          deletedAt: null,
+        },
       },
       include: {
         service: {
@@ -528,9 +560,25 @@ export class ServicesService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
+        const existingTranslation = await tx.serviceTranslation.findFirst({
+          where: {
+            id,
+            service: {
+              deletedAt: null,
+            },
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (!existingTranslation) {
+          throw new NotFoundException('Service not found');
+        }
+
         const service = await tx.serviceTranslation.update({
           where: {
-            id: id,
+            id: existingTranslation.id,
           },
           data,
           include: {
@@ -566,9 +614,27 @@ export class ServicesService {
   async remove(id: string, adminId: string) {
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const service = await tx.service.delete({
+        const existingService = await tx.service.findFirst({
           where: {
-            id: id,
+            id,
+            deletedAt: null,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (!existingService) {
+          throw new NotFoundException('Service not found');
+        }
+
+        const service = await tx.service.update({
+          where: {
+            id: existingService.id,
+          },
+          data: {
+            deletedAt: new Date(),
+            isActive: false,
           },
           include: {
             translations: true,

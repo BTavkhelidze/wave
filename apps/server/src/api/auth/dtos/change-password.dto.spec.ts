@@ -39,6 +39,18 @@ describe('ChangePasswordDto', () => {
 
     expect(errors.some((error) => error.property === 'newPassword')).toBe(true);
   });
+
+  it('rejects overly long new passwords', async () => {
+    const longPassword = `N3w-password!${'a'.repeat(128)}`;
+    const dto = plainToInstance(ChangePasswordDto, {
+      currentPassword: 'Current-password1!',
+      newPassword: longPassword,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'newPassword')).toBe(true);
+  });
 });
 
 describe('ChangeInitialPasswordDto', () => {
@@ -50,5 +62,15 @@ describe('ChangeInitialPasswordDto', () => {
     const errors = await validate(dto);
 
     expect(errors).toHaveLength(0);
+  });
+
+  it('rejects overly long initial-password changes', async () => {
+    const dto = plainToInstance(ChangeInitialPasswordDto, {
+      newPassword: `N3w-password!${'a'.repeat(128)}`,
+    });
+
+    const errors = await validate(dto);
+
+    expect(errors.some((error) => error.property === 'newPassword')).toBe(true);
   });
 });

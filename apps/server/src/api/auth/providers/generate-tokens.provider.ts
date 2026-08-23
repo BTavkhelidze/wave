@@ -35,17 +35,21 @@ export class GenerateTokenProvider {
     );
   }
 
-  public async generateTokens(user: User) {
+  public async generateTokens(
+    user: Pick<User, 'id' | 'email' | 'sessionVersion'>,
+  ) {
     const [accessToken, refreshToken] = await Promise.all([
       this.signToken<Partial<ActiveUserData>>(
         user.id,
         this.jwtConfiguration.accessTokenExpiresIn,
         {
           email: user.email,
+          sessionVersion: user.sessionVersion,
         },
       ),
       this.signToken(user.id, this.jwtConfiguration.refreshTokenExpiresIn, {
         email: user.email,
+        sessionVersion: user.sessionVersion,
       }),
     ]);
 

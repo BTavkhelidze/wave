@@ -23,6 +23,7 @@ import {
   ApiUnauthorizedResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UserRole } from '@prisma/client';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -47,6 +48,8 @@ export class ContactMessagesController {
   ) {}
 
   @Post()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @ApiOperation({ summary: 'Submit a public contact form message' })
   @ApiBody({ type: CreateContactMessageDto })
   @ApiCreatedResponse({ type: ContactMessageCreatedResponseDto })

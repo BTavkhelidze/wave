@@ -47,7 +47,7 @@ function buildBusinessEmailText({
     '',
     buttonText && buttonUrl ? `${buttonText}: ${buttonUrl}` : undefined,
     '',
-    'Engineering that protects, performs, and lasts.',
+    'Water Air Voltage Engeenering',
     '',
     'Wave Engineering',
   ]
@@ -164,7 +164,7 @@ function buildBusinessEmailHtml({
                           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top:1px solid ${BORDER_COLOR};">
                             <tr>
                               <td style="padding:18px 0 0;font-size:13px;line-height:20px;color:${MUTED_COLOR};font-style:italic;">
-                                Engineering that protects, performs, and lasts.
+                                Water Air Voltage Engeenering
                               </td>
                             </tr>
                           </table>

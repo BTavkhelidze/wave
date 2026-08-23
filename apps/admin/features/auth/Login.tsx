@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { useAuth } from '../context/AuthContext';
@@ -81,6 +81,13 @@ function Login() {
         {errors.password && (
           <p className='text-sm text-[#DC2626]'>{errors.password.message}</p>
         )}
+
+        <Link
+          to={ADMIN_ROUTE_PATHS.forgotPassword}
+          className='self-end text-sm font-medium text-[#6D28D9] transition hover:text-[#5B21B6]'
+        >
+          Forgot password?
+        </Link>
 
         {submitError && <p className='text-sm text-[#DC2626]'>{submitError}</p>}
 

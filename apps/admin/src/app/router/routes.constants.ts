@@ -1,4 +1,5 @@
 export const ADMIN_ROUTE_PATHS = {
+  login: '/login',
   dashboard: '/dashboard',
   analytics: '/analytics',
   users: '/users',
@@ -16,6 +17,8 @@ export const ADMIN_ROUTE_PATHS = {
   createBlog: '/blogs/create',
   blogDetail: '/blogs/:blogId',
   changeInitialPassword: '/change-initial-password',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset-password',
 } as const;
 
 export const ADMIN_DEFAULT_ROUTE = ADMIN_ROUTE_PATHS.dashboard;

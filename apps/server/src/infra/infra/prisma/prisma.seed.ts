@@ -18,7 +18,6 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   const salt = await genSalt(10);
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
@@ -63,7 +62,6 @@ async function main() {
       firstName: 'Beka',
       lastName: 'Tavkhelidze',
       email: 'bekatavkhelidze41@gmail.com',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
       password: await hash('beqabeqa', salt),
       hashedRefreshToken: null,
       role: UserRole.SUPER_ADMIN,

@@ -4,7 +4,15 @@ import React from 'react';
 
 import { motion } from 'framer-motion';
 
-import * as FaIcons from 'react-icons/fa';
+import type { IconType } from 'react-icons';
+import {
+  FaBolt,
+  FaFaucet,
+  FaFireExtinguisher,
+  FaSnowflake,
+  FaTools,
+  FaWind,
+} from 'react-icons/fa';
 
 import Link from 'next/link';
 import { TextGenerateEffect } from '../ui/text-generate-effect';
@@ -19,6 +27,15 @@ import {
   PublicCardSkeleton,
   PublicContentState,
 } from '../shared/public-content/PublicContentState';
+
+const SERVICE_ICON_REGISTRY: Record<string, IconType> = {
+  FaBolt,
+  FaFaucet,
+  FaFireExtinguisher,
+  FaSnowflake,
+  FaTools,
+  FaWind,
+};
 
 function ServisesListS2() {
   const locale = useLocale();
@@ -70,7 +87,7 @@ function ServisesListS2() {
           {services &&
             services.map((ser) => {
               const IconComponent =
-                FaIcons[ser.icon as keyof typeof FaIcons] || FaIcons.FaTools;
+                SERVICE_ICON_REGISTRY[ser.icon] ?? FaTools;
               const serviceTitle =
                 getLocalizedServiceTitle(ser, locale) ?? 'Service';
               const serviceSlug =

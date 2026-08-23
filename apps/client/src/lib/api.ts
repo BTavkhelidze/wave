@@ -9,13 +9,15 @@ export class ApiRequestError extends Error {
 }
 
 export function getApiBaseUrl(): string {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : '');
 
   if (!apiBaseUrl) {
     throw new Error('NEXT_PUBLIC_API_BASE_URL is not configured');
   }
 
-  return apiBaseUrl;
+  return apiBaseUrl.replace(/\/+$/, '');
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {

@@ -126,19 +126,6 @@ export class MailService {
     }
   }
 
-  public async sendTestEmail(
-    to: string,
-    subject: string,
-    text: string,
-  ): Promise<void> {
-    await this.emailService.sendMail({
-      from: 'info@waveengineering.ge',
-      to,
-      subject,
-      text,
-    });
-  }
-
   public async sendAdminTemporaryPasswordEmail({
     to,
     temporaryPassword,

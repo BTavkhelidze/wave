@@ -28,6 +28,14 @@ import { PasswordResetTokenProvider } from './providers/password-reset-token.pro
 import { PasswordResetEmailService } from './email/password-reset-email.service';
 import { PasswordResetRateLimitProvider } from './providers/password-reset-rate-limit.provider';
 import { MailModule } from '../mail/mail.module';
+import {
+  SIGN_IN_RATE_LIMIT_MESSAGE,
+  AuthSignInThrottlerGuard,
+} from './guards/auth-signin-throttler.guard';
+import { ThrottlerModule } from '@nestjs/throttler';
+import type { ConfigType } from '@nestjs/config';
+
+const SECONDS_TO_MILLISECONDS = 1000;
 
 @Module({
   controllers: [AuthController],
@@ -48,6 +56,7 @@ import { MailModule } from '../mail/mail.module';
     PasswordResetTokenProvider,
     PasswordResetEmailService,
     PasswordResetRateLimitProvider,
+    AuthSignInThrottlerGuard,
     AccessTokenGuard,
     ActiveUserGuard,
     RolesGuard,
@@ -57,14 +66,41 @@ import { MailModule } from '../mail/mail.module';
     PrismaModule,
     MailModule,
     ConfigModule.forFeature(appConfig),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule.forFeature(appConfig)],
+      inject: [appConfig.KEY],
+      useFactory: (appConfiguration: ConfigType<typeof appConfig>) => ({
+        throttlers: [
+          {
+            name: 'signinBurst',
+            ttl:
+              appConfiguration.auth.signInRateLimit.burst.windowSeconds *
+              SECONDS_TO_MILLISECONDS,
+            limit: appConfiguration.auth.signInRateLimit.burst.limit,
+          },
+          {
+            name: 'signinSustained',
+            ttl:
+              appConfiguration.auth.signInRateLimit.sustained.windowSeconds *
+              SECONDS_TO_MILLISECONDS,
+            limit: appConfiguration.auth.signInRateLimit.sustained.limit,
+          },
+        ],
+        errorMessage: SIGN_IN_RATE_LIMIT_MESSAGE,
+        setHeaders: false,
+      }),
+    }),
     ConfigModule.forFeature(jwtConfig),
-    JwtModule.register({
-      secret: 'supersecret',
-      signOptions: {
-        expiresIn: '1h',
-        issuer: 'my-nest-api',
-        audience: 'my-react-client',
-      },
+    JwtModule.registerAsync({
+      imports: [ConfigModule.forFeature(jwtConfig)],
+      inject: [jwtConfig.KEY],
+      useFactory: (jwtConfiguration: ConfigType<typeof jwtConfig>) => ({
+        secret: jwtConfiguration.secret,
+        signOptions: {
+          issuer: jwtConfiguration.issuer,
+          audience: jwtConfiguration.audience,
+        },
+      }),
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],

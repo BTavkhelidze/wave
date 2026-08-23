@@ -23,6 +23,8 @@ export interface BlogTranslation {
   metaDescription: string | null;
 }
 
+export type BlogListTranslation = Omit<BlogTranslation, 'content'>;
+
 export interface BlogListItem {
   id: string;
   title: string;
@@ -36,7 +38,7 @@ export interface BlogListItem {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
-  translations?: BlogTranslation[];
+  translations?: BlogListTranslation[];
 }
 
 export interface BlogDetail extends BlogListItem {
@@ -108,7 +110,10 @@ function parseBlogListItem(value: unknown, index: number): BlogListItem {
   };
 }
 
-function parseBlogTranslation(value: unknown, index: number): BlogTranslation {
+function parseBlogListTranslation(
+  value: unknown,
+  index: number,
+): BlogListTranslation {
   const context = `blog translation ${index}`;
 
   if (!isRecord(value)) {
@@ -121,9 +126,19 @@ function parseBlogTranslation(value: unknown, index: number): BlogTranslation {
     title: readRequiredString(value, 'title', context),
     slug: readRequiredString(value, 'slug', context),
     excerpt: readRequiredString(value, 'excerpt', context),
-    content: readRequiredString(value, 'content', context),
     metaTitle: readNullableString(value, 'metaTitle'),
     metaDescription: readNullableString(value, 'metaDescription'),
+  };
+}
+
+function parseBlogTranslation(value: unknown, index: number): BlogTranslation {
+  return {
+    ...parseBlogListTranslation(value, index),
+    content: readRequiredString(
+      isRecord(value) ? value : {},
+      'content',
+      `blog translation ${index}`,
+    ),
   };
 }
 
@@ -153,7 +168,18 @@ function parsePublicBlogsResponse(value: unknown): PublicBlogsResponse {
   const pagination = value.pagination;
 
   return {
-    data: value.data.map(parseBlogListItem),
+    data: value.data.map((blog, index) => {
+      const parsedBlog = parseBlogListItem(blog, index);
+
+      if (!isRecord(blog) || !Array.isArray(blog.translations)) {
+        return parsedBlog;
+      }
+
+      return {
+        ...parsedBlog,
+        translations: blog.translations.map(parseBlogListTranslation),
+      };
+    }),
     pagination: {
       page: Number(pagination.page) || 1,
       limit: Number(pagination.limit) || 10,
@@ -203,24 +229,8 @@ export async function fetchPublicBlogs(
   }
 
   const parsedResponse = parsePublicBlogsResponse(await response.json());
-  const enrichedData = await Promise.all(
-    parsedResponse.data.map(async (blog) => {
-      try {
-        return await fetchBlogDetailBySlug(blog.slug, signal);
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          throw error;
-        }
 
-        return blog;
-      }
-    }),
-  );
-
-  return {
-    ...parsedResponse,
-    data: enrichedData,
-  };
+  return parsedResponse;
 }
 
 export async function fetchPublicBlogBySlug(

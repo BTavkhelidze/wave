@@ -5,7 +5,7 @@ import { ServicesService } from './services.service';
 describe('ServicesService analytics', () => {
   let prismaService: {
     service: {
-      count: jest.Mock<Promise<number>, []>;
+      count: jest.Mock<Promise<number>, [unknown]>;
       aggregate: jest.Mock<
         Promise<{ _sum: { viewCount: number | null } }>,
         [unknown]
@@ -25,7 +25,7 @@ describe('ServicesService analytics', () => {
   beforeEach(() => {
     prismaService = {
       service: {
-        count: jest.fn<Promise<number>, []>().mockResolvedValue(2),
+        count: jest.fn<Promise<number>, [unknown]>().mockResolvedValue(2),
         aggregate: jest
           .fn<Promise<{ _sum: { viewCount: number | null } }>, [unknown]>()
           .mockResolvedValue({ _sum: { viewCount: 12 } }),
@@ -65,7 +65,15 @@ describe('ServicesService analytics', () => {
     });
 
     expect(prismaService.service.count).toHaveBeenCalledTimes(1);
+    expect(prismaService.service.count).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+      },
+    });
     expect(prismaService.service.aggregate).toHaveBeenCalledWith({
+      where: {
+        deletedAt: null,
+      },
       _sum: {
         viewCount: true,
       },
@@ -78,6 +86,9 @@ describe('ServicesService analytics', () => {
     });
     expect(prismaService.service.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: {
+          deletedAt: null,
+        },
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         select: expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

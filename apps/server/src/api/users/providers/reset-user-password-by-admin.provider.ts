@@ -82,6 +82,9 @@ export class ResetUserPasswordByAdminProvider {
             mustChangePassword: true,
             passwordChangedAt: new Date(),
             hashedRefreshToken: null,
+            sessionVersion: {
+              increment: 1,
+            },
           },
           select: safeUserSelect,
         });

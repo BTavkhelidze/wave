@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class ChangePasswordDto {
   @IsString()
@@ -8,6 +14,7 @@ export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @MaxLength(128)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
     message:
       'newPassword must include uppercase, lowercase, number, and special character',
@@ -19,6 +26,7 @@ export class ChangeInitialPasswordDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @MaxLength(128)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
     message:
       'newPassword must include uppercase, lowercase, number, and special character',

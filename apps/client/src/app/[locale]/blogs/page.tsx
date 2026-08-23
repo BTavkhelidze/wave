@@ -1,5 +1,7 @@
-import BlogsList from '@/components/Blogs/BlogsList';
-import CompanyName from '@/components/LandingPage/companyName';
+import dynamic from 'next/dynamic';
+
+const BlogsList = dynamic(() => import('@/components/Blogs/BlogsList'));
+const CompanyName = dynamic(() => import('@/components/LandingPage/companyName'));
 
 function page() {
   return (

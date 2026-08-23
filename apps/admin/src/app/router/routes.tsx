@@ -2,7 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AdminLayout } from '../layouts/AdminLayout';
 import { ChangeInitialPasswordPage } from '../../../features/auth/change-initial-password';
+import { ForgotPasswordPage } from '../../../features/auth/forgot-password';
 import LoginPage from '../../../features/auth/Login';
+import { ResetPasswordPage } from '../../../features/auth/reset-password';
 import DashboardPage from '../../../features/dashboard/Dashboard';
 import PrivateRoute from '../../../features/routes/PrivateRoute';
 import PublicRoute from '../../../features/routes/PublicRoute';
@@ -43,10 +45,28 @@ export function AppRoutes() {
       />
 
       <Route
-        path="/login"
+        path={ADMIN_ROUTE_PATHS.login}
         element={
           <PublicRoute>
             <LoginPage />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path={ADMIN_ROUTE_PATHS.forgotPassword}
+        element={
+          <PublicRoute>
+            <ForgotPasswordPage />
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path={ADMIN_ROUTE_PATHS.resetPassword}
+        element={
+          <PublicRoute>
+            <ResetPasswordPage />
           </PublicRoute>
         }
       />

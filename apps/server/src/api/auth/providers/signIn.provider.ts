@@ -1,4 +1,4 @@
-import type { CookieOptions, Response } from 'express';
+import type { Response } from 'express';
 
 import { HashProvider } from './hash.provider';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
@@ -8,6 +8,7 @@ import { SignInDto } from '../dtos/signIn.dto';
 import { UsersService } from 'src/api/users/providers/users.service';
 import { GenerateTokenProvider } from './generate-tokens.provider';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
+import { setAuthCookies } from 'src/common/http/auth-cookie-options';
 
 @Injectable()
 export class SignInProvider {
@@ -66,24 +67,7 @@ export class SignInProvider {
       });
     });
 
-    const isProduction =
-      this.configService.get<string>('appConfig.environment') === 'production';
-    const cookieOptions: CookieOptions = {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
-      path: '/',
-    };
-
-    res.cookie('refreshToken', tokens.refreshToken, {
-      ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('accessToken', tokens.accessToken, {
-      ...cookieOptions,
-      maxAge: 15 * 60 * 1000,
-    });
+    setAuthCookies(res, tokens, this.configService);
 
     return {
       status: 200,

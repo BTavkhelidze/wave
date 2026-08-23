@@ -16,7 +16,7 @@ export const ActiveUser = createParamDecorator(
   (
     data: ActiveUserProperty | undefined,
     context: ExecutionContext,
-  ): ActiveUserData | string => {
+  ): ActiveUserData | string | number => {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     if (!request.user) {

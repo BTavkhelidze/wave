@@ -61,20 +61,24 @@ export class AuthService {
   public async changePassword(
     activeUserId: string,
     changePasswordDto: ChangePasswordDto,
+    res: Response<any, Record<string, any>>,
   ): Promise<ChangePasswordResponse> {
     return this.changePasswordProvider.changePassword(
       activeUserId,
       changePasswordDto,
+      res,
     );
   }
 
   public async changeInitialPassword(
     activeUserId: string,
     changeInitialPasswordDto: ChangeInitialPasswordDto,
+    res: Response<any, Record<string, any>>,
   ): Promise<ChangePasswordResponse> {
     return this.changePasswordProvider.changeInitialPassword(
       activeUserId,
       changeInitialPasswordDto,
+      res,
     );
   }
 

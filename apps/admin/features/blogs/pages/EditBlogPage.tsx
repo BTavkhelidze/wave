@@ -302,7 +302,7 @@ function EditBlogForm({ blog }: EditBlogFormProps) {
       inlineImageUploadsRef.current.clear();
       uploadedInlineImageKeysRef.current.clear();
       reset(getBlogFormValues(updatedBlog));
-    } catch (error) {
+    } catch {
       await deleteUploadedImages([
         uploadedCoverImage?.key,
         ...uploadedInlineImageKeysRef.current,
