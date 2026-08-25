@@ -1,15 +1,24 @@
-// import BlogsLanding from '@/components/LandingPage/BlogsLanding';
-import CompanyName from '@/components/LandingPage/companyName';
+import dynamic from 'next/dynamic';
 
-import SingleService from '@/components/LandingPage/HeroSwiper/SingleService';
-import VentilationCalculatorHero from '@/components/LandingPage/VentilationCalculatorHero';
-import { WellcomeScrollSect2 } from '@/components/LandingPage/WellcomeScrollSect2';
-
-import MotionInViewSection from '@/components/ui/MotionInViewSectionProps';
+const CompanyName = dynamic(() => import('@/components/LandingPage/companyName'));
+const MotionInViewSection = dynamic(
+  () => import('@/components/ui/MotionInViewSectionProps'),
+);
+const SingleService = dynamic(
+  () => import('@/components/LandingPage/HeroSwiper/SingleService'),
+);
+const VentilationCalculatorHero = dynamic(
+  () => import('@/components/LandingPage/VentilationCalculatorHero'),
+);
+const WellcomeScrollSect2 = dynamic(() =>
+  import('@/components/LandingPage/WellcomeScrollSect2').then(
+    (mod) => mod.WellcomeScrollSect2,
+  ),
+);
 
 export default function Home() {
   return (
-    <main className='overflow-hidden'>
+    <main className='overflow-hidden '>
       <div className='min-h-[100dvh] overflow-hidden  h-full w-full   flex flex-col'>
         <CompanyName />
         <WellcomeScrollSect2 />

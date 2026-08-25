@@ -4,11 +4,13 @@ import {
   IsNotEmpty,
   IsString,
   Matches,
+  MaxLength,
   MinLength,
   registerDecorator,
   type ValidationArguments,
   type ValidationOptions,
 } from 'class-validator';
+import { trimStringTransform } from './transformers';
 
 function IsMatchingProperty(
   property: string,
@@ -39,7 +41,7 @@ export class ResetPasswordDto {
   @ApiProperty({
     example: 'xPx58wqJgqjBSaZGv8iXSxeHCQ9wP9b6Z-Z1XTzGUUw',
   })
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(trimStringTransform)
   @IsString()
   @IsNotEmpty()
   token: string;
@@ -50,6 +52,7 @@ export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8)
+  @MaxLength(128)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, {
     message:
       'newPassword must include uppercase, lowercase, number, and special character',

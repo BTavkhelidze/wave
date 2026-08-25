@@ -3,7 +3,6 @@ import {
   SUPER_ADMIN_ONLY,
 } from '../../../auth/lib/authorization';
 import { useAuth } from '../../../context/AuthContext';
-import { CreateUserForm } from '../../create-user';
 import { UsersList } from '../../users-list';
 
 export function UsersPage() {

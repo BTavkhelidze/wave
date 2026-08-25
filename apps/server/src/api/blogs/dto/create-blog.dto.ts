@@ -1,6 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BlogStatus, Language } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsDate,
   IsEnum,
@@ -8,18 +12,30 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
+  MaxLength,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
-export class CreateBlogDto {
+class CreateBlogTranslationDto {
+  @ApiProperty({ enum: Language, example: Language.EN })
+  @IsEnum(Language)
+  language: Language;
+
   @ApiProperty({ example: 'Fire safety checklist for commercial buildings' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(160)
   title: string;
 
   @ApiProperty({ example: 'fire-safety-checklist' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(120)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message:
+      'slug must use lowercase letters, numbers, and single hyphens only',
+  })
   slug: string;
 
   @ApiProperty({
@@ -27,6 +43,7 @@ export class CreateBlogDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   excerpt: string;
 
   @ApiProperty({
@@ -35,8 +52,27 @@ export class CreateBlogDto {
   })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50000)
   content: string;
 
+  @ApiPropertyOptional({
+    example: 'Fire safety checklist | Wave',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  metaTitle?: string;
+
+  @ApiPropertyOptional({
+    example: 'A concise search result summary for this blog.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  metaDescription?: string;
+}
+
+export class CreateBlogDto {
   @ApiProperty({
     example: 'images/5d4e6f7a-73ef-4ad1-8202-4d8444f31820.webp',
   })
@@ -50,10 +86,6 @@ export class CreateBlogDto {
   })
   @IsUrl({ require_tld: false })
   coverImageUrl: string;
-
-  @ApiProperty({ enum: Language, example: Language.EN })
-  @IsEnum(Language)
-  language: Language;
 
   @ApiProperty({ enum: BlogStatus, example: BlogStatus.DRAFT })
   @IsEnum(BlogStatus)
@@ -72,4 +104,12 @@ export class CreateBlogDto {
   @Type(() => Date)
   @IsDate()
   publishedAt?: Date;
+
+  @ApiProperty({ type: [CreateBlogTranslationDto] })
+  @IsArray()
+  @ArrayMinSize(2)
+  @ArrayMaxSize(2)
+  @ValidateNested({ each: true })
+  @Type(() => CreateBlogTranslationDto)
+  translations: CreateBlogTranslationDto[];
 }

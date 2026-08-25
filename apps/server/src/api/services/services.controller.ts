@@ -20,11 +20,19 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
 } from '@nestjs/swagger';
-import { PublicServiceResponse, ServicesService } from './services.service';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import {
+  PublicServiceResponse,
+  ServicesAnalyticsResponse,
+  ServicesService,
+} from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { CreateServiceTranslationDto } from './dto/create-service-translation.dto';
+import { ReorderServicesDto } from './dto/reorder-services.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServiceLanguage } from './enums/service-language';
 import { FindServicesQueryDto } from './dto/find-services-query.dto';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -37,10 +45,13 @@ export class ServicesController {
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Post()
-  @ApiOperation({ summary: 'Create service translation' })
+  @ApiOperation({ summary: 'Create service with EN and KA translations' })
   @ApiBody({ type: CreateServiceDto })
-  create(@Body() createServiceDto: CreateServiceDto) {
-    return this.servicesService.create(createServiceDto);
+  create(
+    @Body() createServiceDto: CreateServiceDto,
+    @ActiveUser('id') adminId: string,
+  ) {
+    return this.servicesService.create(createServiceDto, adminId);
   }
 
   @Get()
@@ -71,7 +82,13 @@ export class ServicesController {
           description_en: 'Service description in English',
           icon: 'FaTools',
           iconColor: '#3B82F6',
-          colors: [],
+          animationColors: [
+            '#B22222',
+            '#FF8C00',
+            '#FFD700',
+            '#2F4F4F',
+            '#DCDCDC',
+          ],
         },
       ],
     },
@@ -80,7 +97,60 @@ export class ServicesController {
     return this.servicesService.findPublic();
   }
 
+  @Get('analytics')
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get read-only service analytics for Admin' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        services: {
+          total: 12,
+          totalViews: 1542,
+        },
+        blogs: {
+          total: 6,
+          totalViews: 420,
+        },
+        totalServices: 12,
+        totalServiceViews: 1542,
+        mostViewedService: {
+          id: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+          title: 'Web Development',
+          viewCount: 483,
+        },
+      },
+    },
+  })
+  getAnalytics(): Promise<ServicesAnalyticsResponse> {
+    return this.servicesService.getAnalytics();
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Post(':serviceId/translations')
+  @ApiOperation({ summary: 'Create translation for an existing service' })
+  @ApiParam({
+    name: 'serviceId',
+    example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+    description: 'Parent service ID',
+  })
+  @ApiBody({ type: CreateServiceTranslationDto })
+  createTranslation(
+    @Param('serviceId', ParseUUIDPipe) serviceId: string,
+    @Body() createServiceTranslationDto: CreateServiceTranslationDto,
+    @ActiveUser('id') adminId: string,
+  ) {
+    return this.servicesService.createTranslation(
+      serviceId,
+      createServiceTranslationDto,
+      adminId,
+    );
+  }
+
   @Post(':id/view')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @ApiOperation({ summary: 'Increment service view count' })
   @ApiParam({
     name: 'id',
@@ -97,6 +167,18 @@ export class ServicesController {
   @ApiNotFoundResponse({ description: 'Service not found.' })
   incrementViewCount(@Param('id', ParseUUIDPipe) id: string) {
     return this.servicesService.incrementViewCount(id);
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @Patch('reorder')
+  @ApiOperation({ summary: 'Reorder services' })
+  @ApiBody({ type: ReorderServicesDto })
+  reorder(
+    @Body() reorderServicesDto: ReorderServicesDto,
+    @ActiveUser('id') adminId: string,
+  ) {
+    return this.servicesService.reorder(reorderServicesDto.serviceIds, adminId);
   }
 
   @Get(':id')
@@ -122,20 +204,29 @@ export class ServicesController {
     description: 'Service translation ID',
   })
   @ApiBody({ type: UpdateServiceDto })
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
-    return this.servicesService.update(id, updateServiceDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto,
+    @ActiveUser('id') adminId: string,
+  ) {
+    return this.servicesService.update(id, updateServiceDto, adminId);
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete service translation by ID' })
+  @ApiOperation({
+    summary: 'Delete service and all translations by service ID',
+  })
   @ApiParam({
     name: 'id',
-    example: 1,
-    description: 'Service translation ID',
+    example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+    description: 'Service ID',
   })
-  remove(@Param('id') id: string) {
-    return this.servicesService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ActiveUser('id') adminId: string,
+  ) {
+    return this.servicesService.remove(id, adminId);
   }
 }

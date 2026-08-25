@@ -50,15 +50,11 @@ function SingleService() {
   ];
 
   return (
-    <div
-      className='w-full  max-w-[1440px] mx-auto my-6 px-6 
-xl:px-0 
-2xl:mx-auto '
-    >
+    <div className='w-full  max-w-[1440px] mx-auto my-6 2xl:mx-auto  '>
       <h2 className='text-white text-center sm:text-start'>
         {t('ServicesTitle')}
       </h2>
-      <ul className='flex  gap-4 mt-4 w-full flex-col sm:flex-row xl:flex-nowrap flex-wrap justify-center sm:justify-start'>
+      <ul className='flex  gap-4 mt-4 w-full flex-col sm:flex-row flex-wrap justify-center sm:justify-start'>
         {services.map((ser, i) => {
           return (
             <li key={i} className='flex items-center justify-center '>

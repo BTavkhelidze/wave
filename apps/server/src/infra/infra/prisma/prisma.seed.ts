@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { PrismaClient, Language, UserRole } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { services } from './data';
-import * as bcrypt from 'bcrypt';
+import { genSalt, hash } from 'bcrypt';
+import { normalizeServiceSlug } from '../../../api/services/lib/service-slug.util';
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -17,7 +18,7 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const salt = await bcrypt.genSalt(10);
+  const salt = await genSalt(10);
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
 
@@ -26,12 +27,20 @@ async function main() {
       data: {
         icon: service.icon?.trim() ?? null,
         iconColor: service.iconColor?.trim() ?? null,
+        animationColors: service.animationColors,
         translations: {
-          create: service.translations.map((translation) => ({
-            language: translation.language,
-            title: translation.title.trim(),
-            description: translation.description?.trim() ?? null,
-          })),
+          create: service.translations.map((translation, index) => {
+            const normalizedSlug = normalizeServiceSlug(translation.title);
+
+            return {
+              language: translation.language,
+              title: translation.title.trim(),
+              description: translation.description?.trim() ?? null,
+              slug:
+                normalizedSlug ||
+                `service-${index + 1}-${translation.language.toLowerCase()}`,
+            };
+          }),
         },
       },
     });
@@ -53,7 +62,7 @@ async function main() {
       firstName: 'Beka',
       lastName: 'Tavkhelidze',
       email: 'bekatavkhelidze41@gmail.com',
-      password: await bcrypt.hash('beqabeqa', salt),
+      password: await hash('beqabeqa', salt),
       hashedRefreshToken: null,
       role: UserRole.SUPER_ADMIN,
       isActive: true,

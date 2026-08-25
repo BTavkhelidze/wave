@@ -4,8 +4,10 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AdminAction, AdminEntity } from '@prisma/client';
 import type { Response } from 'express';
+import { clearAuthCookies } from 'src/common/http/auth-cookie-options';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { HashProvider } from './hash.provider';
@@ -23,6 +25,7 @@ export class ResetPasswordProvider {
     private readonly prismaService: PrismaService,
     private readonly hashProvider: HashProvider,
     private readonly passwordResetTokenProvider: PasswordResetTokenProvider,
+    private readonly configService: ConfigService,
   ) {}
 
   public async resetPassword(
@@ -92,6 +95,9 @@ export class ResetPasswordProvider {
             passwordChangedAt: now,
             mustChangePassword: false,
             hashedRefreshToken: null,
+            sessionVersion: {
+              increment: 1,
+            },
           },
         });
 
@@ -115,8 +121,7 @@ export class ResetPasswordProvider {
         });
       });
 
-      res.clearCookie('refreshToken', { path: '/' });
-      res.clearCookie('accessToken', { path: '/' });
+      clearAuthCookies(res, this.configService);
 
       return {
         message:

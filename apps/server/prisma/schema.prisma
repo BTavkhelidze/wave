@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-    engineType = "binary"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -24,6 +24,12 @@ enum MessageStatus {
   ARCHIVED
 }
 
+enum OutboundEmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 enum AdminAction {
   CREATE
   UPDATE
@@ -41,6 +47,7 @@ enum AdminEntity {
   SERVICE
   BLOG
   CONTACT_MESSAGE
+  OUTBOUND_EMAIL
 }
 
 enum BlogStatus {
@@ -56,6 +63,7 @@ model User {
 
   password           String?
   hashedRefreshToken String? @map("hashed_refresh_token")
+  sessionVersion     Int     @default(0) @map("session_version")
 
   role     UserRole @default(ADMIN)
   isActive Boolean  @default(true) @map("is_active")
@@ -68,8 +76,9 @@ model User {
 
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  logs  AdminLog[]
+  logs                AdminLog[]
   passwordResetTokens PasswordResetToken[]
+  outboundEmails      OutboundEmail[]      @relation("UserOutboundEmails")
 
   @@index([role])
   @@index([isActive])
@@ -92,12 +101,13 @@ model PasswordResetToken {
 }
 
 model Service {
-  id        String @id @default(uuid())
-  icon      String
-  iconColor String @map("icon_color")
-  isActive  Boolean @default(true) @map("is_active")
-  sortOrder Int     @default(0) @map("sort_order")
-  viewCount Int     @default(0) @map("view_count")
+  id              String   @id @default(uuid())
+  icon            String
+  iconColor       String   @map("icon_color")
+  animationColors String[] @default([]) @map("animation_colors")
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  viewCount       Int      @default(0) @map("view_count")
 
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -111,15 +121,19 @@ model Service {
 }
 
 model ServiceTranslation {
-  id          String   @id @default(uuid())
-  serviceId   String   @map("service_id")
-  language    Language
-  title       String
-  description String   @db.Text
+  id              String   @id @default(uuid())
+  serviceId       String   @map("service_id")
+  language        Language
+  title           String
+  description     String   @db.Text
+  slug            String
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
 
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@unique([serviceId, language])
+  @@unique([language, slug])
   @@index([language])
   @@map("service_translations")
 }
@@ -140,6 +154,8 @@ model Blog {
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  translations BlogTranslation[]
+
   @@index([language])
   @@index([status])
   @@index([isFeatured])
@@ -148,20 +164,67 @@ model Blog {
   @@map("blogs")
 }
 
-model ContactMessage {
-  id      String        @id @default(uuid())
-  name    String
-  email   String
-  phone   String?
-  company String?
-  message String        @db.Text
-  status  MessageStatus @default(UNREAD)
+model BlogTranslation {
+  id              String   @id @default(uuid())
+  blogId          String   @map("blog_id")
+  language        Language
+  title           String
+  slug            String
+  excerpt         String   @db.Text
+  content         String   @db.Text
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
 
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+
+  @@unique([blogId, language])
+  @@unique([language, slug])
+  @@index([language])
+  @@map("blog_translations")
+}
+
+model ContactMessage {
+  id         String        @id @default(uuid())
+  fullName   String        @map("full_name")
+  email      String
+  phone      String?
+  subject    String?
+  message    String        @db.Text
+  status     MessageStatus @default(UNREAD)
+  readAt     DateTime?     @map("read_at") @db.Timestamptz(6)
+  archivedAt DateTime?     @map("archived_at") @db.Timestamptz(6)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([status])
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+model OutboundEmail {
+  id                String              @id @default(uuid())
+  recipientEmail    String              @map("recipient_email")
+  recipientName     String?             @map("recipient_name")
+  subject           String
+  heading           String?
+  message           String              @db.Text
+  buttonText        String?             @map("button_text")
+  buttonUrl         String?             @map("button_url")
+  status            OutboundEmailStatus @default(PENDING)
+  providerMessageId String?             @map("provider_message_id")
+  failureCode       String?             @map("failure_code")
+  sentAt            DateTime?           @map("sent_at") @db.Timestamptz(6)
+  createdByUserId   String              @map("created_by_user_id")
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  createdBy User @relation("UserOutboundEmails", fields: [createdByUserId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([createdByUserId])
+  @@index([status, createdAt])
+  @@map("outbound_emails")
 }
 
 model AdminLog {

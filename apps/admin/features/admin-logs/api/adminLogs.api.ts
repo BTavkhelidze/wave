@@ -6,6 +6,7 @@ import type {
 
 export function fetchAdminLogs(
   params: AdminLogsQueryParams,
+  signal?: AbortSignal,
 ): Promise<AdminLogsResponse> {
   const searchParams = new URLSearchParams();
 
@@ -24,6 +25,7 @@ export function fetchAdminLogs(
 
   return apiRequest<AdminLogsResponse>(
     `/admin-logs${queryString ? `?${queryString}` : ''}`,
+    { signal },
   );
 }
 

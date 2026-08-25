@@ -1,4 +1,3 @@
-import { ServiceLanguageBadge } from './ServiceStatusBadge';
 import type { ServiceListItemData } from '../model/service.types';
 
 type ServicesTableProps = {
@@ -14,12 +13,6 @@ export function ServicesTable({ services }: ServicesTableProps) {
             <tr className='border-b border-[#E5E7EB] text-xs font-medium uppercase tracking-wide text-[#6B7280]'>
               <th scope='col' className='px-5 py-3'>
                 Service
-              </th>
-              <th scope='col' className='px-5 py-3'>
-                Language
-              </th>
-              <th scope='col' className='px-5 py-3'>
-                Description
               </th>
               <th scope='col' className='px-5 py-3'>
                 Icon
@@ -39,14 +32,6 @@ export function ServicesTable({ services }: ServicesTableProps) {
                   <p className='mt-1 font-mono text-xs text-[#6B7280]'>
                     {service.id}
                   </p>
-                </td>
-                <td className='whitespace-nowrap px-5 py-4'>
-                  <ServiceLanguageBadge language={service.language} />
-                </td>
-                <td className='max-w-[420px] px-5 py-4 text-sm leading-6 text-[#6B7280]'>
-                  <span title={service.description} className='line-clamp-2'>
-                    {service.description}
-                  </span>
                 </td>
                 <td className='whitespace-nowrap px-5 py-4'>
                   <div className='flex items-center gap-2'>

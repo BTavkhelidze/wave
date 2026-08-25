@@ -2,128 +2,166 @@ import {
   Controller,
   type Control,
   type FieldErrors,
+  type FieldPath,
   type UseFormRegister,
-} from 'react-hook-form';
+} from "react-hook-form";
 
-import { BLOG_LANGUAGE_OPTIONS } from '../model/createBlogForm.constants';
-import type { CreateBlogFormValues } from '../model/createBlogForm.types';
-import { BlogContentEditor } from './BlogContentEditor';
-import { CreateBlogField } from './CreateBlogField';
-import { CreateBlogPanel } from './CreateBlogPanel';
+import type {
+  BlogLanguage,
+  CreateBlogFormValues,
+} from "../model/createBlogForm.types";
+import { BlogContentEditor } from "./BlogContentEditor";
+import { CreateBlogField } from "./CreateBlogField";
+import { CreateBlogPanel } from "./CreateBlogPanel";
 
 type MainInformationSectionProps = {
+  activeLanguage: BlogLanguage;
   control: Control<CreateBlogFormValues>;
   register: UseFormRegister<CreateBlogFormValues>;
   errors: FieldErrors<CreateBlogFormValues>;
   onSlugEdited: () => void;
+  onUploadImage: (file: File) => Promise<{ url: string }>;
+  canonicalSlug?: string;
+  canonicalSlugError?: string;
+  onCanonicalSlugChange?: (value: string) => void;
+  onRegenerateCanonicalSlug?: () => void;
 };
 
 const inputClassName =
-  'mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20';
+  "mt-2 w-full rounded-md border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20";
 const textareaClassName =
-  'mt-2 w-full resize-y rounded-md border border-[#D1D5DB] px-3 py-2 text-sm leading-6 text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20';
+  "mt-2 w-full resize-y rounded-md border border-[#D1D5DB] px-3 py-2 text-sm leading-6 text-[#111827] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20";
 
 export function MainInformationSection({
+  activeLanguage,
   control,
   register,
   errors,
   onSlugEdited,
+  onUploadImage,
+  canonicalSlug,
+  canonicalSlugError,
+  onCanonicalSlugChange,
+  onRegenerateCanonicalSlug,
 }: MainInformationSectionProps) {
-  const slugField = register('slug', {
+  const languageErrors = errors.translations?.[activeLanguage];
+  const fieldPrefix = `translations.${activeLanguage}` as const;
+  const titleFieldId = `create-blog-title-${activeLanguage}`;
+  const slugFieldId = `create-blog-slug-${activeLanguage}`;
+  const excerptFieldId = `create-blog-excerpt-${activeLanguage}`;
+  const contentFieldId = `create-blog-content-${activeLanguage}`;
+  const slugField = register(`${fieldPrefix}.slug`, {
     onChange: onSlugEdited,
   });
+  const usesCanonicalSlug = onCanonicalSlugChange !== undefined;
 
   return (
     <CreateBlogPanel
-      title='Main information'
-      description='Write the core content and choose the language for this blog.'
+      title="Main information"
+      description={`Write the ${activeLanguage} title, summary, and content.`}
     >
       <CreateBlogField
-        label='Blog title'
-        fieldId='create-blog-title'
-        error={errors.title?.message}
+        label="Blog title"
+        fieldId={titleFieldId}
+        error={languageErrors?.title?.message}
       >
         <input
-          id='create-blog-title'
-          type='text'
-          aria-invalid={Boolean(errors.title)}
-          aria-describedby={errors.title ? 'create-blog-title-error' : undefined}
+          key={titleFieldId}
+          id={titleFieldId}
+          type="text"
+          autoComplete="off"
+          aria-invalid={Boolean(languageErrors?.title)}
+          aria-describedby={
+            languageErrors?.title ? `${titleFieldId}-error` : undefined
+          }
           className={inputClassName}
-          placeholder='Fire safety checklist for commercial buildings'
-          {...register('title')}
+          placeholder="Fire safety checklist for commercial buildings"
+          {...register(`${fieldPrefix}.title`)}
         />
       </CreateBlogField>
 
-      <div className='grid gap-4 sm:grid-cols-[1fr_180px]'>
-        <CreateBlogField
-          label='Slug'
-          fieldId='create-blog-slug'
-          error={errors.slug?.message}
-          hint='Used in the public blog URL.'
-        >
+      <CreateBlogField
+        label="Slug"
+        fieldId={slugFieldId}
+        error={usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug?.message}
+        hint={
+          usesCanonicalSlug
+            ? "English canonical slug used by both public language URLs."
+            : "Used in the public blog URL for this language."
+        }
+      >
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <input
-            id='create-blog-slug'
-            type='text'
-            aria-invalid={Boolean(errors.slug)}
+            key={slugFieldId}
+            id={slugFieldId}
+            type="text"
+            autoComplete="off"
+            aria-invalid={Boolean(
+              usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug,
+            )}
             aria-describedby={
-              errors.slug
-                ? 'create-blog-slug-error'
-                : 'create-blog-slug-hint'
+              usesCanonicalSlug
+                ? canonicalSlugError
+                  ? `${slugFieldId}-error`
+                  : `${slugFieldId}-hint`
+                : languageErrors?.slug
+                  ? `${slugFieldId}-error`
+                  : `${slugFieldId}-hint`
             }
-            className={inputClassName}
-            placeholder='fire-safety-checklist'
-            {...slugField}
+            className={inputClassName.replace("mt-2 ", "")}
+            placeholder="fire-safety-checklist"
+            {...(usesCanonicalSlug
+              ? {
+                  value: canonicalSlug ?? "",
+                  onChange: (event) =>
+                    onCanonicalSlugChange(event.currentTarget.value),
+                }
+              : slugField)}
           />
-        </CreateBlogField>
-
-        <CreateBlogField
-          label='Language'
-          fieldId='create-blog-language'
-          error={errors.language?.message}
-        >
-          <select
-            id='create-blog-language'
-            aria-invalid={Boolean(errors.language)}
-            className='mt-2 w-full rounded-md border border-[#D1D5DB] bg-white px-3 py-2 text-sm text-[#111827] outline-none transition focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20'
-            {...register('language')}
-          >
-            {BLOG_LANGUAGE_OPTIONS.map((languageOption) => (
-              <option key={languageOption.value} value={languageOption.value}>
-                {languageOption.label}
-              </option>
-            ))}
-          </select>
-        </CreateBlogField>
-      </div>
+          {usesCanonicalSlug && onRegenerateCanonicalSlug && (
+            <button
+              type="button"
+              onClick={onRegenerateCanonicalSlug}
+              className="rounded-md border border-[#C4B5FD] bg-white px-3 py-2 text-sm font-semibold text-[#6D28D9] transition hover:bg-[#F5F3FF] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30"
+            >
+              Regenerate
+            </button>
+          )}
+        </div>
+      </CreateBlogField>
 
       <CreateBlogField
-        label='Short description'
-        fieldId='create-blog-excerpt'
-        error={errors.excerpt?.message}
+        label="Short description"
+        fieldId={excerptFieldId}
+        error={languageErrors?.excerpt?.message}
       >
         <textarea
-          id='create-blog-excerpt'
+          key={excerptFieldId}
+          id={excerptFieldId}
           rows={4}
-          aria-invalid={Boolean(errors.excerpt)}
+          autoComplete="off"
+          aria-invalid={Boolean(languageErrors?.excerpt)}
           aria-describedby={
-            errors.excerpt ? 'create-blog-excerpt-error' : undefined
+            languageErrors?.excerpt ? `${excerptFieldId}-error` : undefined
           }
           className={textareaClassName}
-          placeholder='Summarize the article for listings and previews.'
-          {...register('excerpt')}
+          placeholder="Summarize the article for listings and previews."
+          {...register(`${fieldPrefix}.excerpt`)}
         />
       </CreateBlogField>
 
       <Controller
-        name='content'
+        name={`${fieldPrefix}.content` as FieldPath<CreateBlogFormValues>}
         control={control}
         render={({ field }) => (
           <BlogContentEditor
-            fieldId='create-blog-content'
-            value={field.value}
-            error={errors.content?.message}
+            key={contentFieldId}
+            fieldId={contentFieldId}
+            value={typeof field.value === "string" ? field.value : ""}
+            error={languageErrors?.content?.message}
             onChange={field.onChange}
             onBlur={field.onBlur}
+            onUploadImage={onUploadImage}
           />
         )}
       />

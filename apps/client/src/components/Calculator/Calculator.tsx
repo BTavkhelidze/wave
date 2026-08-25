@@ -135,8 +135,8 @@ function Calculator() {
         shaxta!,
         kitchenEType!,
         damper!,
-        shaftVentT!
-      )
+        shaftVentT!,
+      ),
     );
 
     setTimeout(() => {
@@ -145,7 +145,7 @@ function Calculator() {
   };
 
   return (
-    <section className=' 2xl:mx-auto mx-auto w-full  p-4 '>
+    <section className=' 2xl:mx-auto  mx-auto w-full  p-4 '>
       <div className=' w-full flex justify-between  items-center lg:items-start flex-col  lg:flex-row'>
         <form
           onSubmit={handleSubmit}
@@ -182,7 +182,7 @@ function Calculator() {
               value={kitchen !== null && kitchen !== undefined ? kitchen : ''}
               onChange={(e) =>
                 setKitchen(
-                  e.target.value === '' ? null : Number(e.target.value)
+                  e.target.value === '' ? null : Number(e.target.value),
                 )
               }
             />
@@ -271,7 +271,7 @@ function Calculator() {
                     className='cursor-pointer '
                     onClick={() =>
                       setInfo((prev) =>
-                        prev === 'kitchenEType' ? null : 'kitchenEType'
+                        prev === 'kitchenEType' ? null : 'kitchenEType',
                       )
                     }
                   >
@@ -337,7 +337,7 @@ function Calculator() {
                   className='cursor-pointer '
                   onClick={() =>
                     setInfo((prev) =>
-                      prev === 'shaftVentT' ? null : 'shaftVentT'
+                      prev === 'shaftVentT' ? null : 'shaftVentT',
                     )
                   }
                 >

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { ADMIN_DEFAULT_ROUTE } from '../../../../src/app/router/routes.constants';
 import { useChangeInitialPasswordMutation } from '../api/changeInitialPassword.queries';
+import { adminPasswordPolicyText } from '../../model/adminPassword.schema';
 import {
   ChangeInitialPasswordSchema,
   type ChangeInitialPasswordFormValues,
@@ -114,8 +115,7 @@ export function ChangeInitialPasswordPage() {
           </div>
 
           <div className='rounded-md border border-[#DDD6FE] bg-[#F5F3FF] px-4 py-3 text-sm leading-6 text-[#5B21B6]'>
-            Use at least 8 characters with uppercase, lowercase, a number, and a
-            special character.
+            {adminPasswordPolicyText}
           </div>
 
           {submitError && (

@@ -11,21 +11,33 @@ import {
 import { AdminLogSortOrder } from '../dtos/find-admin-logs-query.dto';
 
 describe('FindAdminLogsProvider', () => {
+  type AdminLogTransactionOperation = Promise<AdminLogItem[]> | Promise<number>;
+
   const createdAt = new Date('2026-07-30T08:45:12.000Z');
+  const actorUserId = '3f15e2f1-4b5e-4af2-a1d9-5d3e823e7b1b';
   const log: AdminLogItem = {
     id: '6dcdde8e-1c4f-4631-9077-28b7a71ebf6a',
-    userId: '3f15e2f1-4b5e-4af2-a1d9-5d3e823e7b1b',
+    userId: actorUserId,
     action: AdminAction.CREATE,
     entity: AdminEntity.USER,
     entityId: '0479e6b6-25a1-4d28-8ccf-a215c7de9c52',
     createdAt,
     user: {
-      id: '3f15e2f1-4b5e-4af2-a1d9-5d3e823e7b1b',
+      id: actorUserId,
       email: 'admin@example.com',
       role: UserRole.SUPER_ADMIN,
     },
   };
 
+  let findManyMock: jest.Mock<
+    Promise<AdminLogItem[]>,
+    [Prisma.AdminLogFindManyArgs]
+  >;
+  let countMock: jest.Mock<Promise<number>, [Prisma.AdminLogCountArgs]>;
+  let transactionMock: jest.Mock<
+    Promise<[AdminLogItem[], number]>,
+    [AdminLogTransactionOperation[]]
+  >;
   let prismaService: {
     adminLog: {
       findMany: jest.Mock<
@@ -42,17 +54,21 @@ describe('FindAdminLogsProvider', () => {
   let provider: FindAdminLogsProvider;
 
   beforeEach(() => {
+    findManyMock = jest
+      .fn<Promise<AdminLogItem[]>, [Prisma.AdminLogFindManyArgs]>()
+      .mockResolvedValue([log]);
+    countMock = jest
+      .fn<Promise<number>, [Prisma.AdminLogCountArgs]>()
+      .mockResolvedValue(21);
+    transactionMock = jest
+      .fn<Promise<[AdminLogItem[], number]>, [AdminLogTransactionOperation[]]>()
+      .mockResolvedValue([[log], 21]);
     prismaService = {
       adminLog: {
-        findMany: jest.fn().mockResolvedValue([log]),
-        count: jest.fn().mockResolvedValue(21),
+        findMany: findManyMock,
+        count: countMock,
       },
-      $transaction: jest
-        .fn()
-        .mockImplementation(
-          async (operations) =>
-            Promise.all(operations) as Promise<[AdminLogItem[], number]>,
-        ),
+      $transaction: transactionMock,
     };
     provider = new FindAdminLogsProvider(
       prismaService as unknown as PrismaService,
@@ -62,7 +78,7 @@ describe('FindAdminLogsProvider', () => {
   it('uses sensible pagination and newest-first defaults', async () => {
     const response = await provider.findAdminLogs({});
 
-    expect(prismaService.adminLog.findMany).toHaveBeenCalledWith(
+    expect(findManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {},
         orderBy: {
@@ -72,7 +88,7 @@ describe('FindAdminLogsProvider', () => {
         take: 10,
       }),
     );
-    expect(prismaService.adminLog.count).toHaveBeenCalledWith({
+    expect(countMock).toHaveBeenCalledWith({
       where: {},
     });
     expect(response).toEqual({
@@ -93,7 +109,7 @@ describe('FindAdminLogsProvider', () => {
       sortOrder: AdminLogSortOrder.ASC,
     });
 
-    expect(prismaService.adminLog.findMany).toHaveBeenCalledWith(
+    expect(findManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: {
           createdAt: AdminLogSortOrder.ASC,
@@ -109,7 +125,7 @@ describe('FindAdminLogsProvider', () => {
     const dateTo = new Date('2026-07-30T23:59:59.999Z');
 
     await provider.findAdminLogs({
-      userId: log.userId,
+      userId: actorUserId,
       action: AdminAction.UPDATE,
       entity: AdminEntity.USER,
       dateFrom,
@@ -117,7 +133,7 @@ describe('FindAdminLogsProvider', () => {
     });
 
     const expectedWhere: Prisma.AdminLogWhereInput = {
-      userId: log.userId,
+      userId: actorUserId,
       action: AdminAction.UPDATE,
       entity: AdminEntity.USER,
       createdAt: {
@@ -126,25 +142,25 @@ describe('FindAdminLogsProvider', () => {
       },
     };
 
-    expect(prismaService.adminLog.findMany).toHaveBeenCalledWith(
+    expect(findManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expectedWhere,
       }),
     );
-    expect(prismaService.adminLog.count).toHaveBeenCalledWith({
+    expect(countMock).toHaveBeenCalledWith({
       where: expectedWhere,
     });
   });
 
   it('supports the adminId alias for actor filtering', async () => {
     await provider.findAdminLogs({
-      adminId: log.userId,
+      adminId: actorUserId,
     });
 
-    expect(prismaService.adminLog.findMany).toHaveBeenCalledWith(
+    expect(findManyMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          userId: log.userId,
+          userId: actorUserId,
         },
       }),
     );
@@ -155,23 +171,21 @@ describe('FindAdminLogsProvider', () => {
       search: ' admin@example.com ',
     });
 
-    expect(prismaService.adminLog.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          OR: expect.arrayContaining([
-            {
-              user: {
-                is: {
-                  email: {
-                    contains: 'admin@example.com',
-                    mode: 'insensitive',
-                  },
-                },
+    const findManyArgs = findManyMock.mock.calls[0]?.[0];
+
+    expect(findManyArgs?.where?.OR).toEqual(
+      expect.arrayContaining([
+        {
+          user: {
+            is: {
+              email: {
+                contains: 'admin@example.com',
+                mode: 'insensitive',
               },
             },
-          ]),
+          },
         },
-      }),
+      ]),
     );
   });
 
@@ -194,9 +208,7 @@ describe('FindAdminLogsProvider', () => {
   });
 
   it('wraps unexpected Prisma failures', async () => {
-    prismaService.$transaction.mockRejectedValueOnce(
-      new Error('database unavailable'),
-    );
+    transactionMock.mockRejectedValueOnce(new Error('database unavailable'));
 
     await expect(provider.findAdminLogs({})).rejects.toBeInstanceOf(
       InternalServerErrorException,

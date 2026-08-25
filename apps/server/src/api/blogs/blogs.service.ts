@@ -7,7 +7,13 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { AdminAction, AdminEntity, BlogStatus, Prisma } from '@prisma/client';
+import {
+  AdminAction,
+  AdminEntity,
+  BlogStatus,
+  Language,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { FindBlogsQueryDto } from './dto/find-blogs-query.dto';
@@ -29,14 +35,44 @@ const blogListSelect = {
   language: true,
   status: true,
   isFeatured: true,
+  viewCount: true,
   publishedAt: true,
   createdAt: true,
   updatedAt: true,
+  translations: {
+    select: {
+      id: true,
+      language: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      metaTitle: true,
+      metaDescription: true,
+    },
+    orderBy: {
+      language: 'asc',
+    },
+  },
 } satisfies Prisma.BlogSelect;
 
 const blogDetailSelect = {
   ...blogListSelect,
   content: true,
+  translations: {
+    select: {
+      id: true,
+      language: true,
+      title: true,
+      slug: true,
+      excerpt: true,
+      content: true,
+      metaTitle: true,
+      metaDescription: true,
+    },
+    orderBy: {
+      language: 'asc',
+    },
+  },
 } satisfies Prisma.BlogSelect;
 
 export type BlogListItem = Prisma.BlogGetPayload<{
@@ -74,6 +110,8 @@ const isPrismaKnownError = (
   return error instanceof Prisma.PrismaClientKnownRequestError;
 };
 
+const BLOG_SLUG_MAX_LENGTH = 120;
+
 @Injectable()
 export class BlogsService {
   private readonly logger = new Logger(BlogsService.name);
@@ -84,24 +122,40 @@ export class BlogsService {
     createBlogDto: CreateBlogDto,
     adminId: string,
   ): Promise<BlogDetail> {
-    const slug = this.normalizeAndValidateSlug(createBlogDto.slug);
-    const content = this.sanitizeAndValidateContent(createBlogDto.content);
+    const translations = this.normalizeAndValidateCreateTranslations(
+      createBlogDto.translations,
+    );
+    const defaultTranslation =
+      translations.find(
+        (translation) => translation.language === Language.EN,
+      ) ?? translations[0];
     const publishedAt = this.resolveCreatePublishedAt(createBlogDto);
 
     try {
       return await this.prismaService.$transaction(async (tx) => {
         const blog = await tx.blog.create({
           data: {
-            title: createBlogDto.title.trim(),
-            slug,
-            excerpt: createBlogDto.excerpt.trim(),
-            content,
+            title: defaultTranslation.title,
+            slug: defaultTranslation.slug,
+            excerpt: defaultTranslation.excerpt,
+            content: defaultTranslation.content,
             coverImageKey: createBlogDto.coverImageKey.trim(),
             coverImageUrl: createBlogDto.coverImageUrl.trim(),
-            language: createBlogDto.language,
+            language: defaultTranslation.language,
             status: createBlogDto.status,
             isFeatured: createBlogDto.isFeatured ?? false,
             publishedAt,
+            translations: {
+              create: translations.map((translation) => ({
+                language: translation.language,
+                title: translation.title,
+                slug: translation.slug,
+                excerpt: translation.excerpt,
+                content: translation.content,
+                metaTitle: translation.metaTitle,
+                metaDescription: translation.metaDescription,
+              })),
+            },
           },
           select: blogDetailSelect,
         });
@@ -109,10 +163,7 @@ export class BlogsService {
         await tx.adminLog.create({
           data: {
             userId: adminId,
-            action:
-              blog.status === BlogStatus.PUBLISHED
-                ? AdminAction.PUBLISH
-                : AdminAction.CREATE,
+            action: AdminAction.CREATE,
             entity: AdminEntity.BLOG,
             entityId: blog.id,
           },
@@ -243,6 +294,15 @@ export class BlogsService {
       throw new BadRequestException('No blog fields provided for update');
     }
 
+    if (
+      this.hasLocalizedRootFields(updateBlogDto) &&
+      !updateBlogDto.translations
+    ) {
+      throw new BadRequestException(
+        'Blog update must include both KA and EN translations',
+      );
+    }
+
     try {
       return await this.prismaService.$transaction(async (tx) => {
         const existingBlog = await tx.blog.findUnique({
@@ -253,6 +313,11 @@ export class BlogsService {
             id: true,
             status: true,
             publishedAt: true,
+            translations: {
+              select: {
+                language: true,
+              },
+            },
           },
         });
 
@@ -260,7 +325,21 @@ export class BlogsService {
           throw new NotFoundException('Blog not found');
         }
 
-        const data = this.buildUpdateData(updateBlogDto, existingBlog);
+        this.assertExistingBlogHasRequiredTranslations(
+          existingBlog.translations,
+        );
+
+        const translations = updateBlogDto.translations
+          ? this.normalizeAndValidateUpdateTranslations(
+              updateBlogDto.translations,
+            )
+          : undefined;
+        const data = this.buildUpdateData(
+          updateBlogDto,
+          existingBlog,
+          translations,
+        );
+
         const blog = await tx.blog.update({
           where: {
             id,
@@ -269,19 +348,46 @@ export class BlogsService {
           select: blogDetailSelect,
         });
 
+        if (translations) {
+          await Promise.all(
+            translations.map((translation) =>
+              tx.blogTranslation.update({
+                where: {
+                  blogId_language: {
+                    blogId: id,
+                    language: translation.language,
+                  },
+                },
+                data: {
+                  title: translation.title,
+                  slug: translation.slug,
+                  excerpt: translation.excerpt,
+                  content: translation.content,
+                  metaTitle: translation.metaTitle,
+                  metaDescription: translation.metaDescription,
+                },
+              }),
+            ),
+          );
+        }
+
         await tx.adminLog.create({
           data: {
             userId: adminId,
-            action: this.resolveUpdateAdminAction(
-              existingBlog.status,
-              blog.status,
-            ),
+            action: AdminAction.UPDATE,
             entity: AdminEntity.BLOG,
             entityId: blog.id,
           },
         });
 
-        return blog;
+        return (
+          (await tx.blog.findUnique({
+            where: {
+              id,
+            },
+            select: blogDetailSelect,
+          })) ?? blog
+        );
       });
     } catch (error: unknown) {
       if (error instanceof HttpException) {
@@ -423,23 +529,29 @@ export class BlogsService {
   private buildUpdateData(
     updateBlogDto: UpdateBlogDto,
     existingBlog: { status: BlogStatus; publishedAt: Date | null },
+    translations:
+      | Array<{
+          language: Language;
+          title: string;
+          slug: string;
+          excerpt: string;
+          content: string;
+          metaTitle: string | null;
+          metaDescription: string | null;
+        }>
+      | undefined,
   ): Prisma.BlogUpdateInput {
     const data: Prisma.BlogUpdateInput = {};
+    const defaultTranslation = translations?.find(
+      (translation) => translation.language === Language.EN,
+    );
 
-    if (updateBlogDto.title !== undefined) {
-      data.title = updateBlogDto.title.trim();
-    }
-
-    if (updateBlogDto.slug !== undefined) {
-      data.slug = this.normalizeAndValidateSlug(updateBlogDto.slug);
-    }
-
-    if (updateBlogDto.excerpt !== undefined) {
-      data.excerpt = updateBlogDto.excerpt.trim();
-    }
-
-    if (updateBlogDto.content !== undefined) {
-      data.content = this.sanitizeAndValidateContent(updateBlogDto.content);
+    if (defaultTranslation) {
+      data.title = defaultTranslation.title;
+      data.slug = defaultTranslation.slug;
+      data.excerpt = defaultTranslation.excerpt;
+      data.content = defaultTranslation.content;
+      data.language = defaultTranslation.language;
     }
 
     if (updateBlogDto.coverImageKey !== undefined) {
@@ -497,25 +609,141 @@ export class BlogsService {
     return null;
   }
 
-  private resolveUpdateAdminAction(
-    previousStatus: BlogStatus,
-    nextStatus: BlogStatus,
-  ): AdminAction {
-    if (
-      previousStatus !== BlogStatus.PUBLISHED &&
-      nextStatus === BlogStatus.PUBLISHED
-    ) {
-      return AdminAction.PUBLISH;
+  private normalizeAndValidateCreateTranslations(
+    translations: CreateBlogDto['translations'],
+  ): Array<{
+    language: Language;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+  }> {
+    const requiredLanguages = [Language.KA, Language.EN];
+    const providedLanguages = new Set(
+      translations.map((translation) => translation.language),
+    );
+    const hasRequiredTranslations =
+      translations.length === requiredLanguages.length &&
+      requiredLanguages.every((language) => providedLanguages.has(language));
+
+    if (!hasRequiredTranslations) {
+      throw new BadRequestException(
+        'Blog must include exactly one KA and one EN translation',
+      );
     }
 
-    if (
-      previousStatus === BlogStatus.PUBLISHED &&
-      nextStatus !== BlogStatus.PUBLISHED
-    ) {
-      return AdminAction.UNPUBLISH;
+    const normalizedTranslations = translations.map((translation) => ({
+      language: translation.language,
+      title: translation.title.trim(),
+      slug: this.normalizeAndValidateSlug(translation.slug),
+      excerpt: translation.excerpt.trim(),
+      content: this.sanitizeAndValidateContent(translation.content),
+      metaTitle: this.normalizeOptionalText(translation.metaTitle),
+      metaDescription: this.normalizeOptionalText(translation.metaDescription),
+    }));
+
+    this.assertCreateTranslationsUseEnglishCanonicalSlug(
+      normalizedTranslations,
+    );
+
+    return normalizedTranslations;
+  }
+
+  private normalizeAndValidateUpdateTranslations(
+    translations: NonNullable<UpdateBlogDto['translations']>,
+  ): Array<{
+    language: Language;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+  }> {
+    return this.normalizeAndValidateTranslations(translations);
+  }
+
+  private normalizeAndValidateTranslations(
+    translations: Array<{
+      language: Language;
+      title: string;
+      slug: string;
+      excerpt: string;
+      content: string;
+      metaTitle?: string;
+      metaDescription?: string;
+    }>,
+  ): Array<{
+    language: Language;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+  }> {
+    const requiredLanguages = [Language.KA, Language.EN];
+    const providedLanguages = new Set(
+      translations.map((translation) => translation.language),
+    );
+    const hasRequiredTranslations =
+      translations.length === requiredLanguages.length &&
+      requiredLanguages.every((language) => providedLanguages.has(language));
+
+    if (!hasRequiredTranslations) {
+      throw new BadRequestException(
+        'Blog must include exactly one KA and one EN translation',
+      );
     }
 
-    return AdminAction.UPDATE;
+    return translations.map((translation) => ({
+      language: translation.language,
+      title: translation.title.trim(),
+      slug: this.normalizeAndValidateSlug(translation.slug),
+      excerpt: translation.excerpt.trim(),
+      content: this.sanitizeAndValidateContent(translation.content),
+      metaTitle: this.normalizeOptionalText(translation.metaTitle),
+      metaDescription: this.normalizeOptionalText(translation.metaDescription),
+    }));
+  }
+
+  private hasLocalizedRootFields(updateBlogDto: UpdateBlogDto): boolean {
+    return (
+      updateBlogDto.title !== undefined ||
+      updateBlogDto.slug !== undefined ||
+      updateBlogDto.excerpt !== undefined ||
+      updateBlogDto.content !== undefined ||
+      updateBlogDto.language !== undefined
+    );
+  }
+
+  private assertExistingBlogHasRequiredTranslations(
+    translations: Array<{ language: Language }>,
+  ): void {
+    const providedLanguages = new Set(
+      translations.map((translation) => translation.language),
+    );
+
+    if (
+      !providedLanguages.has(Language.KA) ||
+      !providedLanguages.has(Language.EN)
+    ) {
+      throw new BadRequestException(
+        'Blog must include exactly one KA and one EN translation',
+      );
+    }
+  }
+
+  private normalizeOptionalText(value: string | undefined): string | null {
+    if (value === undefined) {
+      return null;
+    }
+
+    const normalizedValue = value.trim();
+
+    return normalizedValue.length > 0 ? normalizedValue : null;
   }
 
   private normalizeAndValidateSlug(slug: string): string {
@@ -525,7 +753,31 @@ export class BlogsService {
       throw new BadRequestException('Slug is required');
     }
 
+    if (normalizedSlug.length > BLOG_SLUG_MAX_LENGTH) {
+      throw new BadRequestException(
+        `Slug must be ${BLOG_SLUG_MAX_LENGTH} characters or fewer`,
+      );
+    }
+
     return normalizedSlug;
+  }
+
+  private assertCreateTranslationsUseEnglishCanonicalSlug(
+    translations: Array<{ language: Language; slug: string }>,
+  ): void {
+    const englishTranslation = translations.find(
+      (translation) => translation.language === Language.EN,
+    );
+    const canonicalSlug = englishTranslation?.slug;
+
+    if (
+      !canonicalSlug ||
+      translations.some((translation) => translation.slug !== canonicalSlug)
+    ) {
+      throw new BadRequestException(
+        'Blog translations must use the same English canonical slug',
+      );
+    }
   }
 
   private sanitizeAndValidateContent(content: string): string {

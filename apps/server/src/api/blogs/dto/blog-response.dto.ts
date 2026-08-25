@@ -44,11 +44,44 @@ export class BlogListItemResponseDto {
   updatedAt: Date;
 }
 
+export class BlogTranslationResponseDto {
+  @ApiProperty({ example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25' })
+  id: string;
+
+  @ApiProperty({ enum: Language, example: Language.EN })
+  language: Language;
+
+  @ApiProperty({ example: 'Fire safety checklist for commercial buildings' })
+  title: string;
+
+  @ApiProperty({ example: 'fire-safety-checklist' })
+  slug: string;
+
+  @ApiProperty({ example: 'A short overview of practical fire safety checks.' })
+  excerpt: string;
+
+  @ApiProperty({
+    example: '<h2>Checklist</h2><p>Inspect alarms every month.</p>',
+  })
+  content: string;
+
+  @ApiPropertyOptional({ example: 'Fire safety checklist | Wave' })
+  metaTitle: string | null;
+
+  @ApiPropertyOptional({
+    example: 'A concise search result summary for this blog.',
+  })
+  metaDescription: string | null;
+}
+
 export class BlogResponseDto extends BlogListItemResponseDto {
   @ApiProperty({
     example: '<h2>Checklist</h2><p>Inspect alarms every month.</p>',
   })
   content: string;
+
+  @ApiProperty({ type: [BlogTranslationResponseDto] })
+  translations: BlogTranslationResponseDto[];
 }
 
 export class BlogPaginationResponseDto {

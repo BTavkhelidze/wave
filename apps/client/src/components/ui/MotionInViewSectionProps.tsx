@@ -17,6 +17,7 @@ const MotionInViewSection: React.FC<MotionInViewSectionProps> = ({
 
   return (
     <motion.div
+      className='xl:px-[8%] px-6   '
       ref={ref}
       initial={{ opacity: 0, y: 40 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}

@@ -1,12 +1,13 @@
-import CompanyName from '@/components/LandingPage/companyName';
+import dynamic from 'next/dynamic';
 
-import ServisesListS2 from '@/components/services/ServisesListS2';
-
-import React from 'react';
+const CompanyName = dynamic(() => import('@/components/LandingPage/companyName'));
+const ServisesListS2 = dynamic(
+  () => import('@/components/services/ServisesListS2'),
+);
 
 function page() {
   return (
-    <main className='relative flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30    pb-[50px]'>
+    <main className='relative xl:px-[8%] flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30    pb-[50px]'>
       <div className='w-full' id='top'></div>
       <div className='w-full'>
         <CompanyName />

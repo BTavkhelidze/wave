@@ -6,11 +6,16 @@ import {
 } from '../../../features/auth/lib/authorization';
 import { ADMIN_ROUTE_PATHS } from './routes.constants';
 
+type ProtectedAdminRoutePath = Exclude<
+  (typeof ADMIN_ROUTE_PATHS)[keyof typeof ADMIN_ROUTE_PATHS],
+  | typeof ADMIN_ROUTE_PATHS.login
+  | typeof ADMIN_ROUTE_PATHS.changeInitialPassword
+  | typeof ADMIN_ROUTE_PATHS.forgotPassword
+  | typeof ADMIN_ROUTE_PATHS.resetPassword
+>;
+
 export const ADMIN_ROUTE_ACCESS: Record<
-  Exclude<
-    (typeof ADMIN_ROUTE_PATHS)[keyof typeof ADMIN_ROUTE_PATHS],
-    typeof ADMIN_ROUTE_PATHS.changeInitialPassword
-  >,
+  ProtectedAdminRoutePath,
   RoleAccessRule
 > = {
   [ADMIN_ROUTE_PATHS.dashboard]: ALL_ADMIN_ROLES,
@@ -18,7 +23,15 @@ export const ADMIN_ROUTE_ACCESS: Record<
   [ADMIN_ROUTE_PATHS.users]: CONTENT_MANAGER_ROLES,
   [ADMIN_ROUTE_PATHS.createUser]: SUPER_ADMIN_ONLY,
   [ADMIN_ROUTE_PATHS.adminLogs]: SUPER_ADMIN_ONLY,
+  [ADMIN_ROUTE_PATHS.messages]: ALL_ADMIN_ROLES,
+  [ADMIN_ROUTE_PATHS.emails]: CONTENT_MANAGER_ROLES,
+  [ADMIN_ROUTE_PATHS.composeEmail]: CONTENT_MANAGER_ROLES,
+  [ADMIN_ROUTE_PATHS.emailDetail]: CONTENT_MANAGER_ROLES,
   [ADMIN_ROUTE_PATHS.services]: ALL_ADMIN_ROLES,
+  [ADMIN_ROUTE_PATHS.createService]: CONTENT_MANAGER_ROLES,
+  [ADMIN_ROUTE_PATHS.serviceDetail]: ALL_ADMIN_ROLES,
+  [ADMIN_ROUTE_PATHS.serviceTranslationDetail]: CONTENT_MANAGER_ROLES,
   [ADMIN_ROUTE_PATHS.blogs]: CONTENT_MANAGER_ROLES,
   [ADMIN_ROUTE_PATHS.createBlog]: CONTENT_MANAGER_ROLES,
+  [ADMIN_ROUTE_PATHS.blogDetail]: CONTENT_MANAGER_ROLES,
 };

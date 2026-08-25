@@ -53,6 +53,28 @@ export class UpdateUserByAdminProvider {
 
     try {
       return await this.prismaService.$transaction(async (tx) => {
+        if (updateUserByAdminDto.role !== undefined) {
+          const existingUser = await tx.user.findUnique({
+            where: {
+              id: userId,
+            },
+            select: {
+              role: true,
+            },
+          });
+
+          if (!existingUser) {
+            throw new NotFoundException('User not found');
+          }
+
+          if (existingUser.role !== updateUserByAdminDto.role) {
+            data.hashedRefreshToken = null;
+            data.sessionVersion = {
+              increment: 1,
+            };
+          }
+        }
+
         const user = await tx.user.update({
           where: {
             id: userId,

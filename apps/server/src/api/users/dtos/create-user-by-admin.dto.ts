@@ -1,6 +1,5 @@
 import { UserRole } from '@prisma/client';
 import {
-  IsBoolean,
   IsEmail,
   IsEnum,
   IsNotEmpty,

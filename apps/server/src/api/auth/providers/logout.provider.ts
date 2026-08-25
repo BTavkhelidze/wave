@@ -3,13 +3,18 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AdminAction, AdminEntity } from '@prisma/client';
 import type { Response } from 'express';
+import { clearAuthCookies } from 'src/common/http/auth-cookie-options';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 
 @Injectable()
 export class LogoutProvider {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   public async logout(userId: string, res: Response<any, Record<string, any>>) {
     try {
@@ -33,8 +38,7 @@ export class LogoutProvider {
         });
       });
 
-      res.clearCookie('refreshToken', { path: '/' });
-      res.clearCookie('accessToken', { path: '/' });
+      clearAuthCookies(res, this.configService);
 
       return {
         message: 'User logged out successfully',

@@ -11,7 +11,8 @@ export type CreateUserPayload = {
 
 export type CreateUserResponse = {
   user: UserListItemData;
-  temporaryPassword: string;
+  emailSent: boolean;
+  message: string;
 };
 
 export function createUserByAdmin(

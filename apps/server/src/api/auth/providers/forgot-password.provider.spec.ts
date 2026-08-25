@@ -3,10 +3,46 @@ import {
   FORGOT_PASSWORD_SUCCESS_MESSAGE,
   ForgotPasswordProvider,
 } from './forgot-password.provider';
+import type { ConfigType } from '@nestjs/config';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { PasswordResetTokenProvider } from './password-reset-token.provider';
 import { PasswordResetEmailService } from '../email/password-reset-email.service';
 import { PasswordResetRateLimitProvider } from './password-reset-rate-limit.provider';
+import appConfig from 'src/config/app.config';
+
+type PasswordResetUser = {
+  id: string;
+  email: string;
+  isActive: boolean;
+};
+
+type PasswordResetTokenUpdateManyArgs = {
+  where: {
+    userId: string;
+    usedAt: null;
+  };
+  data: {
+    usedAt: Date;
+  };
+};
+
+type PasswordResetTokenCreateArgs = {
+  data: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  };
+};
+
+type PasswordResetTokenTransaction = {
+  passwordResetToken: {
+    updateMany: jest.Mock<
+      Promise<{ count: number }>,
+      [PasswordResetTokenUpdateManyArgs]
+    >;
+    create: jest.Mock<Promise<{ id: string }>, [PasswordResetTokenCreateArgs]>;
+  };
+};
 
 describe('ForgotPasswordProvider', () => {
   const appConfiguration = {
@@ -28,57 +64,85 @@ describe('ForgotPasswordProvider', () => {
 
   let prismaService: {
     user: {
-      findFirst: jest.Mock;
+      findFirst: jest.Mock<Promise<PasswordResetUser | null>, [unknown]>;
     };
     passwordResetToken: {
-      updateMany: jest.Mock;
-      create: jest.Mock;
+      updateMany: jest.Mock<
+        Promise<{ count: number }>,
+        [PasswordResetTokenUpdateManyArgs]
+      >;
+      create: jest.Mock<
+        Promise<{ id: string }>,
+        [PasswordResetTokenCreateArgs]
+      >;
     };
-    $transaction: jest.Mock;
+    $transaction: jest.Mock<
+      Promise<unknown>,
+      [callback: (tx: PasswordResetTokenTransaction) => Promise<unknown>]
+    >;
   };
-  let tokenProvider: {
-    generateRawToken: jest.Mock<string, []>;
-    hashToken: jest.Mock<string, [string]>;
-  };
-  let emailService: {
-    sendPasswordResetEmail: jest.Mock<Promise<void>, [unknown]>;
-  };
-  let rateLimitProvider: {
-    consume: jest.Mock<void, [string]>;
-  };
+  let tokenProvider: jest.Mocked<
+    Pick<PasswordResetTokenProvider, 'generateRawToken' | 'hashToken'>
+  >;
+  let emailService: jest.Mocked<
+    Pick<PasswordResetEmailService, 'sendPasswordResetEmail'>
+  >;
+  let rateLimitProvider: jest.Mocked<
+    Pick<PasswordResetRateLimitProvider, 'consume'>
+  >;
   let provider: ForgotPasswordProvider;
 
   beforeEach(() => {
     prismaService = {
       user: {
-        findFirst: jest.fn().mockResolvedValue(user),
+        findFirst: jest
+          .fn<Promise<PasswordResetUser | null>, [unknown]>()
+          .mockResolvedValue(user),
       },
       passwordResetToken: {
-        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-        create: jest.fn().mockResolvedValue({ id: 'token-id' }),
+        updateMany: jest
+          .fn<Promise<{ count: number }>, [PasswordResetTokenUpdateManyArgs]>()
+          .mockResolvedValue({ count: 1 }),
+        create: jest
+          .fn<Promise<{ id: string }>, [PasswordResetTokenCreateArgs]>()
+          .mockResolvedValue({ id: 'token-id' }),
       },
-      $transaction: jest.fn().mockImplementation((callback) =>
-        callback({
-          passwordResetToken: prismaService.passwordResetToken,
-        }),
-      ),
+      $transaction: jest
+        .fn<
+          Promise<unknown>,
+          [callback: (tx: PasswordResetTokenTransaction) => Promise<unknown>]
+        >()
+        .mockImplementation((callback) =>
+          callback({
+            passwordResetToken: prismaService.passwordResetToken,
+          }),
+        ),
     };
     tokenProvider = {
-      generateRawToken: jest.fn().mockReturnValue('raw-reset-token'),
-      hashToken: jest.fn().mockReturnValue('hashed-reset-token'),
+      generateRawToken: jest
+        .fn<string, []>()
+        .mockReturnValue('raw-reset-token'),
+      hashToken: jest
+        .fn<string, [string]>()
+        .mockReturnValue('hashed-reset-token'),
     };
     emailService = {
-      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetEmail: jest
+        .fn<
+          Promise<void>,
+          [Parameters<PasswordResetEmailService['sendPasswordResetEmail']>[0]]
+        >()
+        .mockResolvedValue(undefined),
     };
     rateLimitProvider = {
-      consume: jest.fn(),
+      consume: jest.fn<void, [string]>(),
     };
     provider = new ForgotPasswordProvider(
       prismaService as unknown as PrismaService,
       tokenProvider,
       emailService as unknown as PasswordResetEmailService,
       rateLimitProvider as unknown as PasswordResetRateLimitProvider,
-      appConfiguration as never,
+      appConfiguration as ConfigType<typeof appConfig>,
     );
   });
 
@@ -94,27 +158,32 @@ describe('ForgotPasswordProvider', () => {
     expect(rateLimitProvider.consume).toHaveBeenCalledWith(
       '127.0.0.1:admin@example.com',
     );
-    expect(prismaService.passwordResetToken.updateMany).toHaveBeenCalledWith({
+    const updateManyArgs =
+      prismaService.passwordResetToken.updateMany.mock.calls[0]?.[0];
+    const createArgs =
+      prismaService.passwordResetToken.create.mock.calls[0]?.[0];
+
+    expect(updateManyArgs).toMatchObject({
       where: {
         userId: user.id,
         usedAt: null,
       },
-      data: {
-        usedAt: expect.any(Date),
-      },
     });
-    expect(prismaService.passwordResetToken.create).toHaveBeenCalledWith({
+    expect(updateManyArgs?.data.usedAt).toBeInstanceOf(Date);
+    expect(createArgs).toMatchObject({
       data: {
         userId: user.id,
         tokenHash: 'hashed-reset-token',
-        expiresAt: expect.any(Date),
       },
     });
+    expect(createArgs?.data.expiresAt).toBeInstanceOf(Date);
     expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
       to: user.email,
       resetUrl: 'http://localhost:5173/reset-password?token=raw-reset-token',
       expiresInMinutes: 30,
-    });
+    } satisfies Parameters<
+      PasswordResetEmailService['sendPasswordResetEmail']
+    >[0]);
     expect(JSON.stringify(response)).not.toContain('raw-reset-token');
     expect(JSON.stringify(response)).not.toContain('hashed-reset-token');
   });

@@ -23,6 +23,14 @@
   },
   "Services": {
     "ServicesTitle": "Services",
+    "loading": "Loading...",
+    "loadingDescription": "Preparing the requested service.",
+    "errorDetail": "Error loading service.",
+    "errorDescription": "We could not load this page right now. Please try again later.",
+    "notFound": "Service not found",
+    "notFoundDescription": "The requested resource does not exist or may have been removed.",
+    "backToServices": "Back to Services",
+    "backToHome": "Back to Home",
 
     "DesignAndInstallation": "Design and installation ",
 
@@ -35,6 +43,22 @@
     "Plumbing": "Plumbing",
 
     "SeeAllServises": "See all Services"
+  },
+  "Blogs": {
+    "title": "Blogs",
+    "readMore": "Read more",
+    "loading": "Loading...",
+    "loadingCard": "Loading blog",
+    "error": "Error loading blogs.",
+    "errorDetail": "Error loading blog.",
+    "errorDescription": "We could not load this page right now. Please try again later.",
+    "empty": "No blogs found.",
+    "notFound": "Blog not found.",
+    "notFoundDescription": "The requested resource does not exist or may have been removed.",
+    "backToBlogs": "Back to Blogs",
+    "backToHome": "Back to Home",
+    "goBack": "Go Back",
+    "contentLabel": "Blog content"
   },
   "FooterAbout": {
     "title": "About",
@@ -112,7 +136,17 @@
     "InstalationDirection": "Installation direction",
     "name": "Name",
     "Email": "Email",
+    "Phone": "Phone",
     "Message": "Message",
+    "nameRequired": "Name is required.",
+    "nameShort": "Name must be at least 2 characters.",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Enter a valid email address.",
+    "messageRequired": "Message is required.",
+    "messageShort": "Message must be at least 10 characters.",
+    "success": "Your message has been sent successfully.",
+    "failure": "We could not send your message. Please try again later.",
+    "sending": "Sending...",
     "btn": "SEND",
     "title": "Get in Touch",
     "desc": "info@waveengineering.ge"

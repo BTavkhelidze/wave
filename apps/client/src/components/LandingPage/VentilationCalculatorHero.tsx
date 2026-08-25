@@ -16,7 +16,7 @@ function VentilationCalculatorHero() {
   const t = useTranslations('VentilationHero');
   const [isHover, setIsHover] = useState<boolean>(false);
   return (
-    <section className='w-full max-w-[1440px] flex  mx-auto my-16 px-6  xl:px-0 2xl:mx-auto xl:pb-10 flex-col sm:flex-row items-center gap-10'>
+    <section className='w-full max-w-[1440px] flex  mx-auto my-16  2xl:mx-auto xl:pb-10 flex-col sm:flex-row items-center gap-10'>
       <div className='flex-1  text-center sm:text-start'>
         <h2 className=' mb-4 text-lg text-white'>{t('title')}</h2>
         <p className='text-[#898D8E] mb-6 font-light '>{t('description')}</p>

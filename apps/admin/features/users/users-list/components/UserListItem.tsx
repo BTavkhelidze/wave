@@ -7,6 +7,7 @@ type UserListItemProps = {
   canManageUsers: boolean;
   onToggleActive: (userId: string, isActive: boolean) => void;
   onDelete: (userId: string) => void;
+  onResetPassword: (user: UserListItemData) => void;
 };
 
 const createdDateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -38,8 +39,10 @@ export function UserListItem({
   canManageUsers,
   onToggleActive,
   onDelete,
+  onResetPassword,
 }: UserListItemProps) {
   const activeActionLabel = user.isActive ? 'Make inactive' : 'Make active';
+  const canResetPassword = user.role !== 'SUPER_ADMIN';
 
   return (
     <tr className='border-b border-[#E5E7EB] last:border-b-0'>
@@ -76,6 +79,17 @@ export function UserListItem({
             >
               Delete
             </button>
+            {canResetPassword && (
+              <button
+                type='button'
+                onClick={() => onResetPassword(user)}
+                disabled={isPending}
+                aria-label={`Reset password for ${user.email}`}
+                className='rounded-md border border-[#111827] bg-white px-3 py-1.5 text-xs font-medium text-[#111827] transition hover:bg-[#F8FAFC] focus:outline-none focus:ring-2 focus:ring-[#111827]/20 disabled:cursor-not-allowed disabled:opacity-60'
+              >
+                Reset Password
+              </button>
+            )}
           </div>
         </td>
       )}

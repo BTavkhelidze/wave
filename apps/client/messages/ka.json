@@ -3,7 +3,7 @@
     "Home": "მთავარი",
     "Calculator": "კალკულატორი",
     "Services": "სერვისები",
-    "AboutUs": "ჩვენს შესახებ",
+    "AboutUs": "ჩვენ შესახებ",
     "Blogs": "ბლოგები"
   },
   "AboutUsHero": {
@@ -22,6 +22,14 @@
   },
   "Services": {
     "ServicesTitle": "სერვისები",
+    "loading": "იტვირთება...",
+    "loadingDescription": "მოთხოვნილი სერვისი მზადდება.",
+    "errorDetail": "სერვისის ჩატვირთვა ვერ მოხერხდა.",
+    "errorDescription": "ამ გვერდის ჩატვირთვა ახლა ვერ მოხერხდა. გთხოვთ, სცადოთ მოგვიანებით.",
+    "notFound": "სერვისი ვერ მოიძებნა",
+    "notFoundDescription": "მოთხოვნილი რესურსი არ არსებობს ან შესაძლოა წაშლილია.",
+    "backToServices": "სერვისებზე დაბრუნება",
+    "backToHome": "მთავარზე დაბრუნება",
 
     "DesignAndInstallation": "პროექტირება და მონტაჟი",
 
@@ -36,6 +44,22 @@
     "SeeAllServises": "იხილეთ სერვისები"
   },
 
+  "Blogs": {
+    "title": "\u10d1\u10da\u10dd\u10d2\u10d4\u10d1\u10d8",
+    "readMore": "\u10ec\u10d0\u10d8\u10d9\u10d8\u10d7\u10ee\u10d4\u10d7 \u10db\u10d4\u10e2\u10d8",
+    "loading": "\u10d8\u10e2\u10d5\u10d8\u10e0\u10d7\u10d4\u10d1\u10d0...",
+    "loadingCard": "\u10d1\u10da\u10dd\u10d2\u10d8 \u10d8\u10e2\u10d5\u10d8\u10e0\u10d7\u10d4\u10d1\u10d0",
+    "error": "\u10d1\u10da\u10dd\u10d2\u10d4\u10d1\u10d8\u10e1 \u10e9\u10d0\u10e2\u10d5\u10d8\u10e0\u10d7\u10d5\u10d0 \u10d5\u10d4\u10e0 \u10db\u10dd\u10ee\u10d4\u10e0\u10ee\u10d3\u10d0.",
+    "errorDetail": "\u10d1\u10da\u10dd\u10d2\u10d8\u10e1 \u10e9\u10d0\u10e2\u10d5\u10d8\u10e0\u10d7\u10d5\u10d0 \u10d5\u10d4\u10e0 \u10db\u10dd\u10ee\u10d4\u10e0\u10ee\u10d3\u10d0.",
+    "errorDescription": "ამ გვერდის ჩატვირთვა ახლა ვერ მოხერხდა. გთხოვთ, სცადოთ მოგვიანებით.",
+    "empty": "\u10d1\u10da\u10dd\u10d2\u10d4\u10d1\u10d8 \u10d5\u10d4\u10e0 \u10db\u10dd\u10d8\u10eb\u10d4\u10d1\u10dc\u10d0.",
+    "notFound": "\u10d1\u10da\u10dd\u10d2\u10d8 \u10d5\u10d4\u10e0 \u10db\u10dd\u10d8\u10eb\u10d4\u10d1\u10dc\u10d0.",
+    "notFoundDescription": "მოთხოვნილი რესურსი არ არსებობს ან შესაძლოა წაშლილია.",
+    "backToBlogs": "ბლოგებზე დაბრუნება",
+    "backToHome": "მთავარზე დაბრუნება",
+    "goBack": "\u10e3\u10d9\u10d0\u10dc \u10d3\u10d0\u10d1\u10e0\u10e3\u10dc\u10d4\u10d1\u10d0",
+    "contentLabel": "\u10d1\u10da\u10dd\u10d2\u10d8\u10e1 \u10e8\u10d8\u10dc\u10d0\u10d0\u10e0\u10e1\u10d8"
+  },
   "FooterAbout": {
     "title": "ჩვენ შესახებ",
     "description": "ჩვენი მაღალკვალიფიციური გუნდი სრულად შეძლებს ნებისმიერი პროექტის განხორციელებას იდეიდან დასრულებამდე.",
@@ -112,7 +136,17 @@
     "InstalationDirection": "სამონტაჟო მიმართულება",
     "name": "სახელი",
     "Email": "ელ. ფოსტა",
+    "Phone": "ტელეფონი",
     "Message": "შეტყობინება",
+    "nameRequired": "სახელი სავალდებულოა.",
+    "nameShort": "სახელი უნდა იყოს მინიმუმ 2 სიმბოლო.",
+    "emailRequired": "ელ. ფოსტა სავალდებულოა.",
+    "emailInvalid": "შეიყვანეთ სწორი ელ. ფოსტა.",
+    "messageRequired": "შეტყობინება სავალდებულოა.",
+    "messageShort": "შეტყობინება უნდა იყოს მინიმუმ 10 სიმბოლო.",
+    "success": "თქვენი შეტყობინება წარმატებით გაიგზავნა.",
+    "failure": "შეტყობინების გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ მოგვიანებით.",
+    "sending": "იგზავნება...",
     "btn": "გაგზავნა",
     "title": "დაგვიკავშირდი",
     "desc": "info@waveengineering.ge"

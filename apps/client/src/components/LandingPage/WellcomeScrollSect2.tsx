@@ -32,7 +32,7 @@ export function WellcomeScrollSect2() {
 
   return (
     <motion.div
-      className='relative px-6  xl:px-0 w-full  mx-auto flex  flex-col md:flex-row items-center max-w-[1440px]  xl:gap-8 sm:gap-6  flex-1'
+      className='relative px-6 xl:px-[8%] w-full  mx-auto flex  flex-col md:flex-row items-center max-w-[1440px]  xl:gap-8 sm:gap-6  flex-1'
       variants={containerVariants}
       initial='hidden'
       whileInView='visible'

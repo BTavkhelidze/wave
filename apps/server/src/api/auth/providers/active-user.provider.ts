@@ -8,14 +8,20 @@ export class ActiveUserProvider {
 
   public async activeAccount(
     userEmail: string,
-  ): Promise<Omit<User, 'password' | 'hashedRefreshToken'>> {
+  ): Promise<Omit<User, 'password' | 'hashedRefreshToken' | 'sessionVersion'>> {
     const user = await this.userService.findUserByEmail(userEmail);
-    const {
-      password: _password,
-      hashedRefreshToken: _hashedRefreshToken,
-      ...userWithoutPassword
-    } = user;
 
-    return userWithoutPassword;
+    return {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      mustChangePassword: user.mustChangePassword,
+      passwordChangedAt: user.passwordChangedAt,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }

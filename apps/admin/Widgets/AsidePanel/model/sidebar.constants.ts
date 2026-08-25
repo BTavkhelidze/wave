@@ -58,6 +58,19 @@ export const SIDEBAR_NAVIGATION_GROUPS: readonly SidebarNavigationGroup[] = [
         icon: 'blogs',
         allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.blogs],
       },
+      {
+        label: 'Messages',
+        path: ADMIN_ROUTE_PATHS.messages,
+        icon: 'messages',
+        badge: 'unreadMessages',
+        allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.messages],
+      },
+      {
+        label: 'Emails',
+        path: ADMIN_ROUTE_PATHS.emails,
+        icon: 'messages',
+        allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.emails],
+      },
     ],
   },
 ];

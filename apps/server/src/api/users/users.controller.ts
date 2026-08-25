@@ -21,6 +21,7 @@ import { UpdateUserByAdminDto } from './dtos/update-user-by-admin.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import type { ResetUserPasswordByAdminResponse } from './providers/reset-user-password-by-admin.provider';
 
 @Controller('users')
 export class UsersController {
@@ -83,6 +84,16 @@ export class UsersController {
       updateUserByAdminDto,
       activeUser.sub,
     );
+  }
+
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Post(':userId/reset-password')
+  public resetUserPasswordByAdmin(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @ActiveUser() activeUser: ActiveUserData,
+  ): Promise<ResetUserPasswordByAdminResponse> {
+    return this.usersService.resetUserPasswordByAdmin(userId, activeUser.sub);
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)

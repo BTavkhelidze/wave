@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import emailjs from 'emailjs-com';
+import { useSubmitContactMessageMutation } from './contact/contact.queries';
 
 interface IFormSchema {
   name: string;
@@ -25,19 +25,31 @@ function ContactUs() {
   });
 
   const [errors, setErrors] = useState<Partial<IFormSchema>>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const contactMutation = useSubmitContactMessageMutation();
 
   const t = useTranslations('Contact');
 
   const validate = () => {
     const newErrors: Partial<IFormSchema> = {};
 
-    if (!formData.name.trim()) newErrors.name = t('errors.nameRequired');
-    if (!formData.email.trim()) newErrors.email = t('errors.emailRequired');
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      newErrors.email = t('errors.emailInvalid');
+    const normalizedName = formData.name.trim();
+    const normalizedEmail = formData.email.trim();
+    const normalizedMessage = formData.message.trim();
 
-    if (!formData.message.trim())
-      newErrors.message = t('errors.messageRequired');
+    if (!normalizedName)
+      newErrors.name = t('nameRequired');
+    else if (normalizedName.length < 2)
+      newErrors.name = t('nameShort');
+    if (!normalizedEmail)
+      newErrors.email = t('emailRequired');
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
+      newErrors.email = t('emailInvalid');
+
+    if (!normalizedMessage)
+      newErrors.message = t('messageRequired');
+    else if (normalizedMessage.length < 10)
+      newErrors.message = t('messageShort');
 
     setErrors(newErrors);
 
@@ -46,22 +58,45 @@ function ContactUs() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSuccessMessage(null);
 
+    if (contactMutation.isPending) return;
     if (!validate()) return;
-    emailjs
-      .send(
-        process.env.NEXT_PUBLIC_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_TEMPLATE_ID!,
-        { ...formData, time: new Date().toLocaleString() },
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      )
-      .then(() => {
-        setFormData({ name: '', email: '', message: '' });
-        setErrors({});
-      })
-      .catch((error) => {
-        console.error('Email error:', error);
-      });
+
+    contactMutation.mutate(
+      {
+        fullName: formData.name.trim(),
+        email: formData.email.trim(),
+        message: formData.message.trim(),
+      },
+      {
+        onSuccess: () => {
+          setSuccessMessage(t('success'));
+          setFormData({ name: '', email: '', message: '' });
+          setErrors({});
+        },
+      }
+    );
+  };
+
+  const submitError =
+    contactMutation.error instanceof Error
+      ? contactMutation.error.message || t('failure')
+      : null;
+
+  const handleFieldChange = (field: keyof IFormSchema, value: string) => {
+    if (successMessage) {
+      setSuccessMessage(null);
+    }
+
+    if (contactMutation.isError) {
+      contactMutation.reset();
+    }
+
+    setFormData((current) => ({
+      ...current,
+      [field]: value,
+    }));
   };
 
   useGSAP(() => {
@@ -84,12 +119,17 @@ function ContactUs() {
         <Input
           id='name'
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) => handleFieldChange('name', e.target.value)}
           type='text'
+          maxLength={100}
           placeholder={t('name')}
+          aria-invalid={Boolean(errors.name)}
+          aria-describedby={errors.name ? 'name-error' : undefined}
         />
         {errors.name && (
-          <p className='text-red-500 text-sm mt-1'>{errors.name}</p>
+          <p id='name-error' className='text-red-500 text-sm mt-1'>
+            {errors.name}
+          </p>
         )}
       </LabelInputContainer>
 
@@ -98,12 +138,17 @@ function ContactUs() {
         <Input
           id='email'
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e) => handleFieldChange('email', e.target.value)}
           type='email'
+          maxLength={254}
           placeholder={t('Email')}
+          aria-invalid={Boolean(errors.email)}
+          aria-describedby={errors.email ? 'email-error' : undefined}
         />
         {errors.email && (
-          <p className='text-red-500 text-sm mt-1'>{errors.email}</p>
+          <p id='email-error' className='text-red-500 text-sm mt-1'>
+            {errors.email}
+          </p>
         )}
       </LabelInputContainer>
 
@@ -112,28 +157,42 @@ function ContactUs() {
         <textarea
           id='message'
           value={formData.message}
-          onChange={(e) =>
-            setFormData({ ...formData, message: e.target.value })
-          }
+          onChange={(e) => handleFieldChange('message', e.target.value)}
           placeholder={t('Message')}
+          maxLength={5000}
+          aria-invalid={Boolean(errors.message)}
+          aria-describedby={errors.message ? 'message-error' : undefined}
           className='dark:placeholder-text-neutral-600 h-24 w-full rounded-md border-none px-3 py-2 text-sm placeholder:text-neutral-400 focus-visible:ring-[2px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 bg-zinc-800 text-white shadow-[0px_0px_1px_1px_#404040] focus-visible:ring-neutral-600'
         />
         {errors.message && (
-          <p className='text-red-500 text-sm mt-1'>{errors.message}</p>
+          <p id='message-error' className='text-red-500 text-sm mt-1'>
+            {errors.message}
+          </p>
         )}
       </LabelInputContainer>
 
       <button
         type='submit'
-        className='flex cursor-pointer mt-6 gap-2 text-sm justify-self-end rounded-lg'
+        disabled={contactMutation.isPending}
+        className='flex cursor-pointer mt-6 gap-2 text-sm justify-self-end rounded-lg disabled:cursor-not-allowed disabled:opacity-60'
         onMouseEnter={() => setIsBtnHover(true)}
         onMouseLeave={() => setIsBtnHover(false)}
       >
-        {t('btn')}
+        {contactMutation.isPending ? t('sending') : t('btn')}
         <div ref={refBtn}>
           <ChevronRight />
         </div>
       </button>
+      {successMessage && (
+        <p role='status' className='mt-3 text-sm text-green-500'>
+          {successMessage}
+        </p>
+      )}
+      {submitError && (
+        <p role='alert' className='mt-3 text-sm text-red-500'>
+          {submitError}
+        </p>
+      )}
     </form>
   );
 }

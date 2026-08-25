@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import type { ConfigService } from '@nestjs/config';
 import { AdminAction, AdminEntity } from '@prisma/client';
 import type { Response } from 'express';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
@@ -18,24 +19,35 @@ describe('ResetPasswordProvider', () => {
     },
   };
 
-  let prismaService: {
+  type PasswordResetTokenMock = typeof tokenRecord | null;
+  type UpdateManyResult = { count: number };
+  type PrismaTxMock = {
     passwordResetToken: {
-      findUnique: jest.Mock;
-      updateMany: jest.Mock;
+      findUnique: jest.Mock<Promise<PasswordResetTokenMock>, [unknown]>;
+      updateMany: jest.Mock<Promise<UpdateManyResult>, [unknown]>;
     };
     user: {
-      update: jest.Mock;
+      update: jest.Mock<Promise<unknown>, [unknown]>;
     };
     adminLog: {
-      create: jest.Mock;
+      create: jest.Mock<Promise<unknown>, [unknown]>;
     };
-    $transaction: jest.Mock;
+  };
+
+  let prismaService: PrismaTxMock & {
+    $transaction: jest.Mock<
+      Promise<unknown>,
+      [callback: (tx: PrismaTxMock) => unknown]
+    >;
   };
   let hashProvider: {
     hashPassword: jest.Mock<Promise<string>, [string]>;
   };
   let tokenProvider: {
     hashToken: jest.Mock<string, [string]>;
+  };
+  let configService: {
+    getOrThrow: jest.Mock<string, [string]>;
   };
   let response: Pick<Response, 'clearCookie'>;
   let provider: ResetPasswordProvider;
@@ -46,31 +58,48 @@ describe('ResetPasswordProvider', () => {
 
     prismaService = {
       passwordResetToken: {
-        findUnique: jest.fn().mockResolvedValue(tokenRecord),
+        findUnique: jest
+          .fn<Promise<PasswordResetTokenMock>, [unknown]>()
+          .mockResolvedValue(tokenRecord),
         updateMany: jest
-          .fn()
+          .fn<Promise<UpdateManyResult>, [unknown]>()
           .mockResolvedValueOnce({ count: 1 })
           .mockResolvedValueOnce({ count: 2 }),
       },
       user: {
-        update: jest.fn().mockResolvedValue({ id: 'user-id' }),
+        update: jest
+          .fn<Promise<unknown>, [unknown]>()
+          .mockResolvedValue({ id: 'user-id' }),
       },
       adminLog: {
-        create: jest.fn().mockResolvedValue({ id: 'log-id' }),
+        create: jest
+          .fn<Promise<unknown>, [unknown]>()
+          .mockResolvedValue({ id: 'log-id' }),
       },
-      $transaction: jest.fn().mockImplementation((callback) =>
-        callback({
-          passwordResetToken: prismaService.passwordResetToken,
-          user: prismaService.user,
-          adminLog: prismaService.adminLog,
-        }),
-      ),
+      $transaction: jest
+        .fn<Promise<unknown>, [callback: (tx: PrismaTxMock) => unknown]>()
+        .mockImplementation((callback) =>
+          Promise.resolve(
+            callback({
+              passwordResetToken: prismaService.passwordResetToken,
+              user: prismaService.user,
+              adminLog: prismaService.adminLog,
+            }),
+          ),
+        ),
     };
     hashProvider = {
-      hashPassword: jest.fn().mockResolvedValue('hashed-new-password'),
+      hashPassword: jest
+        .fn<Promise<string>, [string]>()
+        .mockResolvedValue('hashed-new-password'),
     };
     tokenProvider = {
-      hashToken: jest.fn().mockReturnValue('hashed-reset-token'),
+      hashToken: jest
+        .fn<string, [string]>()
+        .mockReturnValue('hashed-reset-token'),
+    };
+    configService = {
+      getOrThrow: jest.fn<string, [string]>().mockReturnValue('development'),
     };
     response = {
       clearCookie: jest.fn(),
@@ -79,6 +108,7 @@ describe('ResetPasswordProvider', () => {
       prismaService as unknown as PrismaService,
       hashProvider as unknown as HashProvider,
       tokenProvider as unknown as PasswordResetTokenProvider,
+      configService as unknown as ConfigService,
     );
   });
 
@@ -106,7 +136,17 @@ describe('ResetPasswordProvider', () => {
       where: {
         tokenHash: 'hashed-reset-token',
       },
-      select: expect.any(Object),
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        usedAt: true,
+        user: {
+          select: {
+            isActive: true,
+          },
+        },
+      },
     });
     expect(prismaService.passwordResetToken.updateMany).toHaveBeenNthCalledWith(
       1,
@@ -132,6 +172,9 @@ describe('ResetPasswordProvider', () => {
         passwordChangedAt: now,
         mustChangePassword: false,
         hashedRefreshToken: null,
+        sessionVersion: {
+          increment: 1,
+        },
       },
     });
     expect(prismaService.passwordResetToken.updateMany).toHaveBeenNthCalledWith(
@@ -155,9 +198,15 @@ describe('ResetPasswordProvider', () => {
       },
     });
     expect(response.clearCookie).toHaveBeenCalledWith('refreshToken', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
       path: '/',
     });
     expect(response.clearCookie).toHaveBeenCalledWith('accessToken', {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
       path: '/',
     });
   });
@@ -176,6 +225,7 @@ describe('ResetPasswordProvider', () => {
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(hashProvider.hashPassword).not.toHaveBeenCalled();
+    expect(prismaService.user.update).not.toHaveBeenCalled();
   });
 
   it('rejects an expired token', async () => {

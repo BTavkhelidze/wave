@@ -11,6 +11,7 @@ import {
   isAuthRequestError,
   subscribeToSessionExpired,
 } from '../../src/shared/api/httpClient';
+import { adminLogsRootQueryKey } from '../admin-logs/api/adminLogs.queries';
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (credentials: LoginCredentials) => {
     await loginUser(credentials);
+    await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
 
     return refreshCurrentUser();
   };
@@ -69,6 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } finally {
       await queryClient.cancelQueries({ queryKey: authQueryKey });
       queryClient.setQueryData(authQueryKey, null);
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
     }
   };
 
