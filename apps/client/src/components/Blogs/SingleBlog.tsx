@@ -11,11 +11,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { ApiRequestError } from '@/lib/api';
 import {
   getLocalizedBlogContent,
-  getLocalizedBlogExcerpt,
   getLocalizedBlogTitle,
 } from './blogs.locale';
 import { usePublicBlogDetailQuery } from './blogs.queries';
 import { SafeBlogContent } from './SafeBlogContent';
+import { PublicDetailState } from '../shared/public-content/PublicDetailState';
 
 function formatPublicationDate(
   date: string | null,
@@ -45,13 +45,11 @@ export default function SingleBlog({ blog: blogSlug }: { blog: string }) {
 
   if (isPending) {
     return (
-      <div
-        className='absolute z-60 inset-0 bg-[#0B1012] flex items-center h-screen overflow-y-hidden justify-center'
-        role='status'
-        aria-live='polite'
-      >
-        <p>{t('loading')}</p>
-      </div>
+      <PublicDetailState
+        title={t('loading')}
+        message={t('loadingDescription')}
+        isLoading
+      />
     );
   }
 
@@ -59,14 +57,17 @@ export default function SingleBlog({ blog: blogSlug }: { blog: string }) {
 
   if (isError || !blog) {
     return (
-      <div
-        className='absolute z-60 inset-0 flex items-center justify-center px-6 text-center'
-        role={isNotFound ? 'status' : 'alert'}
-      >
-        <p className='text-white'>
-          {isNotFound ? t('notFound') : t('errorDetail')}
-        </p>
-      </div>
+      <PublicDetailState
+        title={isNotFound ? t('notFound') : t('errorDetail')}
+        message={
+          isNotFound ? t('notFoundDescription') : t('errorDescription')
+        }
+        tone={isNotFound ? 'neutral' : 'error'}
+        actions={[
+          { href: `/${locale}/blogs`, label: t('backToBlogs') },
+          { href: `/${locale}/home`, label: t('backToHome') },
+        ]}
+      />
     );
   }
 

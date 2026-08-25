@@ -41,11 +41,8 @@ export function getLocalizedBlogExcerpt(
   return getLocalizedTranslation(blog, locale)?.excerpt ?? blog.excerpt;
 }
 
-export function getLocalizedBlogSlug(
-  blog: BlogListItem | BlogDetail,
-  locale: string,
-): string {
-  return getLocalizedTranslation(blog, locale)?.slug ?? blog.slug;
+export function getLocalizedBlogSlug(blog: BlogListItem | BlogDetail): string {
+  return blog.slug;
 }
 
 export function getLocalizedBlogContent(blog: BlogDetail, locale: string): string {

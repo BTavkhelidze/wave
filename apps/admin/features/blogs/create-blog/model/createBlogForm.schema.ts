@@ -7,6 +7,7 @@ import {
   META_DESCRIPTION_MAX_LENGTH,
 } from "./createBlogForm.constants";
 import type { BlogStatus, CreateBlogFormValues } from "./createBlogForm.types";
+import { slugifyEnglishTitle } from "../lib/slugifyEnglishTitle";
 
 const blogStatusValues = BLOG_STATUS_OPTIONS.map(
   (statusOption) => statusOption.value,
@@ -60,6 +61,14 @@ export const CreateBlogFormSchema: z.ZodType<CreateBlogFormValues> = z.object({
     }),
   existingCoverImageKey: z.string().optional(),
   existingCoverImageUrl: z.string().optional(),
+  canonicalSlug: z
+    .string()
+    .trim()
+    .min(1, { message: CREATE_BLOG_FORM_VALIDATION_MESSAGES.slugRequired })
+    .max(120, { message: "Slug must be 120 characters or fewer." })
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+      message: CREATE_BLOG_FORM_VALIDATION_MESSAGES.slugInvalid,
+    }),
   status: z.enum(blogStatusValues),
   publishDate: z.string(),
   isFeatured: z.boolean(),
@@ -87,15 +96,7 @@ export function getVisibleTextFromHtml(html: string): string {
   return document.body.textContent?.trim() ?? "";
 }
 
-export function createSlugFromTitle(title: string): string {
-  return title
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+export const createSlugFromTitle = slugifyEnglishTitle;
 
 export function formatFileSize(sizeInBytes: number): string {
   if (sizeInBytes < 1024 * 1024) {

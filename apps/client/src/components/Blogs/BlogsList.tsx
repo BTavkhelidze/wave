@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { CalendarDays } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -11,26 +10,10 @@ import {
   PublicContentState,
 } from '@/components/shared/public-content/PublicContentState';
 import {
-  getLocalizedBlogExcerpt,
   getLocalizedBlogSlug,
   getLocalizedBlogTitle,
 } from './blogs.locale';
 import { usePublicBlogsQuery } from './blogs.queries';
-
-function formatPublicationDate(
-  date: string | null,
-  locale: string,
-): string | null {
-  if (!date) {
-    return null;
-  }
-
-  return new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : 'en-US', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(date));
-}
 
 export default function BlogsList() {
   const locale = useLocale();
@@ -77,12 +60,7 @@ export default function BlogsList() {
 
           {blogs?.map((blog) => {
             const title = getLocalizedBlogTitle(blog, locale);
-            const excerpt = getLocalizedBlogExcerpt(blog, locale);
-            const slug = getLocalizedBlogSlug(blog, locale);
-            const publishedDate = formatPublicationDate(
-              blog.publishedAt,
-              locale,
-            );
+            const slug = getLocalizedBlogSlug(blog);
 
             return (
               <li key={blog.id} className='flex'>

@@ -22,6 +22,14 @@
   },
   "Services": {
     "ServicesTitle": "სერვისები",
+    "loading": "იტვირთება...",
+    "loadingDescription": "მოთხოვნილი სერვისი მზადდება.",
+    "errorDetail": "სერვისის ჩატვირთვა ვერ მოხერხდა.",
+    "errorDescription": "ამ გვერდის ჩატვირთვა ახლა ვერ მოხერხდა. გთხოვთ, სცადოთ მოგვიანებით.",
+    "notFound": "სერვისი ვერ მოიძებნა",
+    "notFoundDescription": "მოთხოვნილი რესურსი არ არსებობს ან შესაძლოა წაშლილია.",
+    "backToServices": "სერვისებზე დაბრუნება",
+    "backToHome": "მთავარზე დაბრუნება",
 
     "DesignAndInstallation": "პროექტირება და მონტაჟი",
 
@@ -43,8 +51,12 @@
     "loadingCard": "\u10d1\u10da\u10dd\u10d2\u10d8 \u10d8\u10e2\u10d5\u10d8\u10e0\u10d7\u10d4\u10d1\u10d0",
     "error": "\u10d1\u10da\u10dd\u10d2\u10d4\u10d1\u10d8\u10e1 \u10e9\u10d0\u10e2\u10d5\u10d8\u10e0\u10d7\u10d5\u10d0 \u10d5\u10d4\u10e0 \u10db\u10dd\u10ee\u10d4\u10e0\u10ee\u10d3\u10d0.",
     "errorDetail": "\u10d1\u10da\u10dd\u10d2\u10d8\u10e1 \u10e9\u10d0\u10e2\u10d5\u10d8\u10e0\u10d7\u10d5\u10d0 \u10d5\u10d4\u10e0 \u10db\u10dd\u10ee\u10d4\u10e0\u10ee\u10d3\u10d0.",
+    "errorDescription": "ამ გვერდის ჩატვირთვა ახლა ვერ მოხერხდა. გთხოვთ, სცადოთ მოგვიანებით.",
     "empty": "\u10d1\u10da\u10dd\u10d2\u10d4\u10d1\u10d8 \u10d5\u10d4\u10e0 \u10db\u10dd\u10d8\u10eb\u10d4\u10d1\u10dc\u10d0.",
     "notFound": "\u10d1\u10da\u10dd\u10d2\u10d8 \u10d5\u10d4\u10e0 \u10db\u10dd\u10d8\u10eb\u10d4\u10d1\u10dc\u10d0.",
+    "notFoundDescription": "მოთხოვნილი რესურსი არ არსებობს ან შესაძლოა წაშლილია.",
+    "backToBlogs": "ბლოგებზე დაბრუნება",
+    "backToHome": "მთავარზე დაბრუნება",
     "goBack": "\u10e3\u10d9\u10d0\u10dc \u10d3\u10d0\u10d1\u10e0\u10e3\u10dc\u10d4\u10d1\u10d0",
     "contentLabel": "\u10d1\u10da\u10dd\u10d2\u10d8\u10e1 \u10e8\u10d8\u10dc\u10d0\u10d0\u10e0\u10e1\u10d8"
   },

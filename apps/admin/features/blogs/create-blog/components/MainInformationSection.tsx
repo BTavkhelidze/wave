@@ -21,6 +21,10 @@ type MainInformationSectionProps = {
   errors: FieldErrors<CreateBlogFormValues>;
   onSlugEdited: () => void;
   onUploadImage: (file: File) => Promise<{ url: string }>;
+  canonicalSlug?: string;
+  canonicalSlugError?: string;
+  onCanonicalSlugChange?: (value: string) => void;
+  onRegenerateCanonicalSlug?: () => void;
 };
 
 const inputClassName =
@@ -35,6 +39,10 @@ export function MainInformationSection({
   errors,
   onSlugEdited,
   onUploadImage,
+  canonicalSlug,
+  canonicalSlugError,
+  onCanonicalSlugChange,
+  onRegenerateCanonicalSlug,
 }: MainInformationSectionProps) {
   const languageErrors = errors.translations?.[activeLanguage];
   const fieldPrefix = `translations.${activeLanguage}` as const;
@@ -45,6 +53,7 @@ export function MainInformationSection({
   const slugField = register(`${fieldPrefix}.slug`, {
     onChange: onSlugEdited,
   });
+  const usesCanonicalSlug = onCanonicalSlugChange !== undefined;
 
   return (
     <CreateBlogPanel
@@ -74,22 +83,51 @@ export function MainInformationSection({
       <CreateBlogField
         label="Slug"
         fieldId={slugFieldId}
-        error={languageErrors?.slug?.message}
-        hint="Used in the public blog URL for this language."
+        error={usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug?.message}
+        hint={
+          usesCanonicalSlug
+            ? "English canonical slug used by both public language URLs."
+            : "Used in the public blog URL for this language."
+        }
       >
-        <input
-          key={slugFieldId}
-          id={slugFieldId}
-          type="text"
-          autoComplete="off"
-          aria-invalid={Boolean(languageErrors?.slug)}
-          aria-describedby={
-            languageErrors?.slug ? `${slugFieldId}-error` : `${slugFieldId}-hint`
-          }
-          className={inputClassName}
-          placeholder="fire-safety-checklist"
-          {...slugField}
-        />
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            key={slugFieldId}
+            id={slugFieldId}
+            type="text"
+            autoComplete="off"
+            aria-invalid={Boolean(
+              usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug,
+            )}
+            aria-describedby={
+              usesCanonicalSlug
+                ? canonicalSlugError
+                  ? `${slugFieldId}-error`
+                  : `${slugFieldId}-hint`
+                : languageErrors?.slug
+                  ? `${slugFieldId}-error`
+                  : `${slugFieldId}-hint`
+            }
+            className={inputClassName.replace("mt-2 ", "")}
+            placeholder="fire-safety-checklist"
+            {...(usesCanonicalSlug
+              ? {
+                  value: canonicalSlug ?? "",
+                  onChange: (event) =>
+                    onCanonicalSlugChange(event.currentTarget.value),
+                }
+              : slugField)}
+          />
+          {usesCanonicalSlug && onRegenerateCanonicalSlug && (
+            <button
+              type="button"
+              onClick={onRegenerateCanonicalSlug}
+              className="rounded-md border border-[#C4B5FD] bg-white px-3 py-2 text-sm font-semibold text-[#6D28D9] transition hover:bg-[#F5F3FF] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30"
+            >
+              Regenerate
+            </button>
+          )}
+        </div>
       </CreateBlogField>
 
       <CreateBlogField

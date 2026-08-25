@@ -12,7 +12,7 @@ const validPayload = {
     {
       language: Language.KA,
       title: 'Georgian title',
-      slug: 'georgian-title',
+      slug: 'english-title',
       excerpt: 'Georgian excerpt',
       content: '<p>Georgian content</p>',
       metaTitle: 'Georgian title | Wave',

@@ -1,5 +1,11 @@
-import { BadRequestException } from '@nestjs/common';
-import { AdminAction, AdminEntity, BlogStatus, Language } from '@prisma/client';
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  AdminAction,
+  AdminEntity,
+  BlogStatus,
+  Language,
+  Prisma,
+} from '@prisma/client';
 import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { BlogsService } from './blogs.service';
 import type { CreateBlogDto } from './dto/create-blog.dto';
@@ -31,7 +37,7 @@ describe('BlogsService create', () => {
       {
         language: Language.KA,
         title: ' Georgian title ',
-        slug: 'georgian-title',
+        slug: 'english-title',
         excerpt: ' Georgian excerpt ',
         content: '<p>Georgian content</p><script>alert(1)</script>',
         metaTitle: ' Georgian title | Wave ',
@@ -111,7 +117,7 @@ describe('BlogsService create', () => {
             {
               language: Language.KA,
               title: 'Georgian title',
-              slug: 'georgian-title',
+              slug: 'english-title',
               excerpt: 'Georgian excerpt',
               content: '<p>Georgian content</p>',
               metaTitle: 'Georgian title | Wave',
@@ -156,6 +162,39 @@ describe('BlogsService create', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(prismaService.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects create payloads with a non-English translation slug', async () => {
+    await expect(
+      service.create(
+        {
+          ...createBlogDto,
+          translations: [
+            {
+              ...createBlogDto.translations[0],
+              slug: 'georgian-title',
+            },
+            createBlogDto.translations[1],
+          ],
+        },
+        adminId,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(prismaService.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns a conflict when the canonical slug already exists', async () => {
+    tx.blog.create.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+
+    await expect(service.create(createBlogDto, adminId)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 });
 

@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const remoteImageHostnames = [
+  'betawave.hel1.your-objectstorage.com',
   'fiverr-res.cloudinary.com',
   'files.oaiusercontent.com',
   'i.pinimg.com',

@@ -15,6 +15,7 @@ export type CreateBlogFormValues = {
   coverImage: File | null;
   existingCoverImageKey?: string;
   existingCoverImageUrl?: string;
+  canonicalSlug: string;
   status: BlogStatus;
   publishDate: string;
   isFeatured: boolean;

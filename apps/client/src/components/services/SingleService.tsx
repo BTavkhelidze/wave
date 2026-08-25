@@ -17,13 +17,14 @@ import {
 import { motion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { usePublicServicesQuery } from './services.queries';
 import {
   getLocalizedServiceDescription,
   matchesLocalizedServiceSlug,
   getLocalizedServiceTitle,
 } from './services.locale';
+import { PublicDetailState } from '../shared/public-content/PublicDetailState';
 
 const WavyBackground = dynamic(
   () => import('../ui/wavy-background').then((mod) => mod.WavyBackground),
@@ -47,6 +48,7 @@ function SingleService({ service }: SingleServiceProps) {
   const [curIndex, setCurIndex] = useState<number | null>(null);
   const [isHover, setIsHover] = useState<boolean>(false);
   const locale = useLocale();
+  const t = useTranslations('Services');
 
   const { data: services, isPending, isError } = usePublicServicesQuery(locale);
 
@@ -62,34 +64,33 @@ function SingleService({ service }: SingleServiceProps) {
 
   if (isPending)
     return (
-      <div
-        className='absolute z-60 inset-0 bg-[#0B1012] flex items-center justify-center'
-        role='status'
-        aria-live='polite'
-      >
-        <p>Loading...</p>
-      </div>
+      <PublicDetailState
+        title={t('loading')}
+        message={t('loadingDescription')}
+        isLoading
+      />
     );
 
   if (isError)
     return (
-      <div
-        className='absolute z-60 inset-0 flex items-center justify-center'
-        role='alert'
-      >
-        <p className='text-white'>Error loading service.</p>
-      </div>
+      <PublicDetailState
+        title={t('errorDetail')}
+        message={t('errorDescription')}
+        tone='error'
+        actions={[
+          { href: `/${locale}/services`, label: t('backToServices') },
+          { href: `/${locale}/home`, label: t('backToHome') },
+        ]}
+      />
     );
 
   if (curIndex === null)
     return (
-      <div
-        className='absolute z-60 inset-0 bg-[#0B1012] flex items-center justify-center'
-        role='status'
-        aria-live='polite'
-      >
-        <p>Loading...</p>
-      </div>
+      <PublicDetailState
+        title={t('loading')}
+        message={t('loadingDescription')}
+        isLoading
+      />
     );
 
   const currentService =
@@ -97,12 +98,14 @@ function SingleService({ service }: SingleServiceProps) {
 
   if (!currentService)
     return (
-      <div
-        className='absolute z-60 inset-0 flex items-center justify-center'
-        role='status'
-      >
-        <p className='text-white'>Service not found.</p>
-      </div>
+      <PublicDetailState
+        title={t('notFound')}
+        message={t('notFoundDescription')}
+        actions={[
+          { href: `/${locale}/services`, label: t('backToServices') },
+          { href: `/${locale}/home`, label: t('backToHome') },
+        ]}
+      />
     );
 
   const IconComponent =

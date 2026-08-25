@@ -36,6 +36,7 @@ export const CREATE_BLOG_FORM_DEFAULT_VALUES: CreateBlogFormValues = {
   coverImage: null,
   existingCoverImageKey: undefined,
   existingCoverImageUrl: undefined,
+  canonicalSlug: "",
   status: "DRAFT",
   publishDate: "",
   isFeatured: false,

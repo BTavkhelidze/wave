@@ -74,7 +74,7 @@ function buildCreateBlogPayload(
       return {
         language,
         title: translation.title.trim(),
-        slug: translation.slug.trim(),
+        slug: values.canonicalSlug.trim(),
         excerpt: translation.excerpt.trim(),
         content: translation.content.trim(),
         metaTitle: normalizeOptionalText(translation.seoTitle),

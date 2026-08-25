@@ -110,6 +110,8 @@ const isPrismaKnownError = (
   return error instanceof Prisma.PrismaClientKnownRequestError;
 };
 
+const BLOG_SLUG_MAX_LENGTH = 120;
+
 @Injectable()
 export class BlogsService {
   private readonly logger = new Logger(BlogsService.name);
@@ -632,7 +634,7 @@ export class BlogsService {
       );
     }
 
-    return translations.map((translation) => ({
+    const normalizedTranslations = translations.map((translation) => ({
       language: translation.language,
       title: translation.title.trim(),
       slug: this.normalizeAndValidateSlug(translation.slug),
@@ -641,6 +643,12 @@ export class BlogsService {
       metaTitle: this.normalizeOptionalText(translation.metaTitle),
       metaDescription: this.normalizeOptionalText(translation.metaDescription),
     }));
+
+    this.assertCreateTranslationsUseEnglishCanonicalSlug(
+      normalizedTranslations,
+    );
+
+    return normalizedTranslations;
   }
 
   private normalizeAndValidateUpdateTranslations(
@@ -654,7 +662,51 @@ export class BlogsService {
     metaTitle: string | null;
     metaDescription: string | null;
   }> {
-    return this.normalizeAndValidateCreateTranslations(translations);
+    return this.normalizeAndValidateTranslations(translations);
+  }
+
+  private normalizeAndValidateTranslations(
+    translations: Array<{
+      language: Language;
+      title: string;
+      slug: string;
+      excerpt: string;
+      content: string;
+      metaTitle?: string;
+      metaDescription?: string;
+    }>,
+  ): Array<{
+    language: Language;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+  }> {
+    const requiredLanguages = [Language.KA, Language.EN];
+    const providedLanguages = new Set(
+      translations.map((translation) => translation.language),
+    );
+    const hasRequiredTranslations =
+      translations.length === requiredLanguages.length &&
+      requiredLanguages.every((language) => providedLanguages.has(language));
+
+    if (!hasRequiredTranslations) {
+      throw new BadRequestException(
+        'Blog must include exactly one KA and one EN translation',
+      );
+    }
+
+    return translations.map((translation) => ({
+      language: translation.language,
+      title: translation.title.trim(),
+      slug: this.normalizeAndValidateSlug(translation.slug),
+      excerpt: translation.excerpt.trim(),
+      content: this.sanitizeAndValidateContent(translation.content),
+      metaTitle: this.normalizeOptionalText(translation.metaTitle),
+      metaDescription: this.normalizeOptionalText(translation.metaDescription),
+    }));
   }
 
   private hasLocalizedRootFields(updateBlogDto: UpdateBlogDto): boolean {
@@ -701,7 +753,31 @@ export class BlogsService {
       throw new BadRequestException('Slug is required');
     }
 
+    if (normalizedSlug.length > BLOG_SLUG_MAX_LENGTH) {
+      throw new BadRequestException(
+        `Slug must be ${BLOG_SLUG_MAX_LENGTH} characters or fewer`,
+      );
+    }
+
     return normalizedSlug;
+  }
+
+  private assertCreateTranslationsUseEnglishCanonicalSlug(
+    translations: Array<{ language: Language; slug: string }>,
+  ): void {
+    const englishTranslation = translations.find(
+      (translation) => translation.language === Language.EN,
+    );
+    const canonicalSlug = englishTranslation?.slug;
+
+    if (
+      !canonicalSlug ||
+      translations.some((translation) => translation.slug !== canonicalSlug)
+    ) {
+      throw new BadRequestException(
+        'Blog translations must use the same English canonical slug',
+      );
+    }
   }
 
   private sanitizeAndValidateContent(content: string): string {

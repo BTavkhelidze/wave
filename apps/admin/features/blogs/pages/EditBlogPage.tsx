@@ -466,6 +466,7 @@ function getBlogFormValues(blog: AdminBlogDetail): CreateBlogFormValues {
     coverImage: null,
     existingCoverImageKey: blog.coverImageKey,
     existingCoverImageUrl: blog.coverImageUrl,
+    canonicalSlug: blog.slug,
     status: blog.status,
     publishDate: blog.publishedAt ? toDateTimeLocalValue(blog.publishedAt) : '',
     isFeatured: blog.isFeatured,

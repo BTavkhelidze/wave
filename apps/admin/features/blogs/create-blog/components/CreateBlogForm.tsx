@@ -43,6 +43,10 @@ function getValidationMessage(
     return errors.publishDate.message;
   }
 
+  if (errors.canonicalSlug?.message) {
+    return `Slug: ${errors.canonicalSlug.message}`;
+  }
+
   for (const language of ["KA", "EN"] as const) {
     const translationErrors = errors.translations?.[language];
 
@@ -99,12 +103,7 @@ export function CreateBlogForm() {
   const uploadedInlineImageKeysRef = useRef<Set<string>>(new Set());
   const [submitIntent, setSubmitIntentState] = useState<SubmitIntent>("draft");
   const [activeLanguage, setActiveLanguage] = useState<BlogLanguage>("KA");
-  const [hasEditedSlug, setHasEditedSlug] = useState<
-    Record<BlogLanguage, boolean>
-  >({
-    EN: false,
-    KA: false,
-  });
+  const [hasEditedCanonicalSlug, setHasEditedCanonicalSlug] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [createdBlogSlug, setCreatedBlogSlug] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(
@@ -126,6 +125,7 @@ export function CreateBlogForm() {
   });
 
   const translations = watch("translations");
+  const canonicalSlug = watch("canonicalSlug");
   const coverImage = watch("coverImage");
   const isFeatured = watch("isFeatured");
   const activeMetaDescription =
@@ -138,24 +138,40 @@ export function CreateBlogForm() {
   const canSubmit = isDirty && isValid && !isSubmitting;
 
   useEffect(() => {
+    if (hasEditedCanonicalSlug) {
+      return;
+    }
+
+    const englishTitle = translations.EN?.title ?? "";
+    const nextSlug = createSlugFromTitle(englishTitle);
+
+    if (canonicalSlug === nextSlug) {
+      return;
+    }
+
+    setValue("canonicalSlug", nextSlug, {
+      shouldDirty: Boolean(englishTitle),
+      shouldValidate: Boolean(englishTitle),
+    });
+  }, [canonicalSlug, hasEditedCanonicalSlug, setValue, translations.EN?.title]);
+
+  useEffect(() => {
     (["KA", "EN"] as const).forEach((language) => {
-      if (hasEditedSlug[language]) {
+      if (translations[language]?.slug === canonicalSlug) {
         return;
       }
 
-      const title = translations[language]?.title ?? "";
-      const nextSlug = createSlugFromTitle(title);
-
-      if (translations[language]?.slug === nextSlug) {
-        return;
-      }
-
-      setValue(`translations.${language}.slug`, nextSlug, {
-        shouldDirty: Boolean(title),
-        shouldValidate: Boolean(title),
+      setValue(`translations.${language}.slug`, canonicalSlug, {
+        shouldDirty: false,
+        shouldValidate: true,
       });
     });
-  }, [hasEditedSlug, setValue, translations]);
+  }, [
+    canonicalSlug,
+    setValue,
+    translations.EN?.slug,
+    translations.KA?.slug,
+  ]);
 
   useEffect(() => {
     if (!coverImage) {
@@ -236,7 +252,7 @@ export function CreateBlogForm() {
       });
 
       setCreatedBlogSlug(createdBlog.slug);
-      setHasEditedSlug({ EN: false, KA: false });
+      setHasEditedCanonicalSlug(false);
       inlineImageUploadsRef.current.clear();
       uploadedInlineImageKeysRef.current.clear();
       reset(CREATE_BLOG_FORM_DEFAULT_VALUES);
@@ -260,6 +276,26 @@ export function CreateBlogForm() {
 
   const handleCancel = () => {
     navigate(ADMIN_ROUTE_PATHS.blogs);
+  };
+
+  const handleCanonicalSlugChange = (value: string) => {
+    setHasEditedCanonicalSlug(true);
+    setValue("canonicalSlug", createSlugFromTitle(value), {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  };
+
+  const handleRegenerateCanonicalSlug = () => {
+    const nextSlug = createSlugFromTitle(translations.EN?.title ?? "");
+
+    setHasEditedCanonicalSlug(false);
+    setValue("canonicalSlug", nextSlug, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -297,12 +333,11 @@ export function CreateBlogForm() {
             control={control}
             register={register}
             errors={errors}
-            onSlugEdited={() =>
-              setHasEditedSlug((current) => ({
-                ...current,
-                [activeLanguage]: true,
-              }))
-            }
+            onSlugEdited={() => undefined}
+            canonicalSlug={canonicalSlug}
+            canonicalSlugError={errors.canonicalSlug?.message}
+            onCanonicalSlugChange={handleCanonicalSlugChange}
+            onRegenerateCanonicalSlug={handleRegenerateCanonicalSlug}
             onUploadImage={handleUploadInlineImage}
           />
         </div>
