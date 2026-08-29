@@ -12,12 +12,6 @@ export const SIDEBAR_NAVIGATION_GROUPS: readonly SidebarNavigationGroup[] = [
         icon: 'dashboard',
         allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.dashboard],
       },
-      {
-        label: 'Analytics',
-        path: ADMIN_ROUTE_PATHS.analytics,
-        icon: 'analytics',
-        allowedRoles: ADMIN_ROUTE_ACCESS[ADMIN_ROUTE_PATHS.analytics],
-      },
     ],
   },
   {

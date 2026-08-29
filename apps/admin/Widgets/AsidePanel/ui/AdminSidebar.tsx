@@ -44,13 +44,6 @@ export function AdminSidebar() {
           {isLoggingOut ? 'Logging out...' : 'Log Out'}
         </button>
       </div>
-
-      <div className='mt-auto rounded-lg border border-[#E5E7EB] bg-[#F8FAFC] p-4'>
-        <p className='text-sm font-medium text-[#111827]'>Workspace health</p>
-        <p className='mt-1 text-sm text-[#6B7280]'>
-          All systems operational. 2 items need admin review.
-        </p>
-      </div>
     </aside>
   );
 }
