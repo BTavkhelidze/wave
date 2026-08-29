@@ -74,7 +74,7 @@ export class RequestOriginGuard implements CanActivate {
   private hasOriginSignal(request: Request): boolean {
     return Boolean(
       this.readSingleHeader(request, 'origin') ||
-        this.readSingleHeader(request, 'referer'),
+      this.readSingleHeader(request, 'referer'),
     );
   }
 

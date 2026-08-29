@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: wave
+          POSTGRES_USER: wave_user
+          POSTGRES_PASSWORD: ci-db-credential-value
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wave_user -d wave"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NEXT_PUBLIC_API_BASE_URL: https://api.example.com/api
+      VITE_API_BASE_URL: https://api.example.com/api
+      DATABASE_URL: postgresql://wave_user:ci-db-credential-value@localhost:5432/wave
+      NODE_ENV: test
+      HTTP_PORT: "5000"
+      HTTP_API_PREFIX: api
+      HTTP_HOST: https://api.example.com/api
+      FRONTEND_URL: https://admin.example.com
+      ADMIN_APP_URL: https://admin.example.com
+      PUBLIC_WEBSITE_URL: https://example.com
+      TRUSTED_BROWSER_ORIGINS: https://admin.example.com,https://example.com
+      HETZNER_S3_ENDPOINT: https://objectstorage.example.com
+      HETZNER_S3_REGION: eu-central
+      HETZNER_S3_BUCKET: wave-ci
+      HETZNER_S3_ACCESS_KEY: s3-public-ci-credential-value
+      HETZNER_S3_SECRET_KEY: s3-private-ci-credential-value
+      MAIL_PROVIDER: smtp
+      MAIL_HOST: smtp.example.com
+      MAIL_PORT: "465"
+      MAIL_SECURE: "true"
+      MAIL_USER: sender@example.com
+      MAIL_PASSWORD: mail-private-ci-credential-value
+      MAIL_FROM: "Wave Engineering <sender@example.com>"
+      MAIL_TO: admin@example.com
+      JWT_SECRET: ci-jwt-private-value-with-at-least-thirty-two-chars
+      JWT_AUDIENCE: wave-admin
+      JWT_ISSUER: wave-api
+      JWT_ACCESS_TOKEN_EXPIRES_IN: 15m
+      JWT_REFRESH_TOKEN_EXPIRES_IN: 7d
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@10.33.3 --activate
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter server exec prisma generate --config prisma.config.ts
+
+      - name: Admin lint
+        run: pnpm --filter admin lint
+
+      - name: Admin typecheck
+        run: pnpm --filter admin typecheck
+
+      - name: Public frontend lint
+        run: pnpm --filter engineeringweb lint
+
+      - name: Public frontend typecheck
+        run: pnpm --filter engineeringweb exec tsc --noEmit
+
+      - name: Server lint
+        run: pnpm --filter server lint
+
+      - name: Server build TypeScript check
+        run: pnpm --filter server exec tsc -p tsconfig.build.json --noEmit
+
+      - name: Full server TypeScript check
+        run: pnpm --filter server exec tsc -p tsconfig.json --noEmit
+
+      - name: Server unit tests
+        run: pnpm --filter server test -- --runInBand --detectOpenHandles
+
+      - name: Server e2e tests
+        run: pnpm --filter server exec prisma migrate deploy --config prisma.config.ts && pnpm --filter server test:e2e -- --runInBand --detectOpenHandles
+
+      - name: Prisma validate
+        run: pnpm --filter server exec prisma validate --config prisma.config.ts
+
+      - name: Production dependency audit
+        run: pnpm audit --prod --audit-level high
+
+      - name: Admin build
+        run: pnpm --filter admin build
+
+      - name: Public frontend build
+        run: pnpm --filter engineeringweb build
+
+      - name: Server build
+        run: pnpm --filter server build
+
+      - name: Root build
+        run: pnpm build

@@ -252,6 +252,29 @@ function getValidatedHttpHost(
   return url.toString();
 }
 
+function getValidatedDatabaseUrl(environment: string): string {
+  const value = getRequiredString('DATABASE_URL');
+  const url = parseValidatedUrl('DATABASE_URL', value);
+
+  if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
+    throw new Error('DATABASE_URL must use the postgresql protocol');
+  }
+
+  if (environment === 'production') {
+    if (isLocalApplicationHostname(url.hostname)) {
+      throw new Error('DATABASE_URL must not use localhost in production');
+    }
+
+    assertProductionSecretValue(
+      environment,
+      'DATABASE_URL password',
+      url.password,
+    );
+  }
+
+  return value;
+}
+
 function getValidatedMailHost(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
@@ -445,6 +468,7 @@ export function buildAppConfiguration() {
     getOptionalString('MAIL_FROM'),
     mailUser,
   );
+  const databaseUrl = getValidatedDatabaseUrl(environment);
 
   assertMailConfiguration(environment, {
     host: mailHost,
@@ -502,6 +526,9 @@ export function buildAppConfiguration() {
       bucket: getRequiredString('HETZNER_S3_BUCKET'),
       accessKey: hetznerS3AccessKey,
       secretKey: hetznerS3SecretKey,
+    },
+    database: {
+      url: databaseUrl,
     },
     passwordReset: {
       expiresInMinutes: passwordResetExpiresInMinutes,

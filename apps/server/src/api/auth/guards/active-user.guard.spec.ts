@@ -4,7 +4,7 @@ import { PrismaService } from 'src/infra/infra/prisma/prisma.service';
 import { ActiveUserGuard } from './active-user.guard';
 import type { ActiveUserData } from '../interfaces/active-user-data.interface';
 
-type AuthenticatedRequest = Request & {
+type AuthenticatedRequest = Partial<Request> & {
   user?: ActiveUserData | Record<string, unknown>;
 };
 

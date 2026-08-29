@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'node:path';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const remoteImageHostnames = [
@@ -12,7 +13,7 @@ const remoteImageHostnames = [
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  outputFileTracingRoot: path.join(process.cwd(), '../..'),
   images: {
     remotePatterns: remoteImageHostnames.map((hostname) => ({
       protocol: 'https',

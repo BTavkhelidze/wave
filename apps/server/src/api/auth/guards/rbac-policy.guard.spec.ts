@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { BlogStatus, MessageStatus, UserRole } from '@prisma/client';
 import request from 'supertest';
 import type { App } from 'supertest/types';
@@ -177,6 +178,14 @@ async function createTestApp(): Promise<TestApp> {
   };
 
   const moduleRef = await Test.createTestingModule({
+    imports: [
+      ThrottlerModule.forRoot([
+        {
+          ttl: 60000,
+          limit: 100,
+        },
+      ]),
+    ],
     controllers: [
       ServicesController,
       BlogsController,
