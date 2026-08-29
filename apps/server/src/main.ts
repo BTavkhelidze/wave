@@ -3,14 +3,16 @@ import { AppModule } from './app.module';
 
 import { Logger, ValidationPipe } from '@nestjs/common';
 
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { getCorsConfig } from './config/cors.config';
 import { ConfigService } from '@nestjs/config';
-import { getSwaggerConfig } from './config/swagger.config';
+import cookieParser from 'cookie-parser';
+import type { Express } from 'express';
+import { setupApiDocumentation } from './config/api-docs.config';
+import { applySecurityHeaders } from './config/security-headers.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const config = app.get(ConfigService);
+  const configService = app.get(ConfigService);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -20,18 +22,25 @@ async function bootstrap() {
   );
 
   const logger = new Logger(AppModule.name);
+  const apiPrefix = configService.getOrThrow<string>('appConfig.apiPrefix');
+  const trustProxyHops = configService.getOrThrow<number>(
+    'appConfig.http.trustProxyHops',
+  );
 
-  app.enableCors(getCorsConfig(config));
+  if (trustProxyHops > 0) {
+    const expressApp = app.getHttpAdapter().getInstance() as Express;
+    expressApp.set('trust proxy', trustProxyHops);
+  }
 
-  // Swagger setup
-  const swaggerConfig = getSwaggerConfig();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  applySecurityHeaders(app, configService);
+  app.setGlobalPrefix(apiPrefix);
 
-  SwaggerModule.setup('api/docs', app, swaggerDocument, {
-    jsonDocumentUrl: 'openapi.json',
-  });
-  const port = config.getOrThrow<number>('HTTP_PORT');
-  const host = config.getOrThrow<string>('HTTP_HOST');
+  app.enableCors(getCorsConfig(configService));
+  app.use(cookieParser());
+
+  setupApiDocumentation(app, configService);
+  const port = configService.getOrThrow<number>('appConfig.http.port');
+  const host = configService.getOrThrow<string>('appConfig.http.host');
 
   try {
     await app.listen(port, '0.0.0.0');
@@ -46,4 +55,4 @@ async function bootstrap() {
     process.exit(1);
   }
 }
-bootstrap();
+void bootstrap();

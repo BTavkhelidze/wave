@@ -1,49 +1,37 @@
-import { IData } from '../../interface/interface';
+import { apiRequest } from '../../../src/shared/api/httpClient';
+import type { AuthenticatedUser } from '../model/user.types';
 
-const API_Base = 'http://localhost:5000/api';
+export type User = AuthenticatedUser;
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (res.status === 401) {
-    throw new Error('Unauthorized');
-  }
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => 'Unknown Error');
-    throw new Error(text);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-export interface AuthUser {
-  id: string;
-  email: string;
-}
-
-export async function fetchCurrentUser(): Promise<AuthUser> {
-  const res = await fetch(`${API_Base}/users/profile`, {
-    credentials: 'include',
-  });
-
-  return handleResponse<AuthUser>(res);
-}
-
-export async function loginUser(data: IData) {
-  const res = await fetch(`${API_Base}/users/login`, {
+export async function fetchCurrentUser() {
+  return apiRequest<User>('/auth/active-account', {
     method: 'POST',
-    credentials: 'include',
+  });
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  status: number;
+  message: string;
+}
+
+export async function loginUser(data: LoginCredentials) {
+  return apiRequest<LoginResponse>('/auth/signin', {
+    method: 'POST',
+    skipAuthRefresh: true,
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   });
-  return handleResponse(res);
 }
 
 export async function logoutUser() {
-  const res = await fetch(`${API_Base}/users/logout`, {
+  return apiRequest('/auth/logout', {
     method: 'POST',
-    credentials: 'include',
   });
-  return handleResponse(res);
 }

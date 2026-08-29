@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+    engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Language {
+  EN
+  KA
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EMPLOYEE
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+enum AdminAction {
+  CREATE
+  UPDATE
+  DELETE
+  PASSWORD_CHANGE
+  LOGIN
+  LOGOUT
+  PUBLISH
+  UNPUBLISH
+  ARCHIVE
+}
+
+enum AdminEntity {
+  USER
+  SERVICE
+  BLOG
+  CONTACT_MESSAGE
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model User {
+  id        String @id @default(uuid())
+  firstName String @map("first_name")
+  lastName  String @map("last_name")
+  email     String @unique
+
+  password           String?
+  hashedRefreshToken String? @map("hashed_refresh_token")
+
+  role     UserRole @default(ADMIN)
+  isActive Boolean  @default(true) @map("is_active")
+
+  mustChangePassword Boolean @default(false) @map("must_change_password")
+
+  passwordChangedAt DateTime? @map("password_changed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  logs  AdminLog[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model Service {
+  id        String @id @default(uuid())
+  icon      String
+  iconColor String @map("icon_color")
+  isActive  Boolean @default(true) @map("is_active")
+  sortOrder Int     @default(0) @map("sort_order")
+  viewCount Int     @default(0) @map("view_count")
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  translations ServiceTranslation[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("services")
+}
+
+model ServiceTranslation {
+  id          String   @id @default(uuid())
+  serviceId   String   @map("service_id")
+  language    Language
+  title       String
+  description String   @db.Text
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, language])
+  @@index([language])
+  @@map("service_translations")
+}
+
+model Blog {
+  id            String     @id @default(uuid())
+  title         String
+  slug          String     @unique
+  excerpt       String     @db.Text
+  content       String     @db.Text
+  coverImageKey String     @map("cover_image_key")
+  coverImageUrl String     @map("cover_image_url")
+  language      Language
+  status        BlogStatus @default(DRAFT)
+  isFeatured    Boolean    @default(false) @map("is_featured")
+  publishedAt   DateTime?  @map("published_at") @db.Timestamptz(6)
+  viewCount     Int        @default(0) @map("view_count")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([language])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([publishedAt])
+  @@index([createdAt])
+  @@map("blogs")
+}
+
+model ContactMessage {
+  id      String        @id @default(uuid())
+  name    String
+  email   String
+  phone   String?
+  company String?
+  message String        @db.Text
+  status  MessageStatus @default(UNREAD)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model AdminLog {
+  id       String      @id @default(uuid())
+  userId   String?     @map("user_id")
+  action   AdminAction
+  entity   AdminEntity
+  entityId String?     @map("entity_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("admin_logs")
+}

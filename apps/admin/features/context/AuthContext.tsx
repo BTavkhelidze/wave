@@ -1,41 +1,78 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, ReactNode } from 'react';
-import { fetchCurrentUser, loginUser, logoutUser, type AuthUser } from '../auth/api/auth';
-import type { IData } from '../interface/interface';
+import { createContext, useContext, ReactNode, useEffect } from 'react';
+import {
+  fetchCurrentUser,
+  loginUser,
+  logoutUser,
+  type LoginCredentials,
+  type User,
+} from '../auth/api/auth';
+import {
+  isAuthRequestError,
+  subscribeToSessionExpired,
+} from '../../src/shared/api/httpClient';
+import { adminLogsRootQueryKey } from '../admin-logs/api/adminLogs.queries';
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
-type AuthContextValue = {
-  user: AuthUser | null | undefined;
-  isLoading: boolean;
-  login: (credential: IData) => Promise<void>;
-  logout: () => Promise<void>;
-};
+export const authQueryKey = ['auth', 'me'] as const;
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext = createContext<
+  | {
+      user: User | null | undefined;
+      isLoading: boolean;
+      login: (credentials: LoginCredentials) => Promise<User>;
+      logout: () => Promise<void>;
+      refreshCurrentUser: () => Promise<User>;
+    }
+  | undefined
+>(undefined);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<AuthUser | null>({
-    queryKey: ['auth', 'me'],
-    queryFn: fetchCurrentUser,
+  const { data: user, isLoading } = useQuery({
+    queryKey: authQueryKey,
+    queryFn: fetchCurrentUserOrNull,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  const login = async (credential: IData) => {
-    await loginUser(credential);
-    await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+  useEffect(() => {
+    return subscribeToSessionExpired(() => {
+      void queryClient.cancelQueries({ queryKey: authQueryKey });
+      queryClient.setQueryData(authQueryKey, null);
+    });
+  }, [queryClient]);
+
+  const refreshCurrentUser = async () => {
+    const currentUser = await fetchCurrentUser();
+
+    queryClient.setQueryData(authQueryKey, currentUser);
+
+    return currentUser;
+  };
+
+  const login = async (credentials: LoginCredentials) => {
+    await loginUser(credentials);
+    await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
+
+    return refreshCurrentUser();
   };
 
   const logout = async () => {
-    await logoutUser();
-
-    queryClient.setQueryData<AuthUser | null>(['auth', 'me'], null);
-
-    queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+    try {
+      await logoutUser();
+    } catch (error) {
+      if (!isAuthRequestError(error)) {
+        throw error;
+      }
+    } finally {
+      await queryClient.cancelQueries({ queryKey: authQueryKey });
+      queryClient.setQueryData(authQueryKey, null);
+      await queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey });
+    }
   };
 
   return (
@@ -45,12 +82,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoading,
         login,
         logout,
+        refreshCurrentUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+async function fetchCurrentUserOrNull(): Promise<User | null> {
+  try {
+    return await fetchCurrentUser();
+  } catch (error) {
+    if (isAuthRequestError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
+}
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);

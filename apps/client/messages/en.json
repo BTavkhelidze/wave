@@ -1,0 +1,154 @@
+{
+  "HeaderNav": {
+    "Home": "Home",
+    "Calculator": "Calculator",
+    "Services": "Services",
+    "AboutUs": "AboutUs",
+    "Blogs": "Blogs"
+  },
+
+  "AboutUsHero": {
+    "title": "Engineering wave in your buildings",
+    "EngineeringText": "Wave offers complete MEP design, installation, engineering consulting and customized engineering solutions."
+  },
+
+  "AboutUs": {
+    "firstText": "WAVE creates engineering solutions primarily aimed at serving the needs of architects, developers, and end-users. Our mission is to provide reliable and coordinated design services covering complete MEP systems, energy efficiency, and engineering consultancy.",
+    "secondText": "We strive to build a healthy, collaborative, and communication-driven environment where engineering vision aligns harmoniously with architectural concepts and development goals. As professionals, we recognize the importance of compliance with codes, standards, and regulations, fully embracing our responsibility for technical accuracy and human-centered design. Our approach is based on precision, transparency, and professional accountability—we create buildings that perform and relationships that endure."
+  },
+
+  "LandingPage": {
+    "Title": "Innovative Engineering Solutions for a Sustainable Future",
+    "BtnTitle": "Explore Our Services"
+  },
+  "Services": {
+    "ServicesTitle": "Services",
+    "loading": "Loading...",
+    "loadingDescription": "Preparing the requested service.",
+    "errorDetail": "Error loading service.",
+    "errorDescription": "We could not load this page right now. Please try again later.",
+    "notFound": "Service not found",
+    "notFoundDescription": "The requested resource does not exist or may have been removed.",
+    "backToServices": "Back to Services",
+    "backToHome": "Back to Home",
+
+    "DesignAndInstallation": "Design and installation ",
+
+    "Cooling": "Heating-cooling and ventilation ",
+
+    "FireSafety": "Fire safety",
+
+    "Electrical": "Electrical",
+
+    "Plumbing": "Plumbing",
+
+    "SeeAllServises": "See all Services"
+  },
+  "Blogs": {
+    "title": "Blogs",
+    "readMore": "Read more",
+    "loading": "Loading...",
+    "loadingCard": "Loading blog",
+    "error": "Error loading blogs.",
+    "errorDetail": "Error loading blog.",
+    "errorDescription": "We could not load this page right now. Please try again later.",
+    "empty": "No blogs found.",
+    "notFound": "Blog not found.",
+    "notFoundDescription": "The requested resource does not exist or may have been removed.",
+    "backToBlogs": "Back to Blogs",
+    "backToHome": "Back to Home",
+    "goBack": "Go Back",
+    "contentLabel": "Blog content"
+  },
+  "FooterAbout": {
+    "title": "About",
+    "description": "Our highly qualified team is fully capable of delivering any project from concept to completion.",
+    "btnTitle": "Get in Touch",
+    "copyrightText": "All rights reserved"
+  },
+
+  "VentilationHero": {
+    "title": "Shafts calculator",
+    "description": "Quickly and easily calculate the required shaft size for your space. Enter the necessary parameters to determine the right dimensions.",
+    "btnTitle": "Explore Calculator"
+  },
+
+  "WhyChooseUs": {
+    "title": "Why Choose Us",
+    "first": "Expertise & Innovation",
+    "second": "Proven Reliability",
+    "third": "Efficient Execution",
+    "forth": "Client-Centric Approach",
+    "btn": "Learn more about us"
+  },
+
+  "calculator": {
+    "title": "Ventilation Calculator",
+    "mainDescription": "Use this professional ventilation calculator to determine airflow, shaft dimensions, damper behavior, and ventilation type performance. Enter your parameters below to receive accurate engineering results.",
+    "kitchen": {
+      "info": "Specify the number of kitchens connected to the shaft in the entire building",
+      "title": "Number of kitchens connected to shaft"
+    },
+    "toilet": {
+      "info": "Indicate the number of water closets connected to the shaft in the entire building",
+      "title": "Number of WC connected to the shaft"
+    },
+    "shaxta": {
+      "title": "Shaft width  (mm)",
+      "info": "Specify the shaft width in millimeters.\n 1 cm = 10 mm, 1 m = 1000 mm"
+    },
+    "kitchenEType": {
+      "title": "Kitchen equipment type",
+      "info": "Type of kitchen hood",
+      "additionalInfo": "Hood – the air is taken directly from the hood installed above the stove (air exhaust rate of 360 m3/hr).",
+      "span1": "Wall type – the extractor is built directly into the wall (this type of equitpemnt has air exhaust rate of 180 m3/hr).",
+      "option1": "In wall",
+      "option2": "On hood"
+    },
+    "damper": {
+      "title": "Is a damper installation necessary?",
+      "additionalInfo": "There are two types of connecting the apartment’s air duct to the central ventilation shaft: with a damper and without a damper.",
+      "describtion": "In multi-apartment buildings, air ducts are one of the main routes for the spread of fire and smoke. Properly connected ventilation slows down the spread of smoke and fire.",
+      "span1": "When connected with a damper, the horizontal air duct from the apartment has a damper installed and connects to the vertical shaft.",
+      "DamperFunctions": "In case of fire, the damper closes, reducing the likelihood of odors, smoke, or fire returning to the apartment from the shaft.",
+      "WithoutDamperFunctions": "With a connection without a damper, the horizontal air duct does not connect directly to the shaft. Instead, the duct first goes vertically upwards and then connects to the exhaust duct.",
+      "goal": "This type of connection minimizes the risk of smoke spreading to other apartments.",
+      "conclusion": "As shown in the diagram, with a damper connection, the shaft is smaller, but each kitchen and wet area has an individual damper (the estimated cost of one damper is $150).",
+      "option1": "Yes",
+      "option2": "No"
+    },
+    "shaftVentT": {
+      "title": "Shaft ventilation type",
+      "additionalInfo": "In natural ventilation, air moves passively through the duct; the speed is low (2 m/s), and the shaft size is relatively large.",
+      "describtion": "In mechanical ventilation, an additional exhaust fan placed on the roof helps the airflow, increasing the speed (6 m/s) and reducing the shaft size.",
+      "option1": "Mechanical",
+      "option2": "Natural"
+    },
+    "mm": "mm",
+    "Btn": "calculate",
+    "ResultInfo": "The calculator is only a preliminary planning tool and requires confirmation from a specialist. The company is not responsible for the results obtained.",
+    "Result": "Result",
+    "Error": "The specified dimensions do not meet the ventilation requirements, please increase the shaft width."
+  },
+
+  "Contact": {
+    "ProjectDirection": "Project direction",
+    "InstalationDirection": "Installation direction",
+    "name": "Name",
+    "Email": "Email",
+    "Phone": "Phone",
+    "Message": "Message",
+    "nameRequired": "Name is required.",
+    "nameShort": "Name must be at least 2 characters.",
+    "emailRequired": "Email is required.",
+    "emailInvalid": "Enter a valid email address.",
+    "messageRequired": "Message is required.",
+    "messageShort": "Message must be at least 10 characters.",
+    "success": "Your message has been sent successfully.",
+    "failure": "We could not send your message. Please try again later.",
+    "sending": "Sending...",
+    "btn": "SEND",
+    "title": "Get in Touch",
+    "desc": "info@waveengineering.ge"
+  }
+}

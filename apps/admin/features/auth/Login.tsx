@@ -1,78 +1,105 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
-import { Button } from '../../src/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '../../src/components/ui/form';
-import { Input } from '../../src/components/ui/input';
 import { useAuth } from '../context/AuthContext';
+import {
+  ADMIN_DEFAULT_ROUTE,
+  ADMIN_ROUTE_PATHS,
+} from '../../src/app/router/routes.constants';
 import { LoginSchema } from './schema/LoginShcema';
 
 type LoginFormValues = z.infer<typeof LoginSchema>;
 
 function Login() {
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: { email: '', password: '' },
-  });
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+    setSubmitError(null);
+
     try {
-      await login(data);
-      toast.success('Logged in!');
+      const user = await login(data);
+      navigate(
+        user.mustChangePassword
+          ? ADMIN_ROUTE_PATHS.changeInitialPassword
+          : ADMIN_DEFAULT_ROUTE,
+        { replace: true },
+      );
     } catch {
-      toast.error('Invalid credentials');
+      setSubmitError('Invalid email or password');
     }
   };
 
   return (
-    <div className='max-w-md mx-auto mt-10 p-6 bg-gray-400 rounded-xl shadow-md '>
-      <h2 className='text-2xl font-bold mb-6'>Login</h2>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-          <FormField
-            control={form.control}
-            name='email'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder='example@gmail.com' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <main className='flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4'>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className='flex w-full max-w-sm flex-col gap-4 rounded-lg border border-[#E5E7EB] bg-white p-6 shadow-sm'
+      >
+        <div>
+          <h1 className='text-xl font-semibold text-[#111827]'>Admin Login</h1>
+          <p className='mt-1 text-sm text-[#6B7280]'>Sign in to continue</p>
+        </div>
 
-          <FormField
-            control={form.control}
-            name='password'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type='password' placeholder='********' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        <label className='flex flex-col gap-1 text-sm font-medium text-[#111827]'>
+          Email
+          <input
+            {...register('email')}
+            className='rounded-md border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:border-[#7C3AED]'
+            placeholder='admin@example.com'
+            type='email'
           />
+        </label>
+        {errors.email && (
+          <p className='text-sm text-[#DC2626]'>{errors.email.message}</p>
+        )}
 
-          <Button type='submit' className='w-full'>
-            Log In
-          </Button>
-        </form>
-      </Form>
-    </div>
+        <label className='flex flex-col gap-1 text-sm font-medium text-[#111827]'>
+          Password
+          <input
+            {...register('password')}
+            className='rounded-md border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:border-[#7C3AED]'
+            placeholder='Password'
+            type='password'
+          />
+        </label>
+        {errors.password && (
+          <p className='text-sm text-[#DC2626]'>{errors.password.message}</p>
+        )}
+
+        <Link
+          to={ADMIN_ROUTE_PATHS.forgotPassword}
+          className='self-end text-sm font-medium text-[#6D28D9] transition hover:text-[#5B21B6]'
+        >
+          Forgot password?
+        </Link>
+
+        {submitError && <p className='text-sm text-[#DC2626]'>{submitError}</p>}
+
+        <button
+          type='submit'
+          disabled={isSubmitting}
+          className='rounded-md bg-[#7C3AED] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#6D28D9] disabled:cursor-not-allowed disabled:opacity-70'
+        >
+          {isSubmitting ? 'Signing in...' : 'Log in'}
+        </button>
+      </form>
+    </main>
   );
 }
 

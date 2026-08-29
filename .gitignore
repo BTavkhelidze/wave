@@ -1,5 +1,6 @@
 # dependencies
 node_modules/
+.pnpm-store/
 
 # turbo
 .turbo
@@ -12,6 +13,17 @@ build/
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
+!*.env.example
+*.env.backup
+.env.backup
+.env*.backup
+
+# package manager lockfiles
+package-lock.json
+apps/*/package-lock.json
+apps/*/pnpm-lock.yaml
 
 # OS
 .DS_Store

@@ -15,12 +15,32 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = PrismaService.getDatabaseUrl();
     super({
       adapter: new PrismaPg({
         connectionString,
       }),
     });
+  }
+
+  private static getDatabaseUrl(): string {
+    const connectionString = process.env.DATABASE_URL?.trim();
+
+    if (!connectionString) {
+      throw new Error('DATABASE_URL is required');
+    }
+
+    try {
+      const url = new URL(connectionString);
+
+      if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
+        throw new Error();
+      }
+    } catch {
+      throw new Error('DATABASE_URL must be a valid PostgreSQL URL');
+    }
+
+    return connectionString;
   }
 
   async onModuleInit() {
