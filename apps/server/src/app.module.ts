@@ -15,6 +15,7 @@ import { buildMailerOptions } from './config/mail-transport.config';
 import { APP_GUARD } from '@nestjs/core';
 import { RequestOriginGuard } from './common/guards/request-origin.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { HealthModule } from './health/health.module';
 
 const ENV = process.env.NODE_ENV?.trim();
 const SECONDS_TO_MILLISECONDS = 1000;
@@ -43,6 +44,7 @@ const SECONDS_TO_MILLISECONDS = 1000;
       },
     ]),
     ApiModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

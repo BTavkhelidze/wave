@@ -84,10 +84,14 @@ function createResponse(): MockResponse {
     cookie: jest.fn(),
   } as MockResponse;
 
-  response.clearCookie.mockReturnValue(response as Response);
-  response.cookie.mockReturnValue(response as Response);
+  response.clearCookie.mockReturnValue(response as unknown as Response);
+  response.cookie.mockReturnValue(response as unknown as Response);
 
   return response;
+}
+
+function asExpressResponse(response: MockResponse): Response {
+  return response as unknown as Response;
 }
 
 function cookieValue(response: MockResponse, name: string): string {
@@ -260,7 +264,7 @@ describe('normal password change session rotation', () => {
           currentPassword: 'Current-password1!',
           newPassword: 'N3w-password!',
         },
-        changePasswordResponse as Response,
+        asExpressResponse(changePasswordResponse),
       ),
     ).resolves.toEqual({
       message: 'Password changed successfully',
@@ -289,7 +293,7 @@ describe('normal password change session rotation', () => {
     await expect(
       refreshTokenProvider.refreshToken(
         oldTokens.refreshToken,
-        createResponse(),
+        asExpressResponse(createResponse()),
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     await expect(
@@ -299,7 +303,10 @@ describe('normal password change session rotation', () => {
     const refreshResponse = createResponse();
 
     await expect(
-      refreshTokenProvider.refreshToken(newRefreshToken, refreshResponse),
+      refreshTokenProvider.refreshToken(
+        newRefreshToken,
+        asExpressResponse(refreshResponse),
+      ),
     ).resolves.toEqual({
       status: 200,
       message: 'Tokens refreshed successfully',

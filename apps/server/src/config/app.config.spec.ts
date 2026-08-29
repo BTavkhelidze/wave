@@ -12,6 +12,8 @@ function setAppEnv(overrides: Record<string, string | undefined> = {}): void {
     FRONTEND_URL: 'https://admin.waveengineering.ge',
     ADMIN_APP_URL: 'https://admin.waveengineering.ge',
     PUBLIC_WEBSITE_URL: 'https://waveengineering.ge',
+    DATABASE_URL:
+      'postgresql://wave_user:prod-db-credential-value@db.wave.internal:5432/wave',
     TRUSTED_BROWSER_ORIGINS:
       'https://admin.waveengineering.ge,https://waveengineering.ge',
     HETZNER_S3_ENDPOINT: 'https://objectstorage.example.com',
@@ -131,6 +133,36 @@ describe('app configuration hardening', () => {
 
     expect(() => buildAppConfiguration()).toThrow(
       'HETZNER_S3_SECRET_KEY must not use a placeholder value in production',
+    );
+  });
+
+  it('requires a valid production database URL', () => {
+    setAppEnv({ DATABASE_URL: undefined });
+
+    expect(() => buildAppConfiguration()).toThrow('DATABASE_URL is required');
+
+    setAppEnv({ DATABASE_URL: 'mysql://user:pass@db.example.com:3306/wave' });
+
+    expect(() => buildAppConfiguration()).toThrow(
+      'DATABASE_URL must use the postgresql protocol',
+    );
+  });
+
+  it('rejects unsafe production database targets and placeholder passwords', () => {
+    setAppEnv({
+      DATABASE_URL: 'postgresql://user:strong-db-value@localhost:5432/wave',
+    });
+
+    expect(() => buildAppConfiguration()).toThrow(
+      'DATABASE_URL must not use localhost in production',
+    );
+
+    setAppEnv({
+      DATABASE_URL: 'postgresql://user:password@db.wave.internal:5432/wave',
+    });
+
+    expect(() => buildAppConfiguration()).toThrow(
+      'DATABASE_URL password must not use a placeholder value in production',
     );
   });
 

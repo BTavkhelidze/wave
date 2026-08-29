@@ -5,7 +5,6 @@ import { UsersModule } from './users/users.module';
 import { AdminLogsModule } from './admin-logs/admin-logs.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { BlogsModule } from './blogs/blogs.module';
-import { ContactModule } from './contact/contact.module';
 import { ContactMessagesModule } from './contact-messages/contact-messages.module';
 import { OutboundEmailsModule } from './outbound-emails/outbound-emails.module';
 
@@ -17,7 +16,6 @@ import { OutboundEmailsModule } from './outbound-emails/outbound-emails.module';
     AdminLogsModule,
     UploadsModule,
     BlogsModule,
-    ContactModule,
     ContactMessagesModule,
     OutboundEmailsModule,
   ],

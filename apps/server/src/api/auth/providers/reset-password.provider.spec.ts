@@ -9,7 +9,16 @@ import { PasswordResetTokenProvider } from './password-reset-token.provider';
 
 describe('ResetPasswordProvider', () => {
   const now = new Date('2026-07-30T19:15:00.000Z');
-  const tokenRecord = {
+  type TokenRecord = {
+    id: string;
+    userId: string;
+    expiresAt: Date;
+    usedAt: Date | null;
+    user: {
+      isActive: boolean;
+    };
+  };
+  const tokenRecord: TokenRecord = {
     id: 'token-id',
     userId: 'user-id',
     expiresAt: new Date('2026-07-30T19:30:00.000Z'),
@@ -19,7 +28,7 @@ describe('ResetPasswordProvider', () => {
     },
   };
 
-  type PasswordResetTokenMock = typeof tokenRecord | null;
+  type PasswordResetTokenMock = TokenRecord | null;
   type UpdateManyResult = { count: number };
   type PrismaTxMock = {
     passwordResetToken: {

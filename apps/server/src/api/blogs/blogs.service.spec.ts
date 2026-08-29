@@ -55,7 +55,7 @@ describe('BlogsService create', () => {
     ],
   };
 
-  let tx: {
+  type CreateBlogTx = {
     blog: {
       create: jest.Mock<Promise<typeof createdBlog>, [unknown]>;
     };
@@ -63,10 +63,11 @@ describe('BlogsService create', () => {
       create: jest.Mock<Promise<unknown>, [unknown]>;
     };
   };
+  let tx: CreateBlogTx;
   let prismaService: {
     $transaction: jest.Mock<
       Promise<typeof createdBlog>,
-      [callback: (tx: typeof tx) => Promise<typeof createdBlog>]
+      [callback: (tx: CreateBlogTx) => Promise<typeof createdBlog>]
     >;
   };
   let service: BlogsService;
@@ -88,7 +89,7 @@ describe('BlogsService create', () => {
       $transaction: jest
         .fn<
           Promise<typeof createdBlog>,
-          [callback: (tx: typeof tx) => Promise<typeof createdBlog>]
+          [callback: (tx: CreateBlogTx) => Promise<typeof createdBlog>]
         >()
         .mockImplementation((callback) => callback(tx)),
     };
@@ -367,7 +368,7 @@ describe('BlogsService update', () => {
     ],
   };
 
-  let tx: {
+  type UpdateBlogTx = {
     blog: {
       findUnique: jest.Mock<Promise<unknown>, [unknown]>;
       update: jest.Mock<Promise<typeof updatedBlog>, [unknown]>;
@@ -379,10 +380,11 @@ describe('BlogsService update', () => {
       create: jest.Mock<Promise<unknown>, [unknown]>;
     };
   };
+  let tx: UpdateBlogTx;
   let prismaService: {
     $transaction: jest.Mock<
       Promise<typeof updatedBlog>,
-      [callback: (tx: typeof tx) => Promise<typeof updatedBlog>]
+      [callback: (tx: UpdateBlogTx) => Promise<typeof updatedBlog>]
     >;
   };
   let service: BlogsService;
@@ -421,7 +423,7 @@ describe('BlogsService update', () => {
       $transaction: jest
         .fn<
           Promise<typeof updatedBlog>,
-          [callback: (tx: typeof tx) => Promise<typeof updatedBlog>]
+          [callback: (tx: UpdateBlogTx) => Promise<typeof updatedBlog>]
         >()
         .mockImplementation((callback) => callback(tx)),
     };
@@ -560,7 +562,7 @@ describe('BlogsService remove', () => {
     ],
   };
 
-  let tx: {
+  type RemoveBlogTx = {
     blog: {
       delete: jest.Mock<Promise<typeof deletedBlog>, [unknown]>;
     };
@@ -568,12 +570,13 @@ describe('BlogsService remove', () => {
       create: jest.Mock<Promise<unknown>, [unknown]>;
     };
   };
+  let tx: RemoveBlogTx;
   let prismaService: {
     $transaction: jest.Mock<
       Promise<{ blog: typeof deletedBlog; message: string }>,
       [
         callback: (
-          tx: typeof tx,
+          tx: RemoveBlogTx,
         ) => Promise<{ blog: typeof deletedBlog; message: string }>,
       ]
     >;
@@ -599,7 +602,7 @@ describe('BlogsService remove', () => {
           Promise<{ blog: typeof deletedBlog; message: string }>,
           [
             callback: (
-              tx: typeof tx,
+              tx: RemoveBlogTx,
             ) => Promise<{ blog: typeof deletedBlog; message: string }>,
           ]
         >()
