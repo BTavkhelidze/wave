@@ -22,6 +22,8 @@ describe('MailService', () => {
     service = new MailService(
       {
         adminAppUrl: 'https://admin.waveengineering.ge/',
+        publicWebsiteUrl: 'https://waveengineering.ge/',
+        emailLogoUrl: '',
         mail: {
           from: 'Wave Engineering <info@waveengineering.ge>',
           contactNotificationEmail: 'admin@waveengineering.ge',
@@ -36,6 +38,75 @@ describe('MailService', () => {
       } as ConfigType<typeof appConfig>,
       { sendMail } as unknown as MailerService,
     );
+  });
+
+  it('sends temporary-password emails with the shared WAVE layout and escaped values', async () => {
+    await service.sendAdminTemporaryPasswordEmail({
+      to: 'new.admin+<test>@example.com',
+      temporaryPassword: 'Temp<pass>&"',
+      reason: 'USER_CREATED',
+    });
+
+    const input = sendMail.mock.calls[0]?.[0] as
+      | { html?: string; text?: string; subject?: string }
+      | undefined;
+
+    expect(input?.subject).toBe('Your Wave Engineering admin account');
+    expect(input?.html).toContain('WAVE');
+    expect(input?.html).toContain('Water Air Voltage Engineering');
+    expect(input?.html).not.toContain('<img');
+    expect(input?.html).toContain('Open admin panel');
+    expect(input?.html).toContain('new.admin+&lt;test&gt;@example.com');
+    expect(input?.html).toContain('Temp&lt;pass&gt;&amp;&quot;');
+    expect(input?.text).toContain('One-time password: Temp<pass>&"');
+  });
+
+  it('sends ComposeEmail messages with the shared WAVE layout and escaped dynamic content', async () => {
+    await service.sendBusinessEmail({
+      to: 'client@example.com',
+      subject: 'Quarterly <Plan>',
+      recipientName: 'Ana <Admin>',
+      heading: 'Project <Update>',
+      message: 'Line <one>\nLine & two',
+      buttonText: 'Open <Plan>',
+      buttonUrl: 'https://example.com/plan?x=1&y=2',
+    });
+
+    const input = sendMail.mock.calls[0]?.[0] as
+      | { html?: string; text?: string; subject?: string }
+      | undefined;
+
+    expect(input?.subject).toBe('Quarterly <Plan>');
+    expect(input?.html).toContain('WAVE');
+    expect(input?.html).toContain('Water Air Voltage Engineering');
+    expect(input?.html).not.toContain('<img');
+    expect(input?.html).toContain('Hello Ana &lt;Admin&gt;,');
+    expect(input?.html).toContain('Project &lt;Update&gt;');
+    expect(input?.html).toContain('Quarterly &lt;Plan&gt;');
+    expect(input?.html).toContain('Line &lt;one&gt;<br>Line &amp; two');
+    expect(input?.html).toContain('Open &lt;Plan&gt;');
+    expect(input?.html).toContain(
+      'href="https://example.com/plan?x=1&amp;y=2"',
+    );
+    expect(input?.text).toContain('Hello Ana <Admin>,');
+    expect(input?.text).toContain(
+      'Open <Plan>: https://example.com/plan?x=1&y=2',
+    );
+  });
+
+  it('omits the ComposeEmail button when the URL is not safe', async () => {
+    await service.sendBusinessEmail({
+      to: 'client@example.com',
+      subject: 'Plain update',
+      message: 'No action required.',
+      buttonText: 'Open report',
+      buttonUrl: 'javascript:alert(1)',
+    });
+
+    const input = sendMail.mock.calls[0]?.[0] as { html?: string } | undefined;
+
+    expect(input?.html).not.toContain('javascript:alert(1)');
+    expect(input?.html).not.toContain('Open report</a>');
   });
 
   it('sends new contact message notifications from the company mailbox with visitor replyTo', async () => {
