@@ -1,18 +1,25 @@
-import { useMemo } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
-import { isApiRequestError } from '../../../src/shared/api/httpClient';
-import { useOutboundEmailsQuery } from '../api/outboundEmails.queries';
+import { useMemo, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { ADMIN_ROUTE_PATHS } from "../../../src/app/router/routes.constants";
+import { isApiRequestError } from "../../../src/shared/api/httpClient";
+import {
+  useDeleteOutboundEmailMutation,
+  useOutboundEmailsQuery,
+} from "../api/outboundEmails.queries";
 import {
   getOutboundEmailsParamsFromSearch,
   setOutboundEmailsSearchParam,
-} from '../model/outboundEmailsSearchParams';
-import type { OutboundEmailsQueryParams } from '../model/outboundEmail.types';
-import { OutboundEmailsFilters } from './OutboundEmailsFilters';
-import { OutboundEmailsLoadingSkeleton } from './OutboundEmailsLoadingSkeleton';
-import { OutboundEmailsPagination } from './OutboundEmailsPagination';
-import { OutboundEmailsStateCard } from './OutboundEmailsStateCard';
-import { OutboundEmailsTable } from './OutboundEmailsTable';
+} from "../model/outboundEmailsSearchParams";
+import type {
+  OutboundEmailListItem,
+  OutboundEmailsQueryParams,
+} from "../model/outboundEmail.types";
+import { DeleteOutboundEmailDialog } from "./DeleteOutboundEmailDialog";
+import { OutboundEmailsFilters } from "./OutboundEmailsFilters";
+import { OutboundEmailsLoadingSkeleton } from "./OutboundEmailsLoadingSkeleton";
+import { OutboundEmailsPagination } from "./OutboundEmailsPagination";
+import { OutboundEmailsStateCard } from "./OutboundEmailsStateCard";
+import { OutboundEmailsTable } from "./OutboundEmailsTable";
 
 type LocationState = {
   successMessage?: string;
@@ -22,12 +29,16 @@ export function OutboundEmailsList() {
   const location = useLocation();
   const navigate = useNavigate();
   const locationState = location.state as LocationState | null;
+  const [emailToDelete, setEmailToDelete] =
+    useState<OutboundEmailListItem | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useMemo(
     () => getOutboundEmailsParamsFromSearch(searchParams),
     [searchParams],
   );
   const emailsQuery = useOutboundEmailsQuery(params);
+  const deleteEmailMutation = useDeleteOutboundEmailMutation();
 
   const handleFilterChange = (
     key: keyof OutboundEmailsQueryParams,
@@ -37,13 +48,41 @@ export function OutboundEmailsList() {
       setOutboundEmailsSearchParam(
         searchParams,
         key,
-        value === undefined ? '' : String(value),
+        value === undefined ? "" : String(value),
       ),
     );
   };
 
   const handleResetFilters = () => {
     setSearchParams(new URLSearchParams());
+  };
+
+  const handleDeleteEmail = (email: OutboundEmailListItem) => {
+    setSuccessMessage(null);
+    deleteEmailMutation.reset();
+    setEmailToDelete(email);
+  };
+
+  const handleCancelDelete = () => {
+    if (deleteEmailMutation.isPending) {
+      return;
+    }
+
+    setEmailToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!emailToDelete || deleteEmailMutation.isPending) {
+      return;
+    }
+
+    try {
+      await deleteEmailMutation.mutateAsync(emailToDelete.id);
+      setEmailToDelete(null);
+      setSuccessMessage("Email history record deleted.");
+    } catch {
+      // The dialog stays open and shows a safe error message.
+    }
   };
 
   const filters = (
@@ -107,20 +146,36 @@ export function OutboundEmailsList() {
         />
       )}
 
+      {successMessage && (
+        <OutboundEmailsStateCard
+          tone="success"
+          title="Email record deleted"
+          message={successMessage}
+        />
+      )}
+
       {filters}
 
       {emails.length > 0 ? (
-        <OutboundEmailsTable emails={emails} />
+        <OutboundEmailsTable
+          emails={emails}
+          deletingEmailId={
+            deleteEmailMutation.isPending
+              ? (deleteEmailMutation.variables ?? null)
+              : null
+          }
+          onDeleteEmail={handleDeleteEmail}
+        />
       ) : (
         <OutboundEmailsStateCard
           tone="neutral"
-          title={hasActiveFilters ? 'No matching emails' : 'No emails yet'}
+          title={hasActiveFilters ? "No matching emails" : "No emails yet"}
           message={
             hasActiveFilters
-              ? 'Try another status or search term.'
-              : 'Sent business emails will appear here.'
+              ? "Try another status or search term."
+              : "Sent business emails will appear here."
           }
-          actionLabel={hasActiveFilters ? undefined : 'Compose Email'}
+          actionLabel={hasActiveFilters ? undefined : "Compose Email"}
           onAction={
             hasActiveFilters
               ? undefined
@@ -134,7 +189,21 @@ export function OutboundEmailsList() {
       {meta && (
         <OutboundEmailsPagination
           meta={meta}
-          onPageChange={(page) => handleFilterChange('page', page)}
+          onPageChange={(page) => handleFilterChange("page", page)}
+        />
+      )}
+
+      {emailToDelete && (
+        <DeleteOutboundEmailDialog
+          email={emailToDelete}
+          isDeleting={deleteEmailMutation.isPending}
+          errorMessage={
+            deleteEmailMutation.isError
+              ? "Could not delete email record. Please try again."
+              : null
+          }
+          onCancel={handleCancelDelete}
+          onConfirm={() => void handleConfirmDelete()}
         />
       )}
     </div>

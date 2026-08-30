@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 type PublicViewEntityType = 'blog' | 'service';
 
@@ -42,35 +42,26 @@ export function useRecordPublicView({
   slug,
   recordView,
 }: UseRecordPublicViewInput): void {
-  const lastAttemptedKeyRef = useRef<string | null>(null);
+  const viewKey = entityId ? buildSessionKey(entityType, entityId) : undefined;
 
   useEffect(() => {
-    if (!entityId || !slug) {
+    if (!viewKey || !slug) {
       return;
     }
 
-    const sessionKey = buildSessionKey(entityType, entityId);
-
-    if (
-      lastAttemptedKeyRef.current === sessionKey ||
-      inFlightViewKeys.has(sessionKey) ||
-      isAlreadyRecorded(sessionKey)
-    ) {
+    if (inFlightViewKeys.has(viewKey) || isAlreadyRecorded(viewKey)) {
       return;
     }
 
-    lastAttemptedKeyRef.current = sessionKey;
-    inFlightViewKeys.add(sessionKey);
+    inFlightViewKeys.add(viewKey);
 
     void recordView(slug)
       .then(() => {
-        markRecorded(sessionKey);
+        markRecorded(viewKey);
       })
-      .catch(() => {
-        lastAttemptedKeyRef.current = null;
-      })
+      .catch(() => undefined)
       .finally(() => {
-        inFlightViewKeys.delete(sessionKey);
+        inFlightViewKeys.delete(viewKey);
       });
-  }, [entityId, entityType, recordView, slug]);
+  }, [recordView, slug, viewKey]);
 }

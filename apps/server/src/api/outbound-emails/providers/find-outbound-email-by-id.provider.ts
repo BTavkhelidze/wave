@@ -20,9 +20,10 @@ export class FindOutboundEmailByIdProvider {
 
   public async findOne(id: string): Promise<OutboundEmailDetail> {
     try {
-      const outboundEmail = await this.prismaService.outboundEmail.findUnique({
+      const outboundEmail = await this.prismaService.outboundEmail.findFirst({
         where: {
           id,
+          deletedAt: null,
         },
         select: outboundEmailDetailSelect,
       });

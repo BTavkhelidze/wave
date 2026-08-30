@@ -4,7 +4,11 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { useSendOutboundEmailMutation } from '../api/outboundEmails.queries';
-import { SEND_OUTBOUND_EMAIL_DEFAULT_VALUES } from '../model/outboundEmail.constants';
+import {
+  OUTBOUND_EMAIL_LANGUAGES,
+  getOutboundEmailLanguageLabel,
+  SEND_OUTBOUND_EMAIL_DEFAULT_VALUES,
+} from '../model/outboundEmail.constants';
 import type { SendOutboundEmailPayload } from '../model/outboundEmail.types';
 import { SendOutboundEmailSchema } from '../model/sendOutboundEmail.schema';
 import { EmailPreviewDialog } from './EmailPreviewDialog';
@@ -13,6 +17,7 @@ import { SendEmailConfirmationDialog } from './SendEmailConfirmationDialog';
 const fieldIds = {
   recipientEmail: 'send-email-recipient-email',
   recipientName: 'send-email-recipient-name',
+  language: 'send-email-language',
   subject: 'send-email-subject',
   heading: 'send-email-heading',
   message: 'send-email-message',
@@ -139,6 +144,25 @@ export function ComposeEmailForm() {
               />
             </FormField>
           </div>
+
+          <FormField
+            id={fieldIds.language}
+            label="Email language"
+            error={errors.language?.message}
+          >
+            <select
+              id={fieldIds.language}
+              disabled={isSending}
+              className={fieldClassName}
+              {...register('language')}
+            >
+              {OUTBOUND_EMAIL_LANGUAGES.map((language) => (
+                <option key={language} value={language}>
+                  {getOutboundEmailLanguageLabel(language)}
+                </option>
+              ))}
+            </select>
+          </FormField>
 
           <FormField
             id={fieldIds.subject}
@@ -305,6 +329,7 @@ function normalizeSendOutboundEmailValues(
   return {
     recipientEmail: values.recipientEmail.trim().toLowerCase(),
     recipientName: normalizeOptionalValue(values.recipientName),
+    language: values.language,
     subject: values.subject.trim(),
     heading: normalizeOptionalValue(values.heading),
     message: values.message.trim(),

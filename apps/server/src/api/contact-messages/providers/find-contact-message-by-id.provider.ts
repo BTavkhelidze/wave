@@ -20,14 +20,13 @@ export class FindContactMessageByIdProvider {
 
   public async findOne(id: string): Promise<AdminContactMessage> {
     try {
-      const contactMessage = await this.prismaService.contactMessage.findUnique(
-        {
-          where: {
-            id,
-          },
-          select: adminContactMessageSelect,
+      const contactMessage = await this.prismaService.contactMessage.findFirst({
+        where: {
+          id,
+          deletedAt: null,
         },
-      );
+        select: adminContactMessageSelect,
+      });
 
       if (!contactMessage) {
         throw new NotFoundException('Contact message not found');

@@ -9,6 +9,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { MailModule } from '../mail/mail.module';
 import { OutboundEmailsController } from './outbound-emails.controller';
 import { OutboundEmailsService } from './outbound-emails.service';
+import { DeleteOutboundEmailProvider } from './providers/delete-outbound-email.provider';
 import { FindOutboundEmailByIdProvider } from './providers/find-outbound-email-by-id.provider';
 import { FindOutboundEmailsProvider } from './providers/find-outbound-emails.provider';
 import { SendOutboundEmailProvider } from './providers/send-outbound-email.provider';
@@ -26,6 +27,7 @@ import { SendOutboundEmailProvider } from './providers/send-outbound-email.provi
     AccessTokenGuard,
     ActiveUserGuard,
     RolesGuard,
+    DeleteOutboundEmailProvider,
     SendOutboundEmailProvider,
     FindOutboundEmailsProvider,
     FindOutboundEmailByIdProvider,

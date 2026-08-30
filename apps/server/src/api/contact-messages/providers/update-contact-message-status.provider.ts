@@ -35,6 +35,7 @@ export class UpdateContactMessageStatusProvider {
         const contactMessage = await tx.contactMessage.update({
           where: {
             id,
+            deletedAt: null,
           },
           data: this.buildStatusUpdateData(status, now),
           select: adminContactMessageSelect,

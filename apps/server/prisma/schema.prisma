@@ -76,9 +76,11 @@ model User {
 
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  logs                AdminLog[]
-  passwordResetTokens PasswordResetToken[]
-  outboundEmails      OutboundEmail[]      @relation("UserOutboundEmails")
+  logs                   AdminLog[]
+  passwordResetTokens    PasswordResetToken[]
+  outboundEmails         OutboundEmail[]      @relation("UserOutboundEmails")
+  deletedContactMessages ContactMessage[]     @relation("DeletedContactMessages")
+  deletedOutboundEmails  OutboundEmail[]      @relation("DeletedOutboundEmails")
 
   @@index([role])
   @@index([isActive])
@@ -184,19 +186,25 @@ model BlogTranslation {
 }
 
 model ContactMessage {
-  id         String        @id @default(uuid())
-  fullName   String        @map("full_name")
-  email      String
-  phone      String?
-  subject    String?
-  message    String        @db.Text
-  status     MessageStatus @default(UNREAD)
-  readAt     DateTime?     @map("read_at") @db.Timestamptz(6)
-  archivedAt DateTime?     @map("archived_at") @db.Timestamptz(6)
-  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id              String        @id @default(uuid())
+  fullName        String        @map("full_name")
+  email           String
+  phone           String?
+  subject         String?
+  message         String        @db.Text
+  status          MessageStatus @default(UNREAD)
+  readAt          DateTime?     @map("read_at") @db.Timestamptz(6)
+  archivedAt      DateTime?     @map("archived_at") @db.Timestamptz(6)
+  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  deletedByUserId String?       @map("deleted_by_user_id")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  deletedBy User? @relation("DeletedContactMessages", fields: [deletedByUserId], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([deletedAt])
+  @@index([status, deletedAt])
   @@index([createdAt])
   @@map("contact_messages")
 }
@@ -205,6 +213,7 @@ model OutboundEmail {
   id                String              @id @default(uuid())
   recipientEmail    String              @map("recipient_email")
   recipientName     String?             @map("recipient_name")
+  language          Language            @default(EN)
   subject           String
   heading           String?
   message           String              @db.Text
@@ -215,14 +224,19 @@ model OutboundEmail {
   failureCode       String?             @map("failure_code")
   sentAt            DateTime?           @map("sent_at") @db.Timestamptz(6)
   createdByUserId   String              @map("created_by_user_id")
+  deletedAt         DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  deletedByUserId   String?             @map("deleted_by_user_id")
   createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  createdBy User @relation("UserOutboundEmails", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  createdBy User  @relation("UserOutboundEmails", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  deletedBy User? @relation("DeletedOutboundEmails", fields: [deletedByUserId], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([deletedAt])
   @@index([createdAt])
   @@index([createdByUserId])
+  @@index([status, deletedAt])
   @@index([status, createdAt])
   @@map("outbound_emails")
 }

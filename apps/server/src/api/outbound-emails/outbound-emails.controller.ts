@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -16,6 +19,7 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -100,5 +104,30 @@ export class OutboundEmailsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<OutboundEmailDetail> {
     return this.outboundEmailsService.findOne(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Soft delete an outbound email history record',
+    description:
+      'Removes the record from normal Admin Panel views. This does not recall delivered mail or cancel SMTP delivery.',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+  })
+  @ApiNoContentResponse({ description: 'Outbound email history deleted.' })
+  @ApiBadRequestResponse({ description: 'Invalid outbound email ID.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  @ApiForbiddenResponse({
+    description: 'Only SUPER_ADMIN and ADMIN users can delete email history.',
+  })
+  @ApiNotFoundResponse({ description: 'Outbound email not found.' })
+  public delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ActiveUser('id') adminId: string,
+  ): Promise<void> {
+    return this.outboundEmailsService.delete(id, adminId);
   }
 }

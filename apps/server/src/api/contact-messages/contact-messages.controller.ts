@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -17,6 +20,7 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -143,5 +147,31 @@ export class ContactMessagesController {
       updateContactMessageStatusDto.status,
       adminId,
     );
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AccessTokenGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Soft delete a contact message from the Admin Panel',
+  })
+  @ApiParam({
+    name: 'id',
+    example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25',
+  })
+  @ApiNoContentResponse({ description: 'Contact message deleted.' })
+  @ApiBadRequestResponse({ description: 'Invalid contact message ID.' })
+  @ApiUnauthorizedResponse({ description: 'Authentication is required.' })
+  @ApiForbiddenResponse({
+    description: 'Only SUPER_ADMIN and ADMIN users can delete messages.',
+  })
+  @ApiNotFoundResponse({ description: 'Contact message not found.' })
+  public delete(
+    @Param('id', ParseUUIDPipe) id: string,
+    @ActiveUser('id') adminId: string,
+  ): Promise<void> {
+    return this.contactMessagesService.delete(id, adminId);
   }
 }

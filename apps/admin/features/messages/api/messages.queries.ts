@@ -3,33 +3,34 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from '@tanstack/react-query';
+} from "@tanstack/react-query";
+import { adminLogsRootQueryKey } from "../../admin-logs/api/adminLogs.queries";
 import {
+  deleteContactMessage,
   getContactMessageById,
   getContactMessages,
   getUnreadContactMessagesCount,
   updateContactMessageStatus,
-} from './messages.api';
+} from "./messages.api";
 import type {
   ContactMessage,
   ContactMessagesQueryParams,
   ContactMessagesResponse,
   ContactMessagesUnreadCountResponse,
   MessageStatus,
-} from '../model/message.types';
+} from "../model/message.types";
 
-export const contactMessagesRootQueryKey = ['contact-messages'] as const;
+export const contactMessagesRootQueryKey = ["contact-messages"] as const;
 
-export const contactMessagesQueryKey = (
-  params: ContactMessagesQueryParams,
-) => [...contactMessagesRootQueryKey, 'list', params] as const;
+export const contactMessagesQueryKey = (params: ContactMessagesQueryParams) =>
+  [...contactMessagesRootQueryKey, "list", params] as const;
 
 export const contactMessageDetailQueryKey = (messageId: string) =>
-  [...contactMessagesRootQueryKey, 'detail', messageId] as const;
+  [...contactMessagesRootQueryKey, "detail", messageId] as const;
 
 export const unreadContactMessagesCountQueryKey = [
   ...contactMessagesRootQueryKey,
-  'unread-count',
+  "unread-count",
 ] as const;
 
 export function useContactMessagesQuery(params: ContactMessagesQueryParams) {
@@ -42,8 +43,8 @@ export function useContactMessagesQuery(params: ContactMessagesQueryParams) {
 
 export function useContactMessageQuery(messageId: string | null) {
   return useQuery({
-    queryKey: contactMessageDetailQueryKey(messageId ?? ''),
-    queryFn: ({ signal }) => getContactMessageById(messageId ?? '', signal),
+    queryKey: contactMessageDetailQueryKey(messageId ?? ""),
+    queryFn: ({ signal }) => getContactMessageById(messageId ?? "", signal),
     enabled: Boolean(messageId),
   });
 }
@@ -58,6 +59,10 @@ export function useUnreadContactMessagesCountQuery() {
 export type UpdateContactMessageStatusVariables = {
   messageId: string;
   status: MessageStatus;
+};
+
+export type DeleteContactMessageVariables = {
+  messageId: string;
 };
 
 type UpdateContactMessageStatusMutationOptions = {
@@ -83,10 +88,11 @@ export function useUpdateContactMessageStatusMutation(
       const previousDetail = queryClient.getQueryData<ContactMessage>(
         contactMessageDetailQueryKey(messageId),
       );
-      const previousLists =
-        queryClient.getQueriesData<ContactMessagesResponse>({
+      const previousLists = queryClient.getQueriesData<ContactMessagesResponse>(
+        {
           queryKey: contactMessagesQueryRootKey,
-        });
+        },
+      );
       const previousUnreadCount =
         queryClient.getQueryData<ContactMessagesUnreadCountResponse>(
           unreadContactMessagesCountQueryKey,
@@ -145,9 +151,78 @@ export function useUpdateContactMessageStatusMutation(
   });
 }
 
+export function useDeleteContactMessageMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ messageId }: DeleteContactMessageVariables) =>
+      deleteContactMessage(messageId),
+    onMutate: async ({ messageId }) => {
+      await queryClient.cancelQueries({
+        queryKey: contactMessagesRootQueryKey,
+      });
+
+      const previousDetail = queryClient.getQueryData<ContactMessage>(
+        contactMessageDetailQueryKey(messageId),
+      );
+      const previousLists = queryClient.getQueriesData<ContactMessagesResponse>(
+        {
+          queryKey: contactMessagesQueryRootKey,
+        },
+      );
+      const previousUnreadCount =
+        queryClient.getQueryData<ContactMessagesUnreadCountResponse>(
+          unreadContactMessagesCountQueryKey,
+        );
+
+      removeContactMessageFromCache(queryClient, messageId);
+
+      return {
+        previousDetail,
+        previousLists,
+        previousUnreadCount,
+      };
+    },
+    onError: (_error, variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      queryClient.setQueryData<ContactMessage>(
+        contactMessageDetailQueryKey(variables.messageId),
+        context.previousDetail,
+      );
+
+      context.previousLists.forEach(([queryKey, data]) => {
+        queryClient.setQueryData<ContactMessagesResponse>(queryKey, data);
+      });
+
+      queryClient.setQueryData<ContactMessagesUnreadCountResponse>(
+        unreadContactMessagesCountQueryKey,
+        context.previousUnreadCount,
+      );
+    },
+    onSuccess: async (_response, variables) => {
+      queryClient.removeQueries({
+        queryKey: contactMessageDetailQueryKey(variables.messageId),
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: contactMessagesRootQueryKey,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: unreadContactMessagesCountQueryKey,
+        }),
+        queryClient.invalidateQueries({ queryKey: adminLogsRootQueryKey }),
+      ]);
+    },
+  });
+}
+
 const contactMessagesQueryRootKey = [
   ...contactMessagesRootQueryKey,
-  'list',
+  "list",
 ] as const;
 
 type UpdateContactMessageStatusCacheInput = {
@@ -183,7 +258,7 @@ function updateContactMessageStatusCache(
         ...response,
         data: response.data.map((currentMessage) =>
           currentMessage.id === messageId
-            ? message ?? { ...currentMessage, status }
+            ? (message ?? { ...currentMessage, status })
             : currentMessage,
         ),
       };
@@ -248,7 +323,7 @@ function updateUnreadCountCache(
   }
 
   const unreadDelta =
-    nextStatus === 'UNREAD' ? 1 : previousStatus === 'UNREAD' ? -1 : 0;
+    nextStatus === "UNREAD" ? 1 : previousStatus === "UNREAD" ? -1 : 0;
 
   if (unreadDelta === 0) {
     return;
@@ -260,4 +335,42 @@ function updateUnreadCountCache(
       count: Math.max((response?.count ?? 0) + unreadDelta, 0),
     }),
   );
+}
+
+function removeContactMessageFromCache(
+  queryClient: QueryClient,
+  messageId: string,
+) {
+  const messageStatus = getCachedMessageStatus(queryClient, messageId);
+
+  queryClient.removeQueries({
+    queryKey: contactMessageDetailQueryKey(messageId),
+  });
+
+  queryClient.setQueriesData<ContactMessagesResponse>(
+    { queryKey: contactMessagesQueryRootKey },
+    (response) => {
+      if (!response) {
+        return response;
+      }
+
+      return {
+        ...response,
+        data: response.data.filter((message) => message.id !== messageId),
+        meta: {
+          ...response.meta,
+          total: Math.max(response.meta.total - 1, 0),
+        },
+      };
+    },
+  );
+
+  if (messageStatus === "UNREAD") {
+    queryClient.setQueryData<ContactMessagesUnreadCountResponse>(
+      unreadContactMessagesCountQueryKey,
+      (response) => ({
+        count: Math.max((response?.count ?? 0) - 1, 0),
+      }),
+    );
+  }
 }

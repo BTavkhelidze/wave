@@ -287,17 +287,6 @@ export function CreateBlogForm() {
     });
   };
 
-  const handleRegenerateCanonicalSlug = () => {
-    const nextSlug = createSlugFromTitle(translations.EN?.title ?? "");
-
-    setHasEditedCanonicalSlug(false);
-    setValue("canonicalSlug", nextSlug, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    });
-  };
-
   return (
     <form
       noValidate
@@ -337,7 +326,6 @@ export function CreateBlogForm() {
             canonicalSlug={canonicalSlug}
             canonicalSlugError={errors.canonicalSlug?.message}
             onCanonicalSlugChange={handleCanonicalSlugChange}
-            onRegenerateCanonicalSlug={handleRegenerateCanonicalSlug}
             onUploadImage={handleUploadInlineImage}
           />
         </div>

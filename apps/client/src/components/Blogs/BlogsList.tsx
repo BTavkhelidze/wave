@@ -9,10 +9,7 @@ import {
   PublicCardSkeleton,
   PublicContentState,
 } from '@/components/shared/public-content/PublicContentState';
-import {
-  getLocalizedBlogSlug,
-  getLocalizedBlogTitle,
-} from './blogs.locale';
+import { getLocalizedBlogSlug, getLocalizedBlogTitle } from './blogs.locale';
 import { usePublicBlogsQuery } from './blogs.queries';
 
 export default function BlogsList() {

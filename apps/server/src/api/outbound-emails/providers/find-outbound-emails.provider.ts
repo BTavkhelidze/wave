@@ -75,7 +75,9 @@ export class FindOutboundEmailsProvider {
   private buildWhere(
     query: FindOutboundEmailsQueryDto,
   ): Prisma.OutboundEmailWhereInput {
-    const where: Prisma.OutboundEmailWhereInput = {};
+    const where: Prisma.OutboundEmailWhereInput = {
+      deletedAt: null,
+    };
 
     if (query.status) {
       where.status = query.status;

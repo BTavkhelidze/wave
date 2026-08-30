@@ -1,4 +1,5 @@
 import type { SendOutboundEmailPayload } from '../model/outboundEmail.types';
+import { getOutboundEmailLanguageLabel } from '../model/outboundEmail.constants';
 
 type SendEmailConfirmationDialogProps = {
   values: SendOutboundEmailPayload;
@@ -43,6 +44,10 @@ export function SendEmailConfirmationDialog({
               <DetailItem label='Recipient name' value={values.recipientName} />
             )}
             <DetailItem label='Recipient email' value={values.recipientEmail} />
+            <DetailItem
+              label='Email language'
+              value={getOutboundEmailLanguageLabel(values.language)}
+            />
             <DetailItem label='Subject' value={values.subject} />
           </dl>
         </div>

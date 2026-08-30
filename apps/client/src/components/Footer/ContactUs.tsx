@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import LabelInputContainer from '../ui/label-input-container';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { usePathname } from 'next/navigation';
 import { useSubmitContactMessageMutation } from './contact/contact.queries';
 
 interface IFormSchema {
@@ -27,8 +28,13 @@ function ContactUs() {
   const [errors, setErrors] = useState<Partial<IFormSchema>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const contactMutation = useSubmitContactMessageMutation();
+  const pathname = usePathname();
 
   const t = useTranslations('Contact');
+
+  useEffect(() => {
+    setSuccessMessage(null);
+  }, [pathname]);
 
   const validate = () => {
     const newErrors: Partial<IFormSchema> = {};

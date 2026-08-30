@@ -1,6 +1,6 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-const SESSION_EXPIRED_EVENT = 'admin-session-expired';
+const SESSION_EXPIRED_EVENT = "admin-session-expired";
 
 type ApiFetchOptions = RequestInit & {
   skipAuthRefresh?: boolean;
@@ -14,14 +14,14 @@ export class ApiRequestError extends Error {
     public readonly status: number,
   ) {
     super(message);
-    this.name = 'ApiRequestError';
+    this.name = "ApiRequestError";
   }
 }
 
 export class AuthRequestError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'AuthRequestError';
+    this.name = "AuthRequestError";
   }
 }
 
@@ -36,18 +36,18 @@ export function isApiRequestError(error: unknown): error is ApiRequestError {
 function emitSessionExpired() {
   window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
 
-  if (window.location.pathname !== '/login') {
-    window.location.assign('/login');
+  if (window.location.pathname !== "/login") {
+    window.location.assign("/login");
   }
 }
 
 async function refreshAccessToken(): Promise<void> {
   refreshTokenRequest ??= fetch(`${API_BASE_URL}/auth/refresh-token`, {
-    method: 'POST',
-    credentials: 'include',
+    method: "POST",
+    credentials: "include",
   }).then(async (response) => {
     if (!response.ok) {
-      throw new AuthRequestError('Session expired');
+      throw new AuthRequestError("Session expired");
     }
   });
 
@@ -60,11 +60,11 @@ async function refreshAccessToken(): Promise<void> {
 
 export async function handleJsonResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) {
-    throw new AuthRequestError('Unauthorized');
+    throw new AuthRequestError("Unauthorized");
   }
 
   if (!response.ok) {
-    const message = await response.text().catch(() => 'Unknown Error');
+    const message = await response.text().catch(() => "Unknown Error");
     throw new ApiRequestError(message, response.status);
   }
 
@@ -77,7 +77,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { skipAuthRefresh, ...requestInit } = init ?? {};
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    credentials: 'include',
+    credentials: "include",
     ...requestInit,
     headers: {
       ...requestInit.headers,
@@ -93,7 +93,7 @@ export async function apiRequest<T>(
     }
 
     const retriedResponse = await fetch(`${API_BASE_URL}${path}`, {
-      credentials: 'include',
+      credentials: "include",
       ...requestInit,
       headers: {
         ...requestInit.headers,
@@ -108,6 +108,56 @@ export async function apiRequest<T>(
   }
 
   return handleJsonResponse<T>(response);
+}
+
+export async function apiRequestNoContent(
+  path: string,
+  init?: ApiFetchOptions,
+): Promise<void> {
+  const { skipAuthRefresh, ...requestInit } = init ?? {};
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    ...requestInit,
+    headers: {
+      ...requestInit.headers,
+    },
+  });
+
+  if (response.status === 401 && !skipAuthRefresh) {
+    try {
+      await refreshAccessToken();
+    } catch (error) {
+      emitSessionExpired();
+      throw error;
+    }
+
+    const retriedResponse = await fetch(`${API_BASE_URL}${path}`, {
+      credentials: "include",
+      ...requestInit,
+      headers: {
+        ...requestInit.headers,
+      },
+    });
+
+    if (retriedResponse.status === 401) {
+      emitSessionExpired();
+    }
+
+    return handleNoContentResponse(retriedResponse);
+  }
+
+  return handleNoContentResponse(response);
+}
+
+async function handleNoContentResponse(response: Response): Promise<void> {
+  if (response.status === 401) {
+    throw new AuthRequestError("Unauthorized");
+  }
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => "Unknown Error");
+    throw new ApiRequestError(message, response.status);
+  }
 }
 
 export function subscribeToSessionExpired(callback: () => void): () => void {
