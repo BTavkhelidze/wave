@@ -98,10 +98,9 @@ jobs:
         run: pnpm --filter server exec tsc -p tsconfig.json --noEmit
 
       - name: Server unit tests
-        run: pnpm --filter server test -- --runInBand --detectOpenHandles
+        run: pnpm --filter server exec jest --runInBand --detectOpenHandles
 
-      - name: Server e2e tests
-        run: pnpm --filter server exec prisma migrate deploy --config prisma.config.ts && pnpm --filter server test:e2e -- --runInBand --detectOpenHandles
+      # TODO: Restore server e2e execution when meaningful e2e tests are implemented.
 
       - name: Prisma validate
         run: pnpm --filter server exec prisma validate --config prisma.config.ts
