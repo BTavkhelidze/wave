@@ -3,16 +3,9 @@
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import type { IconType } from 'react-icons';
 import {
   FaAngleLeft,
   FaAngleRight,
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
@@ -27,20 +20,12 @@ import {
 } from './services.locale';
 import { PublicDetailState } from '../shared/public-content/PublicDetailState';
 import { useRecordPublicView } from '../shared/public-content/useRecordPublicView';
+import { getServiceIcon } from './serviceIcons';
 
 const WavyBackground = dynamic(
   () => import('../ui/wavy-background').then((mod) => mod.WavyBackground),
   { ssr: false },
 );
-
-const SERVICE_ICON_REGISTRY: Record<string, IconType> = {
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
-};
 
 interface SingleServiceProps {
   service: string;
@@ -119,8 +104,7 @@ function SingleService({ service }: SingleServiceProps) {
       />
     );
 
-  const IconComponent =
-    SERVICE_ICON_REGISTRY[currentService.icon] ?? FaTools;
+  const IconComponent = getServiceIcon(currentService.icon);
   const serviceTitle =
     getLocalizedServiceTitle(currentService, locale) ?? 'Service';
   const serviceDescription =

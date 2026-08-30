@@ -1,15 +1,6 @@
 'use client';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import type { IconType } from 'react-icons';
-import {
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
-} from 'react-icons/fa';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { IServices } from '@/Interface/Interface';
@@ -20,15 +11,8 @@ import {
   getLocalizedServiceTitle,
 } from '@/components/services/services.locale';
 import { useTranslations } from 'next-intl';
-
-const SERVICE_ICON_REGISTRY: Record<string, IconType> = {
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
-};
+import { getServiceIcon } from '@/components/services/serviceIcons';
+import type { IconType } from 'react-icons';
 
 type SingleServiceProps = {
   hasServicesError?: boolean;
@@ -61,7 +45,7 @@ function SingleService({
         return items;
       }
 
-      const IconComponent = SERVICE_ICON_REGISTRY[service.icon] ?? FaTools;
+      const IconComponent = getServiceIcon(service.icon);
 
       items.push({
         id: service.id,
@@ -111,7 +95,7 @@ function SingleService({
                     aria-hidden='true'
                     focusable='false'
                   />
-                  <div className='absolute w-full text-base h-[55px] flex items-center bg-[#18181B] text-white bottom-0 text-start px-2 break-words leading-snug'>
+                  <div className='absolute w-full text-sm h-[70px] flex items-center bg-[#18181B] text-white bottom-0 text-start px-2 break-words leading-snug'>
                     {ser.title}
                   </div>
                 </motion.div>
