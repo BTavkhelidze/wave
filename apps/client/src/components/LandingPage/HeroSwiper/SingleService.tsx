@@ -1,53 +1,64 @@
 'use client';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaBolt, FaFireExtinguisher, FaFaucet } from 'react-icons/fa';
-import { GiGearHammer } from 'react-icons/gi';
-import { TbAirConditioning } from 'react-icons/tb';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { ISingleServiceLanding } from '@/Interface/Interface';
+import type { IServices } from '@/Interface/Interface';
+import type { AppLocale } from '@/lib/seo';
+import { buildLocalizedPath } from '@/lib/seo';
+import {
+  getLocalizedServiceSlug,
+  getLocalizedServiceTitle,
+} from '@/components/services/services.locale';
 import { useTranslations } from 'next-intl';
-import { useParams, usePathname } from 'next/navigation';
+import { getServiceIcon } from '@/components/services/serviceIcons';
+import type { IconType } from 'react-icons';
 
-function SingleService() {
+type SingleServiceProps = {
+  hasServicesError?: boolean;
+  locale: AppLocale;
+  services: IServices[];
+};
+
+type LandingServiceCard = {
+  id: string;
+  href: string;
+  IconComponent: IconType;
+  iconColor: string;
+  title: string;
+};
+
+function SingleService({
+  hasServicesError = false,
+  locale,
+  services,
+}: SingleServiceProps) {
   const [isHover, setIsHover] = useState<boolean>(false);
 
   const t = useTranslations('Services');
+  const visibleServices = services.reduce<LandingServiceCard[]>(
+    (items, service) => {
+      const title = getLocalizedServiceTitle(service, locale);
+      const slug = getLocalizedServiceSlug(service, locale);
 
-  const pathName = usePathname();
+      if (!title || !slug) {
+        return items;
+      }
 
-  const { locale } = useParams();
+      const IconComponent = getServiceIcon(service.icon);
 
-  const ka = pathName.includes('ka') ? true : false;
+      items.push({
+        id: service.id,
+        href: buildLocalizedPath(locale, 'services', slug),
+        IconComponent,
+        iconColor: service.iconColor || '#3B82F6',
+        title,
+      });
 
-  const services: ISingleServiceLanding[] = [
-    {
-      id: ka ? 4 : 5,
-      title: t('DesignAndInstallation'),
-      icon: <GiGearHammer className='text-[rgb(37,99,235)] text-3xl' />,
+      return items;
     },
-    {
-      id: ka ? 4 : 5,
-      title: t('Cooling'),
-      icon: <TbAirConditioning className='text-blue-400 text-2xl' />,
-    },
-    {
-      id: ka ? 7 : 6,
-      title: t('FireSafety'),
-      icon: <FaFireExtinguisher className='text-red-300 text-2xl' />,
-    },
-    {
-      id: ka ? 11 : 10,
-      title: t('Electrical'),
-      icon: <FaBolt className='text-yellow-400 text-2xl' />,
-    },
-    {
-      id: ka ? 8 : 9,
-      title: t('Plumbing'),
-      icon: <FaFaucet className='text-green-500 text-2xl' />,
-    },
-  ];
+    [],
+  );
 
   return (
     <div className='w-full  max-w-[1440px] mx-auto my-6 2xl:mx-auto  '>
@@ -55,10 +66,14 @@ function SingleService() {
         {t('ServicesTitle')}
       </h2>
       <ul className='flex  gap-4 mt-4 w-full flex-col sm:flex-row flex-wrap justify-center sm:justify-start'>
-        {services.map((ser, i) => {
+        {visibleServices.map((ser) => {
           return (
-            <li key={i} className='flex items-center justify-center '>
-              <Link href={`/${locale}/services`} className='w-full text-center'>
+            <li key={ser.id} className='flex items-center justify-center '>
+              <Link
+                href={ser.href}
+                className='w-full text-center outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012] rounded-[8px]'
+                aria-label={ser.title}
+              >
                 <motion.div
                   className='relative w-full  sm:w-[230px] h-[180px] cursor-pointer border border-[#18181B] bg-[#0C1013] rounded-[8px] overflow-hidden flex items-center justify-center '
                   whileHover={{
@@ -74,8 +89,13 @@ function SingleService() {
                     ease: 'easeOut',
                   }}
                 >
-                  {ser.icon}
-                  <div className='absolute w-full text-base h-[55px] flex items-center bg-[#18181B] text-white bottom-0 text-start px-2'>
+                  <ser.IconComponent
+                    className='text-3xl'
+                    style={{ color: ser.iconColor }}
+                    aria-hidden='true'
+                    focusable='false'
+                  />
+                  <div className='absolute w-full text-sm h-[70px] flex items-center bg-[#18181B] text-white bottom-0 text-start px-2 break-words leading-snug'>
                     {ser.title}
                   </div>
                 </motion.div>
@@ -84,6 +104,16 @@ function SingleService() {
           );
         })}
       </ul>
+      {hasServicesError && (
+        <p className='text-white/70 mt-4 text-sm' role='status'>
+          {t('servicesUnavailable')}
+        </p>
+      )}
+      {!hasServicesError && visibleServices.length === 0 && (
+        <p className='text-white/70 mt-4 text-sm' role='status'>
+          {t('noServicesFound')}
+        </p>
+      )}
       <Link
         href={`/${locale}/services`}
         className='text-white mt-6 text-sm flex gap-2 cursor-pointer items-center justify-center sm:justify-start '

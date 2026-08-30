@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   AdminAction,
   AdminEntity,
@@ -228,10 +232,14 @@ describe('BlogsService public reads', () => {
     };
   };
   let prismaService: {
+    blogTranslation: {
+      findFirst: jest.Mock<Promise<{ blogId: string } | null>, [unknown]>;
+    };
     blog: {
       findMany: jest.Mock<Promise<BlogList>, [unknown]>;
       count: jest.Mock<Promise<number>, [unknown]>;
       findFirst: jest.Mock<Promise<typeof publishedBlog | null>, [unknown]>;
+      update: jest.Mock<Promise<{ viewCount: number }>, [unknown]>;
     };
     $transaction: jest.Mock<
       Promise<[BlogList, number]>,
@@ -242,6 +250,11 @@ describe('BlogsService public reads', () => {
 
   beforeEach(() => {
     prismaService = {
+      blogTranslation: {
+        findFirst: jest
+          .fn<Promise<{ blogId: string } | null>, [unknown]>()
+          .mockResolvedValue({ blogId: publishedBlog.id }),
+      },
       blog: {
         findMany: jest
           .fn<Promise<BlogList>, [unknown]>()
@@ -250,6 +263,9 @@ describe('BlogsService public reads', () => {
         findFirst: jest
           .fn<Promise<typeof publishedBlog | null>, [unknown]>()
           .mockResolvedValue(publishedBlog),
+        update: jest
+          .fn<Promise<{ viewCount: number }>, [unknown]>()
+          .mockResolvedValue({ viewCount: 11 }),
       },
       $transaction: jest
         .fn<
@@ -298,6 +314,80 @@ describe('BlogsService public reads', () => {
     expect(findFirstWhere?.slug).toBe('published-english-title');
     expect(findFirstWhere?.status).toBe(BlogStatus.PUBLISHED);
     expect(findFirstWhere?.publishedAt?.lte).toBeInstanceOf(Date);
+  });
+
+  it('increments a published blog by localized slug using an atomic operation', async () => {
+    await expect(
+      service.incrementViewCount('published-georgian-title'),
+    ).resolves.toEqual({ viewCount: 11 });
+
+    const [translationArg] =
+      prismaService.blogTranslation.findFirst.mock.calls[0] ?? [];
+
+    expect(translationArg).toMatchObject({
+      where: {
+        slug: 'published-georgian-title',
+        blog: {
+          status: BlogStatus.PUBLISHED,
+        },
+      },
+      select: {
+        blogId: true,
+      },
+    });
+    expect(
+      (
+        translationArg as {
+          where?: { blog?: { publishedAt?: { lte?: unknown } } };
+        }
+      ).where?.blog?.publishedAt?.lte,
+    ).toBeInstanceOf(Date);
+    expect(prismaService.blog.update).toHaveBeenCalledWith({
+      where: {
+        id: publishedBlog.id,
+      },
+      data: {
+        viewCount: {
+          increment: 1,
+        },
+      },
+      select: {
+        viewCount: true,
+      },
+    });
+  });
+
+  it('does not increment an unavailable blog slug', async () => {
+    prismaService.blogTranslation.findFirst.mockResolvedValueOnce(null);
+
+    await expect(
+      service.incrementViewCount('missing-blog'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(prismaService.blog.update).not.toHaveBeenCalled();
+  });
+
+  it('uses atomic increments for concurrent blog view requests', async () => {
+    await Promise.all([
+      service.incrementViewCount('published-georgian-title'),
+      service.incrementViewCount('published-english-title'),
+    ]);
+
+    expect(prismaService.blog.update).toHaveBeenCalledTimes(2);
+    expect(prismaService.blog.update).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: { id: publishedBlog.id },
+        data: { viewCount: { increment: 1 } },
+      }),
+    );
+    expect(prismaService.blog.update).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: { id: publishedBlog.id },
+        data: { viewCount: { increment: 1 } },
+      }),
+    );
   });
 });
 

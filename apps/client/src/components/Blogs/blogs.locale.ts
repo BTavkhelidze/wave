@@ -4,9 +4,14 @@ import type {
   BlogListTranslation,
   BlogTranslation,
 } from './blogs.api';
+import type { AppLocale } from '@/lib/seo';
 
 function getLocaleLanguage(locale: string): 'KA' | 'EN' {
   return locale === 'ka' ? 'KA' : 'EN';
+}
+
+export function getStrictBlogLanguage(locale: AppLocale): 'KA' | 'EN' {
+  return getLocaleLanguage(locale);
 }
 
 function getLocalizedTranslation(
@@ -61,4 +66,11 @@ export function getLocalizedBlogMetaDescription(
   locale: string,
 ): string | null {
   return getLocalizedTranslation(blog, locale)?.metaDescription ?? null;
+}
+
+export function getStrictLocalizedBlogTranslation(
+  blog: BlogDetail,
+  locale: AppLocale,
+): BlogTranslation | undefined {
+  return getLocalizedDetailTranslation(blog, locale);
 }

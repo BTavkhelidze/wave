@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   useForm,
   type SubmitHandler,
@@ -8,6 +8,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { ADMIN_ROUTE_PATHS } from '../../../src/app/router/routes.constants';
 import { useCreateServiceMutation } from '../api/services.queries';
+import { slugifyEnglishTitle } from '../lib/slugifyEnglishTitle';
 import { CREATE_SERVICE_FORM_DEFAULT_VALUES } from '../model/createServiceForm.constants';
 import { CreateServiceFormSchema } from '../model/createServiceForm.schema';
 import type { CreateServiceFormValues } from '../model/service.types';
@@ -16,6 +17,7 @@ import { AnimationColorsField } from './AnimationColorsField';
 export function CreateServiceForm() {
   const navigate = useNavigate();
   const [createdServiceId, setCreatedServiceId] = useState<string | null>(null);
+  const [hasEditedSlug, setHasEditedSlug] = useState(false);
   const createServiceMutation = useCreateServiceMutation();
   const {
     register,
@@ -31,10 +33,35 @@ export function CreateServiceForm() {
   });
   const iconColor = watch('iconColor');
   const animationColors = watch('animationColors');
+  const englishTitle = watch('enTitle');
+  const englishSlug = watch('enSlug');
+  const georgianSlug = watch('kaSlug');
   const submitError =
     createServiceMutation.error instanceof Error
       ? createServiceMutation.error.message
       : null;
+
+  useEffect(() => {
+    if (hasEditedSlug) {
+      return;
+    }
+
+    const nextSlug = slugifyEnglishTitle(englishTitle);
+
+    if (englishSlug !== nextSlug) {
+      setValue('enSlug', nextSlug, {
+        shouldDirty: Boolean(englishTitle),
+        shouldValidate: Boolean(englishTitle),
+      });
+    }
+
+    if (georgianSlug !== nextSlug) {
+      setValue('kaSlug', nextSlug, {
+        shouldDirty: Boolean(englishTitle),
+        shouldValidate: Boolean(englishTitle),
+      });
+    }
+  }, [englishSlug, englishTitle, georgianSlug, hasEditedSlug, setValue]);
 
   const onSubmit: SubmitHandler<CreateServiceFormValues> = async (values) => {
     setCreatedServiceId(null);
@@ -43,6 +70,7 @@ export function CreateServiceForm() {
       const createdService = await createServiceMutation.mutateAsync(values);
 
       setCreatedServiceId(createdService.id);
+      setHasEditedSlug(false);
       reset(CREATE_SERVICE_FORM_DEFAULT_VALUES);
     } catch {
       setCreatedServiceId(null);
@@ -118,7 +146,9 @@ export function CreateServiceForm() {
           slugField={{
             id: 'create-service-ka-slug',
             error: errors.kaSlug?.message,
-            registration: register('kaSlug'),
+            registration: register('kaSlug', {
+              onChange: () => setHasEditedSlug(true),
+            }),
           }}
           metaTitleField={{
             id: 'create-service-ka-meta-title',
@@ -147,7 +177,9 @@ export function CreateServiceForm() {
           slugField={{
             id: 'create-service-en-slug',
             error: errors.enSlug?.message,
-            registration: register('enSlug'),
+            registration: register('enSlug', {
+              onChange: () => setHasEditedSlug(true),
+            }),
           }}
           metaTitleField={{
             id: 'create-service-en-meta-title',

@@ -4,16 +4,6 @@ import React from 'react';
 
 import { motion } from 'framer-motion';
 
-import type { IconType } from 'react-icons';
-import {
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
-} from 'react-icons/fa';
-
 import Link from 'next/link';
 import { TextGenerateEffect } from '../ui/text-generate-effect';
 import { cn } from '@/lib/utils';
@@ -27,15 +17,7 @@ import {
   PublicCardSkeleton,
   PublicContentState,
 } from '../shared/public-content/PublicContentState';
-
-const SERVICE_ICON_REGISTRY: Record<string, IconType> = {
-  FaBolt,
-  FaFaucet,
-  FaFireExtinguisher,
-  FaSnowflake,
-  FaTools,
-  FaWind,
-};
+import { getServiceIcon } from './serviceIcons';
 
 function ServisesListS2() {
   const locale = useLocale();
@@ -86,8 +68,7 @@ function ServisesListS2() {
 
           {services &&
             services.map((ser) => {
-              const IconComponent =
-                SERVICE_ICON_REGISTRY[ser.icon] ?? FaTools;
+              const IconComponent = getServiceIcon(ser.icon);
               const serviceTitle =
                 getLocalizedServiceTitle(ser, locale) ?? 'Service';
               const serviceSlug =
@@ -97,7 +78,7 @@ function ServisesListS2() {
                 <li key={ser.id} className='flex  mt-4 sm:mt-10'>
                   <Link
                     href={`/${locale}/services/${serviceSlug}`}
-                    className='relative w-full sm:w-[230px] rounded-[8px] outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
+                    className='relative w-full sm:w-55 rounded-[8px] outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1012]'
                     aria-label={serviceTitle}
                   >
                     <motion.div
@@ -125,7 +106,7 @@ function ServisesListS2() {
                       }
 
                       <div
-                        className={`absolute w-full min-h-[65px] text-sm flex items-center bg-[#18181B] text-white bottom-0 text-start px-2 wrap-break-word leading-snug`}
+                        className={`absolute w-full min-h-[70px] text-sm flex items-center bg-[#18181B] text-white bottom-0 text-start px-2 wrap-break-word leading-snug`}
                       >
                         {serviceTitle}
                       </div>

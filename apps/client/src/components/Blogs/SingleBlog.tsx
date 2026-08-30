@@ -14,8 +14,10 @@ import {
   getLocalizedBlogTitle,
 } from './blogs.locale';
 import { usePublicBlogDetailQuery } from './blogs.queries';
+import { recordPublicBlogView } from './blogs.api';
 import { SafeBlogContent } from './SafeBlogContent';
 import { PublicDetailState } from '../shared/public-content/PublicDetailState';
+import { useRecordPublicView } from '../shared/public-content/useRecordPublicView';
 
 function formatPublicationDate(
   date: string | null,
@@ -42,6 +44,13 @@ export default function SingleBlog({ blog: blogSlug }: { blog: string }) {
     isError,
     error,
   } = usePublicBlogDetailQuery(locale, blogSlug);
+
+  useRecordPublicView({
+    entityType: 'blog',
+    entityId: blog?.id,
+    slug: blogSlug,
+    recordView: recordPublicBlogView,
+  });
 
   if (isPending) {
     return (

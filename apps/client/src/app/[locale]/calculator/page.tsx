@@ -1,11 +1,32 @@
 import Calculator from '@/components/Calculator/Calculator';
 import CompanyName from '@/components/LandingPage/companyName';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildStaticPageJsonLd, buildStaticPageMetadata } from '@/lib/seo';
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-async function page() {
+type CalculatorPageProps = {
+  params: Promise<{
+    locale: string;
+  }>;
+};
+
+export async function generateMetadata({
+  params,
+}: CalculatorPageProps): Promise<Metadata> {
+  const { locale } = await params;
+
+  return buildStaticPageMetadata('calculator', locale);
+}
+
+async function page({ params }: CalculatorPageProps) {
+  const { locale } = await params;
+  const jsonLd = buildStaticPageJsonLd('calculator', locale);
   const calcI8N = await getTranslations('calculator');
+
   return (
     <main className='relative flex-1   w-full  justify-center items-center  flex flex-col pt-0 md:pt-30  pb-[50px] xl:px-[8%] px-6'>
+      <JsonLd data={jsonLd} />
       <div className='w-full' id='top'></div>
       <div className='w-full'>
         <CompanyName />

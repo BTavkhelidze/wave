@@ -3,6 +3,17 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
 import { buildBusinessEmailContent } from './templates/business-email.template';
+import {
+  buildButton,
+  buildFinalInfoRow,
+  buildInfoPanel,
+  buildInfoRow,
+  buildMutedText,
+  buildParagraph,
+  buildWarningText,
+  buildWaveEmailLayout,
+  escapeHtml,
+} from './templates/wave-email-layout.template';
 
 export type SendMailInput = {
   to: string;
@@ -79,6 +90,7 @@ export class MailService {
   ): Promise<BusinessEmailDeliveryResult> {
     const content = buildBusinessEmailContent({
       recipientName: input.recipientName,
+      subject: input.subject,
       heading: input.heading,
       message: input.message,
       buttonText: input.buttonText,
@@ -285,35 +297,39 @@ export class MailService {
     loginUrl: string;
     reason: TemporaryPasswordReason;
   }): string {
-    const safeEmail = this.escapeHtml(email);
-    const safeTemporaryPassword = this.escapeHtml(temporaryPassword);
-    const safeLoginUrl = this.escapeHtml(loginUrl);
+    const safeEmail = escapeHtml(email);
+    const safeTemporaryPassword = escapeHtml(temporaryPassword);
+    const safeLoginUrl = escapeHtml(loginUrl);
     const intro =
       reason === 'USER_CREATED'
         ? 'Your Wave Engineering admin account has been created.'
         : 'A Wave Engineering administrator has reset your password.';
 
-    return `
-      <div style="margin:0;padding:0;background:#F8FAFC;">
-        <div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:Arial,Helvetica,sans-serif;color:#111827;line-height:1.6;">
-          <div style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:24px;">
-            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827;">Wave Engineering</h1>
-            <p style="margin:0 0 20px;font-size:15px;">${intro}</p>
-            <p style="margin:0 0 22px;">
-              <a href="${safeLoginUrl}" style="display:inline-block;padding:12px 18px;border-radius:6px;background:#111827;color:#FFFFFF;text-decoration:none;font-weight:700;">Open admin panel</a>
-            </p>
-            <div style="margin:0 0 20px;padding:16px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;">
-              <p style="margin:0 0 8px;"><strong>Admin panel:</strong> <a href="${safeLoginUrl}" style="color:#2563EB;">${safeLoginUrl}</a></p>
-              <p style="margin:0 0 8px;"><strong>Email:</strong> ${safeEmail}</p>
-              <p style="margin:0;"><strong>One-time password:</strong> <span style="font-family:Consolas,Monaco,monospace;">${safeTemporaryPassword}</span></p>
-            </div>
-            <p style="margin:0 0 12px;color:#92400E;"><strong>Security notice:</strong> this password must be changed immediately after your first login.</p>
-            <p style="margin:0 0 16px;">Do not share this password with anyone.</p>
-            <p style="margin:0;color:#6B7280;">If you did not expect this email, ignore it and contact your administrator.</p>
-          </div>
-        </div>
-      </div>
-    `;
+    return buildWaveEmailLayout({
+      preheader: intro,
+      contentHtml: [
+        buildParagraph(escapeHtml(intro)),
+        buildButton({ href: safeLoginUrl, label: 'Open admin panel' }),
+        buildInfoPanel([
+          buildInfoRow(
+            'Admin panel',
+            `<a href="${safeLoginUrl}" style="color:#2563EB;">${safeLoginUrl}</a>`,
+          ),
+          buildInfoRow('Email', safeEmail),
+          buildFinalInfoRow(
+            'One-time password',
+            `<span style="font-family:Consolas,Monaco,monospace;">${safeTemporaryPassword}</span>`,
+          ),
+        ]),
+        buildWarningText(
+          '<strong>Security notice:</strong> this password must be changed immediately after your first login.',
+        ),
+        buildParagraph('Do not share this password with anyone.'),
+        buildMutedText(
+          'If you did not expect this email, ignore it and contact your administrator.',
+        ),
+      ].join(''),
+    });
   }
 
   private buildContactText({
@@ -339,10 +355,10 @@ export class MailService {
   }: ContactMessageMailInput): string {
     return `
       <h2>New contact message</h2>
-      <p><strong>Name:</strong> ${this.escapeHtml(name)}</p>
-      <p><strong>Email:</strong> ${this.escapeHtml(email)}</p>
+      <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
       <p><strong>Message:</strong></p>
-      <p>${this.escapeHtml(message).replace(/\n/g, '<br>')}</p>
+      <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
     `;
   }
 
@@ -378,22 +394,20 @@ export class MailService {
     contactMessage: NewContactMessageNotificationInput;
     adminMessagesUrl: string;
   }): string {
-    const safeAdminMessagesUrl = this.escapeHtml(adminMessagesUrl);
-    const safeFullName = this.escapeHtml(contactMessage.fullName);
-    const safeEmail = this.escapeHtml(contactMessage.email);
+    const safeAdminMessagesUrl = escapeHtml(adminMessagesUrl);
+    const safeFullName = escapeHtml(contactMessage.fullName);
+    const safeEmail = escapeHtml(contactMessage.email);
     const safePhone = contactMessage.phone
-      ? this.escapeHtml(contactMessage.phone)
+      ? escapeHtml(contactMessage.phone)
       : undefined;
     const safeSubject = contactMessage.subject
-      ? this.escapeHtml(contactMessage.subject)
+      ? escapeHtml(contactMessage.subject)
       : undefined;
-    const safeMessage = this.escapeHtml(contactMessage.message).replace(
+    const safeMessage = escapeHtml(contactMessage.message).replace(
       /\n/g,
       '<br>',
     );
-    const safeReceivedAt = this.escapeHtml(
-      contactMessage.createdAt.toISOString(),
-    );
+    const safeReceivedAt = escapeHtml(contactMessage.createdAt.toISOString());
 
     return `
       <div style="margin:0;padding:0;background:#F8FAFC;">
@@ -464,15 +478,6 @@ export class MailService {
       .slice(0, 100);
 
     return normalizedValue || 'SMTP_DELIVERY_FAILED';
-  }
-
-  private escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 
   private logMailDeliveryError(error: unknown): void {
