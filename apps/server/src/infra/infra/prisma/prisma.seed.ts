@@ -22,23 +22,37 @@ async function main() {
   await prisma.serviceTranslation.deleteMany({});
   await prisma.service.deleteMany({});
 
+  await prisma.$transaction([
+    prisma.serviceTranslation.deleteMany({}),
+    prisma.service.deleteMany({}),
+  ]);
+
   for (const service of services) {
     await prisma.service.create({
       data: {
-        icon: service.icon?.trim() ?? null,
-        iconColor: service.iconColor?.trim() ?? null,
-        animationColors: service.animationColors,
+        icon: service.icon.trim(),
+        iconColor: service.iconColor.trim(),
+        sortOrder: service.sortOrder,
+        animationColors: [...service.animationColors],
         translations: {
-          create: service.translations.map((translation, index) => {
-            const normalizedSlug = normalizeServiceSlug(translation.title);
+          create: service.translations.map((translation) => {
+            const normalizedSlug = normalizeServiceSlug(
+              translation.slug.trim(),
+            );
+
+            if (!normalizedSlug) {
+              throw new Error(
+                `Invalid service slug: language=${translation.language}, title=${translation.title}`,
+              );
+            }
 
             return {
               language: translation.language,
               title: translation.title.trim(),
-              description: translation.description?.trim() ?? null,
-              slug:
-                normalizedSlug ||
-                `service-${index + 1}-${translation.language.toLowerCase()}`,
+              slug: normalizedSlug,
+              description: translation.description.trim(),
+              metaTitle: translation.metaTitle.trim(),
+              metaDescription: translation.metaDescription.trim(),
             };
           }),
         },

@@ -84,6 +84,29 @@ export class BlogsController {
     return this.blogsService.findPublicBySlug(slug);
   }
 
+  @Post('public/:slug/view')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Record a public blog detail page view by localized slug',
+    description:
+      'Applies route-specific in-memory throttling only; session-level deduplication is handled by the public client.',
+  })
+  @ApiParam({ name: 'slug', example: 'fire-safety-checklist' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        viewCount: 15,
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Blog not found.' })
+  public incrementPublicViewCount(
+    @Param('slug') slug: string,
+  ): Promise<BlogViewCountResponse> {
+    return this.blogsService.incrementViewCount(slug);
+  }
+
   @Post('slug/:slug/view')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 20, ttl: 60_000 } })

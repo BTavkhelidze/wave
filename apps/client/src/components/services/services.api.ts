@@ -7,9 +7,27 @@ import {
   readOptionalString,
   readRequiredString,
 } from '@/lib/api';
+import { buildPublicContentFetchInit } from '@/lib/seo';
 import { getSafeServiceAnimationColors } from './serviceAnimationColors';
 
 const SERVICES_PUBLIC_PATH = '/services/public';
+
+export async function recordPublicServiceView(slug: string): Promise<void> {
+  const response = await fetch(
+    `${getApiBaseUrl()}${SERVICES_PUBLIC_PATH}/${encodeURIComponent(slug)}/view`,
+    {
+      method: 'POST',
+      keepalive: true,
+    },
+  );
+
+  if (!response.ok) {
+    throw new ApiRequestError(
+      await getResponseErrorMessage(response, 'Service view request'),
+      response.status,
+    );
+  }
+}
 
 function parsePublicService(value: unknown, index: number): IServices {
   const context = `service response item ${index}`;
@@ -39,11 +57,10 @@ function parsePublicService(value: unknown, index: number): IServices {
 export async function fetchPublicServices(
   signal?: AbortSignal,
 ): Promise<IServices[]> {
-  const response = await fetch(`${getApiBaseUrl()}${SERVICES_PUBLIC_PATH}`, {
-    signal,
-  });
-
-  console.log('fetchPublicServices response:', response);
+  const response = await fetch(
+    `${getApiBaseUrl()}${SERVICES_PUBLIC_PATH}`,
+    buildPublicContentFetchInit(signal),
+  );
 
   if (!response.ok) {
     throw new ApiRequestError(

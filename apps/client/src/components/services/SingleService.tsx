@@ -19,12 +19,14 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePublicServicesQuery } from './services.queries';
+import { recordPublicServiceView } from './services.api';
 import {
   getLocalizedServiceDescription,
   matchesLocalizedServiceSlug,
   getLocalizedServiceTitle,
 } from './services.locale';
 import { PublicDetailState } from '../shared/public-content/PublicDetailState';
+import { useRecordPublicView } from '../shared/public-content/useRecordPublicView';
 
 const WavyBackground = dynamic(
   () => import('../ui/wavy-background').then((mod) => mod.WavyBackground),
@@ -62,6 +64,18 @@ function SingleService({ service }: SingleServiceProps) {
     setCurIndex(index);
   }, [locale, service, services]);
 
+  const currentService =
+    services && curIndex !== null && curIndex >= 0
+      ? services[curIndex]
+      : undefined;
+
+  useRecordPublicView({
+    entityType: 'service',
+    entityId: currentService?.id,
+    slug: service,
+    recordView: recordPublicServiceView,
+  });
+
   if (isPending)
     return (
       <PublicDetailState
@@ -92,9 +106,6 @@ function SingleService({ service }: SingleServiceProps) {
         isLoading
       />
     );
-
-  const currentService =
-    services && curIndex >= 0 ? services[curIndex] : undefined;
 
   if (!currentService)
     return (

@@ -255,9 +255,28 @@ export class BlogsService {
     const normalizedSlug = this.normalizeAndValidateSlug(slug);
 
     try {
-      const blog = await this.prismaService.blog.update({
+      const translation = await this.prismaService.blogTranslation.findFirst({
         where: {
           slug: normalizedSlug,
+          blog: {
+            status: BlogStatus.PUBLISHED,
+            publishedAt: {
+              lte: new Date(),
+            },
+          },
+        },
+        select: {
+          blogId: true,
+        },
+      });
+
+      if (!translation) {
+        throw new NotFoundException('Blog not found');
+      }
+
+      const blog = await this.prismaService.blog.update({
+        where: {
+          id: translation.blogId,
         },
         data: {
           viewCount: {
@@ -278,6 +297,11 @@ export class BlogsService {
       if (error instanceof HttpException) {
         throw error;
       }
+
+      this.logger.error(
+        'Blog view count increment failed',
+        error instanceof Error ? error.stack : undefined,
+      );
 
       throw new InternalServerErrorException(
         'Could not increment blog view count',

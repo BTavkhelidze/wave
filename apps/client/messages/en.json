@@ -42,7 +42,9 @@
 
     "Plumbing": "Plumbing",
 
-    "SeeAllServises": "See all Services"
+    "SeeAllServises": "See all Services",
+    "servicesUnavailable": "Services are unavailable right now.",
+    "noServicesFound": "No services found."
   },
   "Blogs": {
     "title": "Blogs",

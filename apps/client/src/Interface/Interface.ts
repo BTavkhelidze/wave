@@ -1,9 +1,3 @@
-export interface ISingleServiceLanding {
-  id: number;
-  title: string;
-  icon: React.JSX.Element;
-}
-
 export interface IServices {
   id: string;
   title_ka?: string;

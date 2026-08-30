@@ -23,6 +23,7 @@ import {
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import {
   PublicServiceResponse,
+  ServiceViewCountResponse,
   ServicesAnalyticsResponse,
   ServicesService,
 } from './services.service';
@@ -124,6 +125,33 @@ export class ServicesController {
   })
   getAnalytics(): Promise<ServicesAnalyticsResponse> {
     return this.servicesService.getAnalytics();
+  }
+
+  @Post('public/:slug/view')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Record a public service detail page view by localized slug',
+    description:
+      'Applies route-specific in-memory throttling only; session-level deduplication is handled by the public client.',
+  })
+  @ApiParam({
+    name: 'slug',
+    example: 'ventilation-systems',
+    description: 'Public service slug in the current locale',
+  })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        viewCount: 15,
+      },
+    },
+  })
+  @ApiNotFoundResponse({ description: 'Service not found.' })
+  incrementPublicViewCountBySlug(
+    @Param('slug') slug: string,
+  ): Promise<ServiceViewCountResponse> {
+    return this.servicesService.incrementPublicViewCountBySlug(slug);
   }
 
   @UseGuards(AccessTokenGuard, RolesGuard)

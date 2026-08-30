@@ -1,4 +1,21 @@
 import type { IServices } from '@/Interface/Interface';
+import type { AppLocale } from '@/lib/seo';
+
+function getStrictLocalizedServiceField(
+  service: IServices,
+  locale: AppLocale,
+  field:
+    | 'title'
+    | 'description'
+    | 'slug'
+    | 'metaTitle'
+    | 'metaDescription',
+): string | undefined {
+  const fieldName = `${field}_${locale}` as keyof IServices;
+  const value = service[fieldName];
+
+  return typeof value === 'string' ? value : undefined;
+}
 
 export function getLocalizedServiceTitle(
   service: IServices,
@@ -54,4 +71,39 @@ export function matchesLocalizedServiceSlug(
     service.id === serviceParam ||
     getLocalizedServiceSlug(service, locale) === serviceParam
   );
+}
+
+export function getStrictLocalizedServiceTitle(
+  service: IServices,
+  locale: AppLocale,
+): string | undefined {
+  return getStrictLocalizedServiceField(service, locale, 'title');
+}
+
+export function getStrictLocalizedServiceDescription(
+  service: IServices,
+  locale: AppLocale,
+): string | undefined {
+  return getStrictLocalizedServiceField(service, locale, 'description');
+}
+
+export function getStrictLocalizedServiceSlug(
+  service: IServices,
+  locale: AppLocale,
+): string | undefined {
+  return getStrictLocalizedServiceField(service, locale, 'slug');
+}
+
+export function getStrictLocalizedServiceMetaTitle(
+  service: IServices,
+  locale: AppLocale,
+): string | undefined {
+  return getStrictLocalizedServiceField(service, locale, 'metaTitle');
+}
+
+export function getStrictLocalizedServiceMetaDescription(
+  service: IServices,
+  locale: AppLocale,
+): string | undefined {
+  return getStrictLocalizedServiceField(service, locale, 'metaDescription');
 }

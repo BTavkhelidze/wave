@@ -6,11 +6,30 @@ import {
   readOptionalString,
   readRequiredString,
 } from '@/lib/api';
+import { buildPublicContentFetchInit } from '@/lib/seo';
 
 const BLOGS_PUBLIC_PATH = '/blogs';
 const BLOGS_PUBLIC_DETAIL_PATH = '/blogs/slug';
+const BLOGS_PUBLIC_VIEW_PATH = '/blogs/public';
 
 export type BlogLanguage = 'EN' | 'KA';
+
+export async function recordPublicBlogView(slug: string): Promise<void> {
+  const response = await fetch(
+    `${getApiBaseUrl()}${BLOGS_PUBLIC_VIEW_PATH}/${encodeURIComponent(slug)}/view`,
+    {
+      method: 'POST',
+      keepalive: true,
+    },
+  );
+
+  if (!response.ok) {
+    throw new ApiRequestError(
+      await getResponseErrorMessage(response, 'Blog view request'),
+      response.status,
+    );
+  }
+}
 
 export interface BlogTranslation {
   id: string;
@@ -195,7 +214,7 @@ async function fetchBlogDetailBySlug(
 ): Promise<BlogDetail> {
   const response = await fetch(
     `${getApiBaseUrl()}${BLOGS_PUBLIC_DETAIL_PATH}/${encodeURIComponent(slug)}`,
-    { signal },
+    buildPublicContentFetchInit(signal),
   );
 
   if (!response.ok) {
@@ -218,7 +237,7 @@ export async function fetchPublicBlogs(
   });
   const response = await fetch(
     `${getApiBaseUrl()}${BLOGS_PUBLIC_PATH}?${searchParams.toString()}`,
-    { signal },
+    buildPublicContentFetchInit(signal),
   );
 
   if (!response.ok) {

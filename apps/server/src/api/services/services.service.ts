@@ -4,6 +4,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -35,6 +36,10 @@ export interface PublicServiceResponse {
   animationColors: string[];
 }
 
+export interface ServiceViewCountResponse {
+  viewCount: number;
+}
+
 export interface ServicesAnalyticsResponse {
   services: {
     total: number;
@@ -55,13 +60,16 @@ export interface ServicesAnalyticsResponse {
 
 @Injectable()
 export class ServicesService {
+  private readonly logger = new Logger(ServicesService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
-  async incrementViewCount(id: string): Promise<{ viewCount: number }> {
+  async incrementViewCount(id: string): Promise<ServiceViewCountResponse> {
     try {
       const existingService = await this.prisma.service.findFirst({
         where: {
           id,
+          isActive: true,
           deletedAt: null,
         },
         select: {
@@ -99,6 +107,72 @@ export class ServicesService {
       ) {
         throw new NotFoundException('Service not found');
       }
+
+      this.logger.error(
+        'Service view count increment failed',
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      throw new InternalServerErrorException(
+        'Could not increment service view count',
+      );
+    }
+  }
+
+  async incrementPublicViewCountBySlug(
+    slug: string,
+  ): Promise<ServiceViewCountResponse> {
+    const normalizedSlug = this.normalizeRequiredSlug(slug);
+
+    try {
+      const translation = await this.prisma.serviceTranslation.findFirst({
+        where: {
+          slug: normalizedSlug,
+          service: {
+            isActive: true,
+            deletedAt: null,
+          },
+        },
+        select: {
+          serviceId: true,
+        },
+      });
+
+      if (!translation) {
+        throw new NotFoundException('Service not found');
+      }
+
+      const service = await this.prisma.service.update({
+        where: {
+          id: translation.serviceId,
+        },
+        data: {
+          viewCount: {
+            increment: 1,
+          },
+        },
+        select: {
+          viewCount: true,
+        },
+      });
+
+      return service;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new NotFoundException('Service not found');
+      }
+
+      this.logger.error(
+        'Service public view count increment failed',
+        error instanceof Error ? error.stack : undefined,
+      );
 
       throw new InternalServerErrorException(
         'Could not increment service view count',
