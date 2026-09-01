@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OutboundEmailStatus, UserRole } from '@prisma/client';
+import { Language, OutboundEmailStatus, UserRole } from '@prisma/client';
 
 class OutboundEmailSenderDto {
   @ApiProperty({ example: 'ab5a4c0f-7e19-42c3-8b95-905599b46c25' })
@@ -28,6 +28,9 @@ export class SendOutboundEmailDataDto {
   @ApiProperty({ example: 'Fire Protection System Proposal' })
   subject: string;
 
+  @ApiProperty({ enum: Language, example: Language.EN })
+  language: Language;
+
   @ApiProperty({ enum: OutboundEmailStatus, example: OutboundEmailStatus.SENT })
   status: OutboundEmailStatus;
 
@@ -55,6 +58,9 @@ export class OutboundEmailListItemDto {
 
   @ApiProperty({ example: 'Fire Protection System Proposal' })
   subject: string;
+
+  @ApiProperty({ enum: Language, example: Language.EN })
+  language: Language;
 
   @ApiProperty({ enum: OutboundEmailStatus, example: OutboundEmailStatus.SENT })
   status: OutboundEmailStatus;

@@ -23,6 +23,7 @@ export class GetUnreadContactMessageCountProvider {
       const count = await this.prismaService.contactMessage.count({
         where: {
           status: MessageStatus.UNREAD,
+          deletedAt: null,
         },
       });
 

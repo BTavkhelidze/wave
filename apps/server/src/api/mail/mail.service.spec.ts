@@ -1,5 +1,6 @@
 import type { MailerService } from '@nestjs-modules/mailer';
 import type { ConfigType } from '@nestjs/config';
+import { Language } from '@prisma/client';
 import appConfig from 'src/config/app.config';
 import { MailDeliveryError, MailService } from './mail.service';
 
@@ -80,18 +81,72 @@ describe('MailService', () => {
     expect(input?.html).toContain('WAVE');
     expect(input?.html).toContain('Water Air Voltage Engineering');
     expect(input?.html).not.toContain('<img');
-    expect(input?.html).toContain('Hello Ana &lt;Admin&gt;,');
+    expect(input?.html).not.toContain('Hello, Ana &lt;Admin&gt;!');
     expect(input?.html).toContain('Project &lt;Update&gt;');
-    expect(input?.html).toContain('Quarterly &lt;Plan&gt;');
+    expect(input?.html).not.toContain('<strong>Subject:</strong>');
     expect(input?.html).toContain('Line &lt;one&gt;<br>Line &amp; two');
     expect(input?.html).toContain('Open &lt;Plan&gt;');
     expect(input?.html).toContain(
       'href="https://example.com/plan?x=1&amp;y=2"',
     );
-    expect(input?.text).toContain('Hello Ana <Admin>,');
+    expect(input?.text).not.toContain('Hello, Ana <Admin>!');
+    expect(input?.text).toContain('Project <Update>\n\nLine <one>');
     expect(input?.text).toContain(
       'Open <Plan>: https://example.com/plan?x=1&y=2',
     );
+  });
+
+  it('does not add ComposeEmail greetings from recipient names', async () => {
+    await service.sendBusinessEmail({
+      to: 'client@example.com',
+      subject: 'Georgian update',
+      language: Language.KA,
+      recipientName: 'Beqa Tavkhelidze',
+      message: 'Message body',
+    });
+
+    const input = sendMail.mock.calls[0]?.[0] as
+      | { html?: string; text?: string }
+      | undefined;
+    const greeting =
+      '\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0, Beqa Tavkhelidze!';
+
+    expect(input?.html).not.toContain(greeting);
+    expect(input?.text).not.toContain(greeting);
+    expect(input?.html).toContain('Message body');
+    expect(input?.text).toContain('Message body');
+  });
+
+  it('does not add ComposeEmail greetings without recipient names', async () => {
+    await service.sendBusinessEmail({
+      to: 'client@example.com',
+      subject: 'English update',
+      language: Language.EN,
+      message: 'Message body',
+    });
+
+    await service.sendBusinessEmail({
+      to: 'client@example.com',
+      subject: 'Georgian update',
+      language: Language.KA,
+      message: 'Message body',
+    });
+
+    const englishInput = sendMail.mock.calls[0]?.[0] as
+      | { html?: string; text?: string }
+      | undefined;
+    const georgianInput = sendMail.mock.calls[1]?.[0] as
+      | { html?: string; text?: string }
+      | undefined;
+    const georgianGreeting =
+      '\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0!';
+
+    expect(englishInput?.html).not.toContain('Hello!');
+    expect(englishInput?.text).not.toContain('Hello!');
+    expect(georgianInput?.html).not.toContain(georgianGreeting);
+    expect(georgianInput?.text).not.toContain(georgianGreeting);
+    expect(englishInput?.text?.startsWith('Message body')).toBe(true);
+    expect(georgianInput?.text?.startsWith('Message body')).toBe(true);
   });
 
   it('omits the ComposeEmail button when the URL is not safe', async () => {

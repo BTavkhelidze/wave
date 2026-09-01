@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import {
   FaAngleLeft,
   FaAngleRight,
@@ -15,6 +16,7 @@ import { usePublicServicesQuery } from './services.queries';
 import { recordPublicServiceView } from './services.api';
 import {
   getLocalizedServiceDescription,
+  getLocalizedServiceSlug,
   matchesLocalizedServiceSlug,
   getLocalizedServiceTitle,
 } from './services.locale';
@@ -32,32 +34,33 @@ interface SingleServiceProps {
 }
 
 function SingleService({ service }: SingleServiceProps) {
-  const [curIndex, setCurIndex] = useState<number | null>(null);
   const [isHover, setIsHover] = useState<boolean>(false);
+  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('Services');
 
   const { data: services, isPending, isError } = usePublicServicesQuery(locale);
 
-  useEffect(() => {
-    if (!services) return;
+  const curIndex = useMemo(() => {
+    if (!services) return null;
 
-    const index = services.findIndex((el) =>
+    return services.findIndex((el) =>
       matchesLocalizedServiceSlug(el, locale, service),
     );
-
-    setCurIndex(index);
   }, [locale, service, services]);
 
   const currentService =
     services && curIndex !== null && curIndex >= 0
       ? services[curIndex]
       : undefined;
+  const currentServiceSlug = currentService
+    ? (getLocalizedServiceSlug(currentService, locale) ?? currentService.id)
+    : service;
 
   useRecordPublicView({
     entityType: 'service',
     entityId: currentService?.id,
-    slug: service,
+    slug: currentServiceSlug,
     recordView: recordPublicServiceView,
   });
 
@@ -110,16 +113,27 @@ function SingleService({ service }: SingleServiceProps) {
   const serviceDescription =
     getLocalizedServiceDescription(currentService, locale) ?? '';
 
+  const getServiceHref = (index: number) => {
+    const targetService = services?.[index];
+
+    if (!targetService) return null;
+
+    const targetSlug =
+      getLocalizedServiceSlug(targetService, locale) ?? targetService.id;
+
+    return `/${locale}/services/${encodeURIComponent(targetSlug)}`;
+  };
+
   const handlePrev = () => {
-    if (curIndex > 0) {
-      setCurIndex((prev) => (prev === null ? prev : prev - 1));
-    }
+    const href = getServiceHref(curIndex - 1);
+
+    if (href) router.push(href);
   };
 
   const handleNext = () => {
-    if (services && curIndex < services.length - 1) {
-      setCurIndex((prev) => (prev === null ? prev : prev + 1));
-    }
+    const href = getServiceHref(curIndex + 1);
+
+    if (href) router.push(href);
   };
 
   return (
@@ -155,7 +169,7 @@ function SingleService({ service }: SingleServiceProps) {
         </div>
 
         <div
-          key={curIndex}
+          key={currentService.id}
           className='flex flex-col gap-10 max-w-[100%] w-full md:max-w-[80%] lg:max-w-[70%] px-6 sm:px-10 md:px-14 '
         >
           <IconComponent

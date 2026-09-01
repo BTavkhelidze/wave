@@ -1,5 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Language } from '@prisma/client';
 import type { ConfigType } from '@nestjs/config';
 import appConfig from 'src/config/app.config';
 import { buildBusinessEmailContent } from './templates/business-email.template';
@@ -51,6 +52,7 @@ export type BusinessEmailMailInput = {
   to: string;
   subject: string;
   recipientName?: string;
+  language?: Language;
   heading?: string;
   message: string;
   buttonText?: string;
@@ -90,6 +92,7 @@ export class MailService {
   ): Promise<BusinessEmailDeliveryResult> {
     const content = buildBusinessEmailContent({
       recipientName: input.recipientName,
+      language: input.language ?? Language.EN,
       subject: input.subject,
       heading: input.heading,
       message: input.message,

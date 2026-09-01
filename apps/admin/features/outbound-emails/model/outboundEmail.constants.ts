@@ -1,4 +1,5 @@
 import type {
+  OutboundEmailLanguage,
   OutboundEmailStatus,
   SendOutboundEmailPayload,
 } from './outboundEmail.types';
@@ -16,9 +17,23 @@ export const OUTBOUND_EMAIL_STATUS_LABELS: Record<OutboundEmailStatus, string> =
     FAILED: 'Failed',
   };
 
+export const OUTBOUND_EMAIL_LANGUAGES = [
+  'KA',
+  'EN',
+] as const satisfies readonly OutboundEmailLanguage[];
+
+export const OUTBOUND_EMAIL_LANGUAGE_LABELS: Record<
+  OutboundEmailLanguage,
+  string
+> = {
+  KA: '\u10E5\u10D0\u10E0\u10D7\u10E3\u10DA\u10D8',
+  EN: 'English',
+};
+
 export const SEND_OUTBOUND_EMAIL_DEFAULT_VALUES: SendOutboundEmailPayload = {
   recipientEmail: '',
   recipientName: '',
+  language: 'EN',
   subject: '',
   heading: '',
   message: '',
@@ -31,6 +46,7 @@ export const SEND_OUTBOUND_EMAIL_VALIDATION_MESSAGES = {
   recipientEmailInvalid: 'Enter a valid recipient email address.',
   recipientEmailMax: 'Recipient email must be at most 254 characters.',
   recipientNameMax: 'Recipient name must be at most 100 characters.',
+  languageRequired: 'Email language is required.',
   subjectRequired: 'Subject is required.',
   subjectShort: 'Subject must be at least 2 characters.',
   subjectMax: 'Subject must be at most 150 characters.',
@@ -47,4 +63,10 @@ export function getOutboundEmailStatusLabel(
   status: OutboundEmailStatus,
 ): string {
   return OUTBOUND_EMAIL_STATUS_LABELS[status];
+}
+
+export function getOutboundEmailLanguageLabel(
+  language: OutboundEmailLanguage,
+): string {
+  return OUTBOUND_EMAIL_LANGUAGE_LABELS[language];
 }

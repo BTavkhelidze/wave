@@ -5,6 +5,7 @@ import { CreateContactMessageDto } from './dto/create-contact-message.dto';
 import { FindContactMessagesQueryDto } from './dto/find-contact-messages-query.dto';
 import type { AdminContactMessage } from './providers/contact-message-select.constant';
 import { CreateContactMessageProvider } from './providers/create-contact-message.provider';
+import { DeleteContactMessageProvider } from './providers/delete-contact-message.provider';
 import {
   FindContactMessagesProvider,
   type FindContactMessagesResponse,
@@ -31,6 +32,7 @@ export class ContactMessagesService {
 
   constructor(
     private readonly createContactMessageProvider: CreateContactMessageProvider,
+    private readonly deleteContactMessageProvider: DeleteContactMessageProvider,
     private readonly findContactMessagesProvider: FindContactMessagesProvider,
     private readonly findContactMessageByIdProvider: FindContactMessageByIdProvider,
     private readonly getUnreadContactMessageCountProvider: GetUnreadContactMessageCountProvider,
@@ -69,6 +71,10 @@ export class ContactMessagesService {
 
   public findAdminById(id: string): Promise<AdminContactMessage> {
     return this.findContactMessageByIdProvider.findOne(id);
+  }
+
+  public delete(id: string, adminId: string): Promise<void> {
+    return this.deleteContactMessageProvider.delete(id, adminId);
   }
 
   public getUnreadCount(): Promise<UnreadContactMessageCountResponse> {

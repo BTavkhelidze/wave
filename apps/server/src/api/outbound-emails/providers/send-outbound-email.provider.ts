@@ -7,6 +7,7 @@ import {
 import {
   AdminAction,
   AdminEntity,
+  Language,
   OutboundEmailStatus,
   Prisma,
 } from '@prisma/client';
@@ -19,6 +20,7 @@ export type SendOutboundEmailResponse = {
   data: {
     id: string;
     recipientEmail: string;
+    language: Language;
     subject: string;
     status: OutboundEmailStatus;
     sentAt: Date;
@@ -46,6 +48,7 @@ export class SendOutboundEmailProvider {
         to: normalizedDto.recipientEmail,
         subject: normalizedDto.subject,
         recipientName: normalizedDto.recipientName,
+        language: normalizedDto.language,
         heading: normalizedDto.heading,
         message: normalizedDto.message,
         buttonText: normalizedDto.buttonText,
@@ -64,6 +67,7 @@ export class SendOutboundEmailProvider {
         data: {
           id: sentEmail.id,
           recipientEmail: sentEmail.recipientEmail,
+          language: sentEmail.language,
           subject: sentEmail.subject,
           status: sentEmail.status,
           sentAt: sentEmail.sentAt ?? sentAt,
@@ -92,6 +96,7 @@ export class SendOutboundEmailProvider {
         data: {
           recipientEmail: dto.recipientEmail,
           recipientName: dto.recipientName ?? null,
+          language: dto.language,
           subject: dto.subject,
           heading: dto.heading ?? null,
           message: dto.message,
@@ -131,6 +136,7 @@ export class SendOutboundEmailProvider {
   }): Promise<{
     id: string;
     recipientEmail: string;
+    language: Language;
     subject: string;
     status: OutboundEmailStatus;
     sentAt: Date | null;
@@ -150,6 +156,7 @@ export class SendOutboundEmailProvider {
           select: {
             id: true,
             recipientEmail: true,
+            language: true,
             subject: true,
             status: true,
             sentAt: true,
@@ -201,6 +208,7 @@ export class SendOutboundEmailProvider {
     return {
       recipientEmail: dto.recipientEmail,
       recipientName: this.normalizeOptionalText(dto.recipientName),
+      language: dto.language,
       subject: this.normalizeHeaderText(dto.subject),
       heading: this.normalizeOptionalText(dto.heading),
       message: dto.message,
@@ -266,6 +274,7 @@ export class SendOutboundEmailProvider {
 type NormalizedSendOutboundEmailDto = {
   recipientEmail: string;
   recipientName?: string;
+  language: Language;
   subject: string;
   heading?: string;
   message: string;

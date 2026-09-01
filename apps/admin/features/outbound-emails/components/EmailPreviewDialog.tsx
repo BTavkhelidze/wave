@@ -1,4 +1,5 @@
 import type { SendOutboundEmailPayload } from '../model/outboundEmail.types';
+import { getOutboundEmailLanguageLabel } from '../model/outboundEmail.constants';
 
 type EmailPreviewDialogProps = {
   values: SendOutboundEmailPayload;
@@ -10,6 +11,14 @@ export function EmailPreviewDialog({
   onClose,
 }: EmailPreviewDialogProps) {
   const recipientName = values.recipientName?.trim();
+  const greeting =
+    values.language === 'KA'
+      ? recipientName
+        ? `\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0, ${recipientName}!`
+        : '\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0!'
+      : recipientName
+        ? `Hello, ${recipientName}!`
+        : 'Hello!';
   const heading = values.heading?.trim() || 'Wave Engineering';
   const buttonText = values.buttonText?.trim();
   const buttonUrl = values.buttonUrl?.trim();
@@ -31,6 +40,7 @@ export function EmailPreviewDialog({
               Preview Email
             </h2>
             <p className="mt-1 text-sm text-[#6B7280]">
+              {getOutboundEmailLanguageLabel(values.language)} template.
               Final rendering may vary between email clients.
             </p>
           </div>
@@ -55,9 +65,7 @@ export function EmailPreviewDialog({
             </header>
 
             <section className="px-7 py-7 text-[#111827]">
-              {recipientName && (
-                <p className="mb-4 text-sm leading-6">Hello {recipientName},</p>
-              )}
+              <p className="mb-4 text-sm leading-6">{greeting}</p>
               <h3 className="text-2xl font-semibold leading-8 text-[#0F4C81]">
                 {heading}
               </h3>

@@ -49,6 +49,11 @@ export const SendOutboundEmailSchema: z.ZodType<SendOutboundEmailPayload> = z
       100,
       SEND_OUTBOUND_EMAIL_VALIDATION_MESSAGES.recipientNameMax,
     ),
+    language: z.enum(['KA', 'EN'], {
+      required_error: SEND_OUTBOUND_EMAIL_VALIDATION_MESSAGES.languageRequired,
+      invalid_type_error:
+        SEND_OUTBOUND_EMAIL_VALIDATION_MESSAGES.languageRequired,
+    }),
     subject: z
       .string()
       .trim()

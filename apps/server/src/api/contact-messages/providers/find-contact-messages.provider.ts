@@ -75,7 +75,9 @@ export class FindContactMessagesProvider {
   private buildWhere(
     query: FindContactMessagesQueryDto,
   ): Prisma.ContactMessageWhereInput {
-    const where: Prisma.ContactMessageWhereInput = {};
+    const where: Prisma.ContactMessageWhereInput = {
+      deletedAt: null,
+    };
 
     if (query.status) {
       where.status = query.status;

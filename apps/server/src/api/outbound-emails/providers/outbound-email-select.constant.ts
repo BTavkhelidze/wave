@@ -12,6 +12,7 @@ export const outboundEmailListSelect = {
   id: true,
   recipientEmail: true,
   recipientName: true,
+  language: true,
   subject: true,
   status: true,
   sentAt: true,

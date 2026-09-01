@@ -1,6 +1,7 @@
 import type { UserRole } from '../../auth/model/user.types';
 
 export type OutboundEmailStatus = 'PENDING' | 'SENT' | 'FAILED';
+export type OutboundEmailLanguage = 'KA' | 'EN';
 
 export type OutboundEmailSortOrder = 'asc' | 'desc';
 
@@ -16,6 +17,7 @@ export type OutboundEmailListItem = {
   id: string;
   recipientEmail: string;
   recipientName: string | null;
+  language: OutboundEmailLanguage;
   subject: string;
   status: OutboundEmailStatus;
   sentAt: string | null;
@@ -56,6 +58,7 @@ export type OutboundEmailsResponse = {
 export type SendOutboundEmailPayload = {
   recipientEmail: string;
   recipientName?: string;
+  language: OutboundEmailLanguage;
   subject: string;
   heading?: string;
   message: string;
@@ -68,6 +71,7 @@ export type SendOutboundEmailResponse = {
   data: {
     id: string;
     recipientEmail: string;
+    language: OutboundEmailLanguage;
     subject: string;
     status: OutboundEmailStatus;
     sentAt: string;

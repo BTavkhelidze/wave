@@ -1,3 +1,5 @@
+import { Language } from '@prisma/client';
+
 const TEXT_COLOR = '#111827';
 const MUTED_COLOR = '#6B7280';
 const BORDER_COLOR = '#E5E7EB';
@@ -7,19 +9,22 @@ const ACCENT_COLOR = '#7C3AED';
 const WARNING_COLOR = '#92400E';
 
 export type WaveEmailLayoutInput = {
+  language?: Language;
   preheader: string;
   contentHtml: string;
 };
 
 export function buildWaveEmailLayout({
+  language = Language.EN,
   preheader,
   contentHtml,
 }: WaveEmailLayoutInput): string {
   const year = new Date().getFullYear();
+  const htmlLang = language === Language.KA ? 'ka' : 'en';
 
   return `
     <!doctype html>
-    <html lang="en">
+    <html lang="${htmlLang}">
       <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">

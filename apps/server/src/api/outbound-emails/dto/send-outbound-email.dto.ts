@@ -1,8 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Language } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsDefined,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -43,6 +45,10 @@ export class SendOutboundEmailDto {
   @IsString()
   @MaxLength(100)
   recipientName?: string;
+
+  @ApiProperty({ enum: Language, example: Language.EN })
+  @IsEnum(Language)
+  language: Language;
 
   @ApiProperty({
     example: 'Fire Protection System Proposal',

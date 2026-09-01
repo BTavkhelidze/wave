@@ -24,7 +24,6 @@ type MainInformationSectionProps = {
   canonicalSlug?: string;
   canonicalSlugError?: string;
   onCanonicalSlugChange?: (value: string) => void;
-  onRegenerateCanonicalSlug?: () => void;
 };
 
 const inputClassName =
@@ -42,7 +41,6 @@ export function MainInformationSection({
   canonicalSlug,
   canonicalSlugError,
   onCanonicalSlugChange,
-  onRegenerateCanonicalSlug,
 }: MainInformationSectionProps) {
   const languageErrors = errors.translations?.[activeLanguage];
   const fieldPrefix = `translations.${activeLanguage}` as const;
@@ -90,44 +88,33 @@ export function MainInformationSection({
             : "Used in the public blog URL for this language."
         }
       >
-        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input
-            key={slugFieldId}
-            id={slugFieldId}
-            type="text"
-            autoComplete="off"
-            aria-invalid={Boolean(
-              usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug,
-            )}
-            aria-describedby={
-              usesCanonicalSlug
-                ? canonicalSlugError
-                  ? `${slugFieldId}-error`
-                  : `${slugFieldId}-hint`
-                : languageErrors?.slug
-                  ? `${slugFieldId}-error`
-                  : `${slugFieldId}-hint`
-            }
-            className={inputClassName.replace("mt-2 ", "")}
-            placeholder="fire-safety-checklist"
-            {...(usesCanonicalSlug
-              ? {
-                  value: canonicalSlug ?? "",
-                  onChange: (event) =>
-                    onCanonicalSlugChange(event.currentTarget.value),
-                }
-              : slugField)}
-          />
-          {usesCanonicalSlug && onRegenerateCanonicalSlug && (
-            <button
-              type="button"
-              onClick={onRegenerateCanonicalSlug}
-              className="rounded-md border border-[#C4B5FD] bg-white px-3 py-2 text-sm font-semibold text-[#6D28D9] transition hover:bg-[#F5F3FF] focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30"
-            >
-              Regenerate
-            </button>
+        <input
+          key={slugFieldId}
+          id={slugFieldId}
+          type="text"
+          autoComplete="off"
+          aria-invalid={Boolean(
+            usesCanonicalSlug ? canonicalSlugError : languageErrors?.slug,
           )}
-        </div>
+          aria-describedby={
+            usesCanonicalSlug
+              ? canonicalSlugError
+                ? `${slugFieldId}-error`
+                : `${slugFieldId}-hint`
+              : languageErrors?.slug
+                ? `${slugFieldId}-error`
+                : `${slugFieldId}-hint`
+          }
+          className={inputClassName}
+          placeholder="fire-safety-checklist"
+          {...(usesCanonicalSlug
+            ? {
+                value: canonicalSlug ?? "",
+                onChange: (event) =>
+                  onCanonicalSlugChange(event.currentTarget.value),
+              }
+            : slugField)}
+        />
       </CreateBlogField>
 
       <CreateBlogField

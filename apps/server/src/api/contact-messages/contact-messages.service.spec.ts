@@ -2,6 +2,7 @@ import { MessageStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import { ContactMessagesService } from './contact-messages.service';
 import { CreateContactMessageProvider } from './providers/create-contact-message.provider';
+import { DeleteContactMessageProvider } from './providers/delete-contact-message.provider';
 import { FindContactMessagesProvider } from './providers/find-contact-messages.provider';
 import { FindContactMessageByIdProvider } from './providers/find-contact-message-by-id.provider';
 import { GetUnreadContactMessageCountProvider } from './providers/get-unread-contact-message-count.provider';
@@ -48,6 +49,7 @@ describe('ContactMessagesService', () => {
     };
     service = new ContactMessagesService(
       createContactMessageProvider as unknown as CreateContactMessageProvider,
+      {} as DeleteContactMessageProvider,
       {} as FindContactMessagesProvider,
       {} as FindContactMessageByIdProvider,
       {} as GetUnreadContactMessageCountProvider,

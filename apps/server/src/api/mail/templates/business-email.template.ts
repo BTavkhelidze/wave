@@ -1,9 +1,7 @@
+import { Language } from '@prisma/client';
 import {
   buildBodyText,
   buildButton,
-  buildFinalInfoRow,
-  buildInfoPanel,
-  buildParagraph,
   buildSectionHeading,
   buildWaveEmailLayout,
   escapeHtml,
@@ -12,6 +10,7 @@ import {
 
 export type BusinessEmailTemplateInput = {
   recipientName?: string;
+  language?: Language;
   subject: string;
   heading?: string;
   message: string;
@@ -36,20 +35,13 @@ export function buildBusinessEmailContent(
 }
 
 function buildBusinessEmailText({
-  recipientName,
   heading,
   message,
   buttonText,
   buttonUrl,
 }: BusinessEmailTemplateInput): string {
-  const greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
-
   return [
-    greeting,
-    '',
-    heading,
-    '',
-    message,
+    ...(heading ? [heading, '', message] : [message]),
     '',
     buttonText && buttonUrl ? `${buttonText}: ${buttonUrl}` : undefined,
     '',
@@ -62,17 +54,13 @@ function buildBusinessEmailText({
 }
 
 function buildBusinessEmailHtml({
-  recipientName,
+  language = Language.EN,
   subject,
   heading,
   message,
   buttonText,
   buttonUrl,
 }: BusinessEmailTemplateInput): string {
-  const safeGreeting = recipientName
-    ? `Hello ${escapeHtml(recipientName)},`
-    : 'Hello,';
-  const safeSubject = escapeHtml(subject);
   const safeHeading = heading ? escapeHtml(heading) : '';
   const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
   const safeButtonText = buttonText ? escapeHtml(buttonText) : '';
@@ -80,11 +68,10 @@ function buildBusinessEmailHtml({
     buttonUrl && isSafeHttpUrl(buttonUrl) ? escapeHtml(buttonUrl) : '';
 
   return buildWaveEmailLayout({
+    language,
     preheader: heading ?? subject,
     contentHtml: [
-      buildParagraph(safeGreeting),
       safeHeading ? buildSectionHeading(safeHeading) : '',
-      buildInfoPanel([buildFinalInfoRow('Subject', safeSubject)]),
       buildBodyText(safeMessage),
       safeButtonText && safeButtonUrl
         ? buildButton({ href: safeButtonUrl, label: safeButtonText })

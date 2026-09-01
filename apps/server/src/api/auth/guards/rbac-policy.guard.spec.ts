@@ -156,6 +156,7 @@ function createContactMessagesServiceMock(): TestApp['contactMessagesService'] {
     }),
     getUnreadCount: jest.fn().mockResolvedValue({ count: 0 }),
     findAdminById: jest.fn().mockResolvedValue({ id: CONTACT_MESSAGE_ID }),
+    delete: jest.fn().mockResolvedValue(undefined),
     updateStatus: jest.fn().mockResolvedValue({
       id: CONTACT_MESSAGE_ID,
       status: MessageStatus.READ,
@@ -257,7 +258,7 @@ async function createTestApp(): Promise<TestApp> {
 
 function withToken(
   server: App,
-  method: 'get' | 'post' | 'patch',
+  method: 'delete' | 'get' | 'post' | 'patch',
   path: string,
   token: string,
 ) {
@@ -333,7 +334,7 @@ describe('RBAC policy guard integration', () => {
     expect(testApp.contactMessagesService.findAdmin).toHaveBeenCalledTimes(1);
   });
 
-  it('denies employee mutations for services, blogs, and message status', async () => {
+  it('denies employee mutations for services, blogs, and messages', async () => {
     testApp = await createTestApp();
 
     await withToken(testApp.server, 'post', '/api/services', 'employee-token')
@@ -350,11 +351,34 @@ describe('RBAC policy guard integration', () => {
     )
       .send({ status: MessageStatus.READ })
       .expect(403);
+    await withToken(
+      testApp.server,
+      'delete',
+      `/api/contact-messages/${CONTACT_MESSAGE_ID}`,
+      'employee-token',
+    ).expect(403);
 
     expect(testApp.servicesService.create).not.toHaveBeenCalled();
     expect(testApp.blogsService.create).not.toHaveBeenCalled();
     expect(testApp.contactMessagesService.updateStatus).not.toHaveBeenCalled();
+    expect(testApp.contactMessagesService.delete).not.toHaveBeenCalled();
   });
+
+  it.each(['super-token', 'admin-token'])(
+    'allows %s to delete contact messages',
+    async (token) => {
+      testApp = await createTestApp();
+
+      await withToken(
+        testApp.server,
+        'delete',
+        `/api/contact-messages/${CONTACT_MESSAGE_ID}`,
+        token,
+      ).expect(204);
+
+      expect(testApp.contactMessagesService.delete).toHaveBeenCalledTimes(1);
+    },
+  );
 
   it('leaves published blog endpoints public and does not route drafts through public listing', async () => {
     testApp = await createTestApp();
