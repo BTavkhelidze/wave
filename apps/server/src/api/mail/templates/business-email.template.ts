@@ -2,7 +2,6 @@ import { Language } from '@prisma/client';
 import {
   buildBodyText,
   buildButton,
-  buildParagraph,
   buildSectionHeading,
   buildWaveEmailLayout,
   escapeHtml,
