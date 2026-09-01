@@ -81,7 +81,7 @@ describe('MailService', () => {
     expect(input?.html).toContain('WAVE');
     expect(input?.html).toContain('Water Air Voltage Engineering');
     expect(input?.html).not.toContain('<img');
-    expect(input?.html).toContain('Hello, Ana &lt;Admin&gt;!');
+    expect(input?.html).not.toContain('Hello, Ana &lt;Admin&gt;!');
     expect(input?.html).toContain('Project &lt;Update&gt;');
     expect(input?.html).not.toContain('<strong>Subject:</strong>');
     expect(input?.html).toContain('Line &lt;one&gt;<br>Line &amp; two');
@@ -89,13 +89,14 @@ describe('MailService', () => {
     expect(input?.html).toContain(
       'href="https://example.com/plan?x=1&amp;y=2"',
     );
-    expect(input?.text).toContain('Hello, Ana <Admin>!');
+    expect(input?.text).not.toContain('Hello, Ana <Admin>!');
+    expect(input?.text).toContain('Project <Update>\n\nLine <one>');
     expect(input?.text).toContain(
       'Open <Plan>: https://example.com/plan?x=1&y=2',
     );
   });
 
-  it('localizes ComposeEmail greetings in HTML and text without translating recipient names', async () => {
+  it('does not add ComposeEmail greetings from recipient names', async () => {
     await service.sendBusinessEmail({
       to: 'client@example.com',
       subject: 'Georgian update',
@@ -110,11 +111,13 @@ describe('MailService', () => {
     const greeting =
       '\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0, Beqa Tavkhelidze!';
 
-    expect(input?.html).toContain(greeting);
-    expect(input?.text).toContain(greeting);
+    expect(input?.html).not.toContain(greeting);
+    expect(input?.text).not.toContain(greeting);
+    expect(input?.html).toContain('Message body');
+    expect(input?.text).toContain('Message body');
   });
 
-  it('localizes ComposeEmail greetings without recipient names', async () => {
+  it('does not add ComposeEmail greetings without recipient names', async () => {
     await service.sendBusinessEmail({
       to: 'client@example.com',
       subject: 'English update',
@@ -138,10 +141,12 @@ describe('MailService', () => {
     const georgianGreeting =
       '\u10D2\u10D0\u10DB\u10D0\u10E0\u10EF\u10DD\u10D1\u10D0!';
 
-    expect(englishInput?.html).toContain('Hello!');
-    expect(englishInput?.text).toContain('Hello!');
-    expect(georgianInput?.html).toContain(georgianGreeting);
-    expect(georgianInput?.text).toContain(georgianGreeting);
+    expect(englishInput?.html).not.toContain('Hello!');
+    expect(englishInput?.text).not.toContain('Hello!');
+    expect(georgianInput?.html).not.toContain(georgianGreeting);
+    expect(georgianInput?.text).not.toContain(georgianGreeting);
+    expect(englishInput?.text?.startsWith('Message body')).toBe(true);
+    expect(georgianInput?.text?.startsWith('Message body')).toBe(true);
   });
 
   it('omits the ComposeEmail button when the URL is not safe', async () => {
